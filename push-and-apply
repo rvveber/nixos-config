@@ -1,0 +1,38 @@
+#!/usr/bin/env sh
+
+# Get the directory of the script
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+
+# Generate variable with current timestamp
+CURRENT_TIMESTAMP=$(date +"%s")
+
+# Fancy up the terminal output
+ARROW="➜"
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+RESET='\033[0m'
+
+# Check if script is run with sudo
+if [ "$(id -u)" -ne 0 ]; then
+    printf "${RED}${ARROW} This script should be run with sudo!${RESET}\n"
+    exit 1
+fi
+
+printf "${CYAN}${ARROW} Backing up /etc/nixos configuration directory to ${SCRIPT_DIR}/backup/${CURRENT_TIMESTAMP}/etc/nixos...${RESET}\n"
+mkdir -p ${SCRIPT_DIR}/backup/${CURRENT_TIMESTAMP}/etc/nixos
+rsync -az /etc/nixos/ ${SCRIPT_DIR}/backup/${CURRENT_TIMESTAMP}/etc/nixos
+
+printf "${CYAN}${ARROW} Pushing contents of ${SCRIPT_DIR}/nixos to /etc/nixos...${RESET}\n"
+rsync -az --no-p --no-g --chmod=ugo=rwX --delete --exclude="hardware-configuration.nix" --exclude="configuration.nix" ${SCRIPT_DIR}/nixos/ /etc/nixos
+
+printf "${CYAN}${ARROW} Testing if the new NixOS system configuration can be switched to...${RESET}\n"
+if nixos-rebuild dry-activate --flake /etc/nixos#; then
+    printf "${GREEN}${ARROW} Test successful! Switching now.${RESET}\n"
+    nixos-rebuild switch --flake /etc/nixos#
+    printf "${GREEN}${ARROW} System updated - restart recommended.${RESET}\n"
+else
+    printf "${RED}${ARROW} Test failed!${RESET}\n"
+    rsync -az --no-p --no-g --chmod=ugo=rwX --delete ${SCRIPT_DIR}/backup/${CURRENT_TIMESTAMP}/etc/nixos/ /etc/nixos
+    printf "${GREEN}${ARROW} System NOT updated - previous configuration restored${RESET}\n"
+fi
