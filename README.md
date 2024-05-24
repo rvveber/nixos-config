@@ -38,10 +38,11 @@ At this point you should have NixOS installed
 and pre-configured `/etc/nixos/configuration.nix` to include the required values mentioned above.
 
 Now you can
-1. Clone this repository to a project directory, eg. `/p/nixos-config`
-2. Navigate to it
-3. (optional) Update to the latest packages `./update`
-2. Execute `./push-and-apply` - pushes  contents of `nixos/` to `/etc/nixos` and switches the system to the new configuration.
+1. Activate your pre-configuration with `sudo nixos-rebuild switch`
+2. Clone this repository to a project directory, eg. `/p/nixos-config`
+3. Navigate to it
+4. (optional) Update to the latest packages `./update`
+5. Execute `./push-and-apply` - pushes  contents of `nixos/` to `/etc/nixos` and switches the system to the new configuration.
 
 ***
 ## In the future
@@ -49,3 +50,8 @@ Now you can
 In the future, just evolve your configuration in an IDE at eg. `/p/nixos-config` and `sudo ./push-and-apply` it.
 
 Don't touch `/etc/nixos/configuration.nix` or `/etc/nixos/hardware-configuration.nix`, except when you want to introduce new variables for your flakes to access, or fundamentally change hardware/drives/boot etc.
+
+### Inspiration from
+https://drakerossman.com/blog/how-to-convert-default-nixos-to-nixos-with-flakes
+https://github.com/vimjoyer/flake-starter-config
+https://github.com/Misterio77/nix-starter-configs
