@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+USER=robin
+HOST=machine
+
 # Get the directory of the script
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 
@@ -8,7 +11,7 @@ CURRENT_TIMESTAMP=$(date +"%s")
 
 # Specify target and backup directory
 DIR_BACKUP=${SCRIPT_DIR}/backup/${CURRENT_TIMESTAMP}/etc/nixos
-DIR_SOURCE=${SCRIPT_DIR}/nixos
+DIR_SOURCE=${SCRIPT_DIR}/generation_1
 DIR_TARGET=/etc/nixos
 
 # Fancy up the terminal output
@@ -32,9 +35,9 @@ printf "${CYAN}${ARROW} Pushing contents of ${DIR_SOURCE} to ${DIR_TARGET}${RESE
 rsync -az --no-p --no-g --chmod=ugo=rwX --delete --exclude="hardware-configuration.nix" --exclude="configuration.nix" "${DIR_SOURCE}/" "${DIR_TARGET}"
 
 printf "${CYAN}${ARROW} Testing if the new NixOS system configuration can be switched to${RESET}\n"
-if nixos-rebuild dry-activate --flake "${DIR_TARGET}#machine"; then
+if USER=$USER nixos-rebuild dry-activate --flake "${DIR_TARGET}#${HOST}"; then
     printf "${GREEN}${ARROW} Test successful!\nSwitching now${RESET}\n"
-    nixos-rebuild switch --flake "${DIR_TARGET}#machine"
+    USER=$USER nixos-rebuild switch --flake "${DIR_TARGET}#${HOST}"
     printf "${GREEN}System updated!\nRestart recommended.${RESET}\n"
 else
     printf "${RED}${ARROW} Test failed!${RESET}\n"

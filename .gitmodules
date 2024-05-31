@@ -1,0 +1,3 @@
+[submodule "generation_2"]
+	path = generation_2
+	url = https://github.com/numtide/blueprint.git
