@@ -43,6 +43,8 @@
     # # the Nix store. Activating the configuration will then make '~/.screenrc' a
     # # symlink to the Nix store copy.
     # ".screenrc".source = dotfiles/screenrc;
+    ".config/hypr/hyprland.conf".source = dotfiles/.config/hypr/hyprland.conf;
+
 
     # # You can also set the file content immediately.
     # ".gradle/gradle.properties".text = ''
@@ -69,6 +71,7 @@
   #
   home.sessionVariables = {
     EDITOR = "nvim";
+    APP_DEFAULT_DARK_MODE="true";
   };
 
   # Let Home Manager install and manage itself.
