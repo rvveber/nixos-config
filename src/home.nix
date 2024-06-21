@@ -43,7 +43,9 @@
     # # the Nix store. Activating the configuration will then make '~/.screenrc' a
     # # symlink to the Nix store copy.
     # ".screenrc".source = dotfiles/screenrc;
-    ".config/hypr/hyprland.conf".source = dotfiles/.config/hypr/hyprland.conf;
+    ".config/hypr/hyprland.conf".source = fixtures/home/robin/.config/hypr/hyprland.conf;
+    ".config/gtk-3.0/settings.ini".source = fixtures/home/robin/.config/gtk-3.0/settings.ini;
+
 
 
     # # You can also set the file content immediately.
@@ -72,6 +74,7 @@
   home.sessionVariables = {
     EDITOR = "nvim";
     APP_DEFAULT_DARK_MODE="true";
+    ELECTRON_OZONE_PLATFORM_HINT="1"; #Fixes for wayland
   };
 
   # Let Home Manager install and manage itself.

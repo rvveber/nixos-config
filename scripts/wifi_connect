@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+#nmcli device wifi list
+nmcli device wifi connect "ssid" password "password"

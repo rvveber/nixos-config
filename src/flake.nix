@@ -13,15 +13,7 @@
       specialArgs = attrs;
       modules = [ 
         ./configuration.nix 
-	./m/hibernate.nix
-	./m/default.nix
-        ./m/8821cu.nix
-        ./m/audio.nix
-        ./m/bluetooth.nix
-        ./m/hyprland.nix
-        ./m/lsp.nix
-        ./m/nvidia.nix
-        ./m/trezor.nix
+	./nix-modules/default.nix
 	home-manager.nixosModules.home-manager {
 	  home-manager.useGlobalPkgs = true;
 	  home-manager.useUserPackages = true;

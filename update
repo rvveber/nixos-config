@@ -3,4 +3,4 @@
 # Get the directory of the script
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 
-nix flake update ${SCRIPT_DIR}/generation_1
+nix flake update ${SCRIPT_DIR}/src
