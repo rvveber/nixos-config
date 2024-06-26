@@ -1,10 +1,8 @@
 { config, pkgs, ... }:
 
 {
-  hardware.opengl = {
+  hardware.graphics= {
     enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
   };
 
   # load nvidea driver for Xorg and Wayland
