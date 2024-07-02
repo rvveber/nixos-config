@@ -3,8 +3,8 @@
 {
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
-  home.username = "robin";
-  home.homeDirectory = "/home/robin";
+  home.username = "i";
+  home.homeDirectory = "/home/i";
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -13,7 +13,7 @@
   # You should not change this value, even if you update Home Manager. If you do
   # want to update the value, then make sure to first check the Home Manager
   # release notes.
-  home.stateVersion = "23.11"; # Please read the comment before changing.
+  home.stateVersion = "24.05"; # Please read the comment before changing.
 
   # The home.packages option allows you to install Nix packages into your
   # environment.
@@ -43,9 +43,7 @@
     # # the Nix store. Activating the configuration will then make '~/.screenrc' a
     # # symlink to the Nix store copy.
     # ".screenrc".source = dotfiles/screenrc;
-    ".config/hypr/hyprland.conf".source = fixtures/home/robin/.config/hypr/hyprland.conf;
-    ".config/gtk-3.0/settings.ini".source = fixtures/home/robin/.config/gtk-3.0/settings.ini;
-
+    ".config/hypr/hyprland.conf".source = .config/hypr/hyprland.conf;
 
 
     # # You can also set the file content immediately.
@@ -72,9 +70,6 @@
   #  /etc/profiles/per-user/robin/etc/profile.d/hm-session-vars.sh
   #
   home.sessionVariables = {
-    EDITOR = "nvim";
-    APP_DEFAULT_DARK_MODE="true";
-    ELECTRON_OZONE_PLATFORM_HINT="1"; #Fixes for wayland
   };
 
   # Let Home Manager install and manage itself.

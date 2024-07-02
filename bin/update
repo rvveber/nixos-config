@@ -3,4 +3,6 @@
 # Get the directory of the script
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 
-nix flake update ${SCRIPT_DIR}/../src
+nix flake update ${SCRIPT_DIR}/../src \
+	--extra-experimental-features nix-command \
+	--extra-experimental-features flakes

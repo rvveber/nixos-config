@@ -1,25 +1,37 @@
 {
   description = "NixOS configuration";
 
-  inputs.nixpkgs.url = "nixpkgs/nixos-unstable";
-  inputs.nixpkgs-unstable.url = "nixpkgs/nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.home-manager.url = "github:nix-community/home-manager";
-  inputs.home-manager.inputs.nixpkgs.follows = "nixpkgs";
+  inputs.nixos-hardware.url = "github:NixOS/nixos-hardware/master";
 
-  outputs = { nixpkgs, home-manager, ... }@attrs: {
+  outputs = { self, nixpkgs, ... }@attrs: {
 
-    nixosConfigurations.machine = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.cake = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = attrs;
-      modules = [ 
-        ./configuration.nix 
-	./nix-modules/default.nix
-	home-manager.nixosModules.home-manager {
-	  home-manager.useGlobalPkgs = true;
-	  home-manager.useUserPackages = true;
-	  home-manager.backupFileExtension = "bak"; 
-	  home-manager.users.robin = import ./home.nix;
-	}
+      modules = [
+	./host/cake/default.nix
+	./user/robin/default.nix
+	
+	./module/hardware/audio.nix
+	./module/hardware/bluetooth.nix
+
+	./module/programs/hyprland.nix
+      ];
+    };
+
+    nixosConfigurations.b1kini = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = attrs;
+      modules = [
+        ./host/b1kini/default.nix
+	./user/i/default.nix
+	
+	./module/hardware/audio.nix
+	./module/hardware/bluetooth.nix
+
+	./module/programs/hyprland.nix
       ];
     };
 
