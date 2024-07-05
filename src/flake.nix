@@ -11,13 +11,13 @@
       system = "x86_64-linux";
       specialArgs = attrs;
       modules = [
-	./host/cake/default.nix
-	./user/robin/default.nix
+	./host/cake
+#	./user/robin/default.nix
 	
-	./module/hardware/audio.nix
-	./module/hardware/bluetooth.nix
+#	./module/hardware/audio.nix
+#	./module/hardware/bluetooth.nix
 
-	./module/programs/hyprland.nix
+#	./module/programs/hyprland.nix
       ];
     };
 

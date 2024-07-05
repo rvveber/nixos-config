@@ -19,12 +19,5 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-printf "${CYAN}${ARROW} Testing if the new NixOS system configuration can be switched to${RESET}\n"
-if nixos-rebuild dry-activate --flake "${DIR_TARGET}#"; then
-    printf "${GREEN}${ARROW} Test successful!\nSwitching now${RESET}\n"
-    nixos-rebuild switch --flake "${DIR_TARGET}#"
-    printf "${GREEN}System updated!\nRestart recommended.${RESET}\n"
-else
-    printf "${RED}${ARROW} Test failed!${RESET}\n"
-    printf "${GREEN}System NOT updated!${RESET}\n"
-fi
+echo "${DIR_SOURCE}"
+nixos-rebuild switch --flake "${DIR_SOURCE}#"

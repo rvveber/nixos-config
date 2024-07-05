@@ -1,0 +1,8 @@
+WRN 2024-07-05T16:58:26.637 ?.10046    server_start:163: Failed to start server: permission denied: /run/user/0/
+WRN 2024-07-05T16:58:51.512 ?.10059    server_start:163: Failed to start server: permission denied: /run/user/0/
+WRN 2024-07-05T16:59:44.707 ?.10081    server_start:163: Failed to start server: permission denied: /run/user/0/
+WRN 2024-07-05T17:00:24.706 ?.10149    server_start:163: Failed to start server: permission denied: /run/user/0/
+WRN 2024-07-05T17:01:58.688 ?.10170    server_start:163: Failed to start server: permission denied: /run/user/0/
+WRN 2024-07-05T17:02:03.630 ?.10182    server_start:163: Failed to start server: permission denied: /run/user/0/
+WRN 2024-07-05T17:02:07.949 ?.10194    server_start:163: Failed to start server: permission denied: /run/user/0/
+WRN 2024-07-05T17:02:54.153 ?.10223    server_start:163: Failed to start server: permission denied: /run/user/0/
