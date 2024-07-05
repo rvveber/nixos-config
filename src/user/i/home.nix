@@ -67,8 +67,11 @@
   #
   # or
   #
-  #  /etc/profiles/per-user/robin/etc/profile.d/hm-session-vars.sh
+  #  /etc/profiles/per-user/i/etc/profile.d/hm-session-vars.sh
   #
   home.sessionVariables = {
   };
+
+  # Let Home Manager install and manage itself.
+  programs.home-manager.enable = true;
 }

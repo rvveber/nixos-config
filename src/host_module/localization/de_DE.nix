@@ -27,7 +27,4 @@
 
   # Configure console keymap
   console.keyMap = "de";
-
-  # Configure the keyboard layout for the Hyprland program
-  programs.hyprland.config.input.kb_layout = "de";
 }
