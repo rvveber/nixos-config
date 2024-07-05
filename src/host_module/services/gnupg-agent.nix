@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 {
-  services.gnupg-agent = {
+  programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
   };
