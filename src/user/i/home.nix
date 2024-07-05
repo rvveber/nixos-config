@@ -43,7 +43,7 @@
     # # the Nix store. Activating the configuration will then make '~/.screenrc' a
     # # symlink to the Nix store copy.
     # ".screenrc".source = dotfiles/screenrc;
-    ".config/hypr/hyprland.conf".source = .config/hypr/hyprland.conf;
+    #".config/hypr/hyprland.conf".source = .config/hypr/hyprland.conf;
 
 
     # # You can also set the file content immediately.
@@ -71,7 +71,4 @@
   #
   home.sessionVariables = {
   };
-
-  # Let Home Manager install and manage itself.
-  programs.home-manager.enable = true;
 }

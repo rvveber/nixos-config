@@ -11,13 +11,8 @@
       system = "x86_64-linux";
       specialArgs = attrs;
       modules = [
-	./host/cake
-#	./user/robin/default.nix
-	
-#	./module/hardware/audio.nix
-#	./module/hardware/bluetooth.nix
-
-#	./module/programs/hyprland.nix
+        ./host/cake
+        ./user/i
       ];
     };
 
@@ -25,13 +20,8 @@
       system = "x86_64-linux";
       specialArgs = attrs;
       modules = [
-        ./host/b1kini/default.nix
-	./user/i/default.nix
-	
-	./module/hardware/audio.nix
-	./module/hardware/bluetooth.nix
-
-	./module/programs/hyprland.nix
+        ./host/b1kini
+        ./user/i
       ];
     };
 
