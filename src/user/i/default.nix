@@ -1,10 +1,11 @@
 # src/user/$username/default.nix - user specific configuration
-{ config, pkgs, home-manager, ... }:
+{ config, pkgs, ... }:
 
 
 {
   users.users.i = {
     isNormalUser = true;
+    home = "/home/i";
     description = "Robin Weber";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
@@ -12,9 +13,7 @@
     ];
   };
 
-#  imports = [
-#    home-manager.nixosModules.default {
-#      home-manager.users.i = import ./home.nix;
-#    }
-#  ];
+  imports = [
+    ../../module/select/theme/future-hud { homeDirectory = users.users.i.home; }
+  ];
 }
