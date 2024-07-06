@@ -28,8 +28,7 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  # programs
-  programs.gnupg.agent.enable = true;
+
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget

@@ -3,12 +3,6 @@
 
 
 {
-  imports = [
-    home-manager.nixosModules.default {
-      home-manager.users.i = import ./home.nix;
-    }
-  ];
-
   users.users.i = {
     isNormalUser = true;
     description = "Robin Weber";
@@ -17,4 +11,10 @@
       thunderbird
     ];
   };
+
+#  imports = [
+#    home-manager.nixosModules.default {
+#      home-manager.users.i = import ./home.nix;
+#    }
+#  ];
 }
