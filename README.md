@@ -1,6 +1,4 @@
-# nixos-config
-
-# Quick Start
+## Quick Start
 Make this config structure your own
 0. (fork this repository)
 1. `git clone <repository-uri>`
@@ -61,7 +59,10 @@ sudo bin/push-and-apply
 10. Done! You now have a minimal multi-host, multi-user NixOS configuration
 ***
 
-# Future
+### Updating
+Update by simply running `bin/update` and apply with `sudo bin/push-and-apply`
+
+### Future
 This repository is ever evolving, so if you have certain requests featurewise, don't hesitate to create issues
 I try to keep it minimal, but i'm also using it for myself, in the future i'll create a second repository
 that acts as pure boilerplate and will be even more minimal than now.
