@@ -19,5 +19,4 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-echo "${DIR_SOURCE}"
 nixos-rebuild switch --flake "${DIR_SOURCE}#"
