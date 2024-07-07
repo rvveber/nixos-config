@@ -34,7 +34,7 @@ nano src/host/$(hostname)/default.nix
     ];
 }
 ```
-6. copy the user/i directory to a directory with your username - acts as entrypoint for user configurations
+6. copy the `user/i` directory to a directory with your username - acts as entrypoint for user configurations
 ```shell
 cp -r src/user/i src/user/$(whoami)
 ```
