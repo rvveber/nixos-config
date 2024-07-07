@@ -1,0 +1,38 @@
+#!/usr/bin/env sh
+
+# Get the absolute path of the directory containing the script
+DIR_BIN=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+# Navigate up one directory from the script directory to get to the project root
+DIR_ROOT=$(cd "$DIR_BIN"/.. && pwd -P)
+cd "${DIR_ROOT}"
+
+# Fancy up the terminal output
+ARROW="➜"
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+RESET='\033[0m'
+
+
+# check that "direnv, devenv and statix" are installed
+for cmd in direnv devenv statix; do
+  if ! command -v $cmd &> /dev/null; then
+    printf "${RED}${ARROW} ERROR: This script requires the development module to be added to this host($(hostname)) first.${RESET}\n"
+    printf "${RED}   HINT: If you already added it, restart your terminal.${RESET}\n"
+    exit 1
+  fi
+done
+
+# Run the statix check
+if statix check "${DIR_ROOT}"; then
+  printf "${GREEN}${ARROW} SUCCESS: The statix check passed successfully.${RESET}\n"
+else
+  printf "${RED}${ARROW} ERROR: The statix check failed. Do you want to try to fix it?${RESET}\n"
+  read -p "Do you want to try to fix it? [y/N]: " response
+  if [ "$response" = "y" ]; then
+    statix fix
+  else
+    printf "${RED}${ARROW} ERROR: The statix check failed. Please fix the issues and try again.${RESET}\n"
+    exit 1
+  fi
+fi

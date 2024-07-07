@@ -1,12 +1,9 @@
-{ config, pkgs, lib, ... }:
-
-#let
-#  linkConfigurationToUser = if homeDirectory != null then {
-#    "${homeDirectory}/.config/hypr/hyprland.conf".source = "./etc/hypr/hyprland.conf";
-#  } else {};
-#in
-
 {
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
   programs.hyprland = {
     enable = true;
   };

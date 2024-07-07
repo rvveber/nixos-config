@@ -13,6 +13,12 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 RESET='\033[0m'
 
+# Check if script is run with sudo
+if [ "$(id -u)" -ne 0 ]; then
+    printf "${RED}${ARROW} This script must be ran with sudo!${RESET}\n"
+    exit 1
+fi
+
 # if development module is enabled for this host - run development scripts first
 if command -v direnv >/dev/null && command -v devenv >/dev/null && command -v statix >/dev/null; then
   printf "${CYAN}${ARROW} INFO: Detected support for the development module${RESET}\n"
@@ -25,6 +31,4 @@ fi
 # execute git add src - to have new files tracked and available in the nix store, important for flake mechanism
 git add "${DIR_ROOT}/src"
 
-nix flake update "${DIR_ROOT}/src" \
-	--extra-experimental-features nix-command \
-	--extra-experimental-features flakes
+nixos-rebuild switch --flake "${DIR_ROOT}/src#"

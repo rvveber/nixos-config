@@ -1,10 +1,11 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
-
-{ config, pkgs, ... }:
-
 {
+  config,
+  pkgs,
+  ...
+}: {
   networking.hostName = "b1kini";
   networking.networkmanager.enable = true;
 
@@ -28,20 +29,18 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-
-
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-     wget
-     neovim
-     kitty
-     chromium
-     wl-clipboard
-     wofi
-     wofi-emoji
-     ags
-     git
+    wget
+    neovim
+    kitty
+    chromium
+    wl-clipboard
+    wofi
+    wofi-emoji
+    ags
+    git
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -74,5 +73,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "24.05"; # Did you read the comment?
-
 }

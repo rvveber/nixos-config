@@ -1,3 +1,18 @@
+This config structure for NixOS aims to be:
+- self-explainatory
+- minimal
+- flake based
+- multi-host compatible
+- multi-user compatible
+- easily universally extendable
+
+It optionally includes home-manager.
+
+***
+Don't get discouraged by all the files in the root, they are optional development assisting tools.
+What is important for the NixOS configuration, is only the `src` directory.
+***
+
 ## Quick Start
 Make this config structure your own
 1. (fork this repository)
@@ -29,7 +44,7 @@ nano src/host/$(hostname)/default.nix
         ../../module/add/hardware/audio.nix
         ../../module/add/hardware/nvidia.nix
 
-        # import development module - enables everything to further develop this config
+        # (optional) import development module - enables everything to further develop this config
         ../../module/add/software/development.nix
     ];
 }
@@ -60,7 +75,18 @@ sudo bin/push-and-apply
 ***
 
 ### Updating
-Update by simply running `bin/update` and apply with `sudo bin/push-and-apply`
+Update all packages, by simply running `bin/update` and apply with `sudo bin/switch`
+
+### Development
+You will most likely want expand this configuration, you're in luck, because thats exactly what this repository aims to assist you with. 
+
+If you'd like to enable nix's development features in general, you'll need to add the `module/add/software/development.nix` module to your hosts default.nix.
+
+Then, the various tools to assist development with nix, will be loaded automatically when you enter the directory where you cloned this repository.
+
+- `bin/lint` to check and (optionally) fix static errors
+
+
 
 ### Future
 This repository is ever evolving, so if you have certain requests featurewise, don't hesitate to create issues.

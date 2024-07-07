@@ -1,6 +1,8 @@
-{ config, pkgs, ... }:
-
 {
+  config,
+  pkgs,
+  ...
+}: {
   # Enable sound with pipewire.
   hardware.pulseaudio.enable = false;
   services.pipewire = {
@@ -10,4 +12,3 @@
     pulse.enable = true;
   };
 }
-

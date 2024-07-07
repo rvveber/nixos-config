@@ -1,8 +1,11 @@
-{ pkgs, config, ... }:
-
 {
+  pkgs,
+  config,
+  ...
+}: {
   programs.direnv.enable = true;
-  environment.systemPackages = [ 
+  environment.systemPackages = [
     pkgs.devenv
+    pkgs.git
   ];
 }
