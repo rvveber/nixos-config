@@ -84,8 +84,10 @@ If you'd like to enable nix's development features in general, you'll need to ad
 
 Then, the various tools to assist development with nix, will be loaded automatically when you enter the directory where you cloned this repository.
 
-- `bin/lint` to check and (optionally) fix static errors
+As an added bonus, these scripts will be ran automatically, on `bin/update` and `bin/switch`.
 
+- `bin/lint` to check and (optionally) fix static errors
+- `bin/format` to format the nix configuration to standards
 
 
 ### Future

@@ -24,7 +24,7 @@ for cmd in direnv devenv alejandra; do
 done
 
 # Run alejandra
-if alejandra "${DIR_ROOT}"; then
+if alejandra "${DIR_ROOT}" --quiet; then
   printf "${GREEN}${ARROW} SUCCESS: The alejandra formatting finished successfully.${RESET}\n"
 else
   printf "${RED}${ARROW} ERROR: The alejandra formatting was unsuccessful.${RESET}\n"
