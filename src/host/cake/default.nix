@@ -13,5 +13,6 @@
     ../../module/add/hardware/nvidia.nix
 
     ../../module/add/software/gaming.nix
+    ../../module/add/software/development.nix
   ];
 }

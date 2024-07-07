@@ -12,8 +12,4 @@
       thunderbird
     ];
   };
-
-  imports = [
-    ../../module/select/theme/future-hud { homeDirectory = users.users.i.home; }
-  ];
 }
