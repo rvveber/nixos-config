@@ -56,7 +56,7 @@ cp -r src/user/i src/user/$(whoami)
 8. in the files in it, replace all occurances of the user `i` with your username
 9. in `src/flake.nix` add a new nixosConfigurations entry for your hostname and user combination (can be multiple)
 ```nix
-    ...W
+    ...
     nixosConfigurations.<HOSTNAME> = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = attrs;
