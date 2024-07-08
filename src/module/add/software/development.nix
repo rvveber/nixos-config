@@ -8,4 +8,9 @@
     pkgs.devenv
     pkgs.git
   ];
+  virtualisation.docker.enable = true;
+  virtualisation.docker.rootless = {
+    enable = true;
+    setSocketVariable = true;
+  };
 }

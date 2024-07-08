@@ -6,6 +6,8 @@
   pkgs,
   ...
 }: {
+  nix.settings.experimental-features = ["nix-command" "flakes"];
+
   networking.hostName = "b1kini";
   networking.networkmanager.enable = true;
 
@@ -14,14 +16,15 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Enable the X11 windowing system.
-  services.xserver.enable = true;
+  #services.xserver.enable = true;
 
   # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  #services.xserver.displayManager.gdm.enable = true;
+  #services.xserver.desktopManager.gnome.enable = true;
 
   services.printing.enable = true;
-  security.rtkit.enable = true;
+
+  nixpkgs.config.allowUnfree = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
@@ -29,16 +32,10 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    wget
     neovim
-    kitty
+    vscode
     chromium
-    wl-clipboard
-    wofi
-    wofi-emoji
-    ags
-    git
   ];
 
-  system.stateVersion = "24.05"; # Did you read the comment?
+  system.stateVersion = "24.05";
 }

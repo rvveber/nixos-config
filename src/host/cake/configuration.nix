@@ -3,6 +3,8 @@
   pkgs,
   ...
 }: {
+  nix.settings.experimental-features = ["nix-command" "flakes"];
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_zen;
@@ -14,16 +16,10 @@
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
-    git
     neovim
     vscode
     chromium
-    kitty
   ];
 
-  programs.hyprland.enable = true;
-
-  system.stateVersion = "24.05"; # Did you read the comment?
-
-  nix.settings.experimental-features = ["nix-command" "flakes"];
+  system.stateVersion = "24.05";
 }
