@@ -9,6 +9,9 @@
   packages = [
     pkgs.statix
     pkgs.alejandra
+    pkgs.nixd
+    pkgs.nil
+    pkgs.nix-doc
   ];
 
   # https://devenv.sh/languages/
