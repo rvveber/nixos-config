@@ -7,6 +7,7 @@
     ../../module/select/frontend/future-hud
 
     ../../module/add/hardware/audio.nix
+    ../../module/add/hardware/bluetooth.nix
 
     ../../module/add/software/home-manager.nix
     ../../module/add/software/gnupg-agent.nix
