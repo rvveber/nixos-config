@@ -1,6 +1,8 @@
 {
   config,
   pkgs,
+  lib,
+  nixpkgs,
   ...
 }: {
   nix.settings.experimental-features = ["nix-command" "flakes"];
@@ -13,9 +15,16 @@
   networking.hostName = "cake";
   networking.networkmanager.enable = true;
 
+  services.xserver = {
+    enable = true;
+    displayManager.gdm.enable = true;
+    desktopManager.gnome.enable = true;
+  };
+
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
+    spotify
     neovim
     vscode
     chromium
