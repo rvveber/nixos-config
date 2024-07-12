@@ -16,13 +16,11 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Enable the X11 windowing system.
-  #services.xserver.enable = true;
+  services.xserver.enable = true;
 
   # Enable the GNOME Desktop Environment.
-  #services.xserver.displayManager.gdm.enable = true;
-  #services.xserver.desktopManager.gnome.enable = true;
-
-  services.printing.enable = true;
+  services.xserver.displayManager.gdm.enable = true;
+  services.xserver.desktopManager.gnome.enable = true;
 
   nixpkgs.config.allowUnfree = true;
 
@@ -32,6 +30,12 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    openshift
+    kubectl
+    kubernetes-helm
+    helm-docs
+
+    spotify
     neovim
     vscode
     chromium

@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+
+# Get the absolute path of the directory containing the script
+DIR_BIN=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+# Navigate up one directory from the script directory to get to the project root
+DIR_ROOT=$(cd "$DIR_BIN"/.. && pwd -P)
+cd "${DIR_ROOT}"
+
+# Fancy up the terminal output
+ARROW="➜"
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+RESET='\033[0m'
+
+rm -r "${DIR_ROOT}/.direnv"
+
+devenv gc
+
+nix-env --list-generations
+
+nix-collect-garbage --delete-old
+
+sudo nix-collect-garbage -d
+
+sudo /run/current-system/bin/switch-to-configuration boot
