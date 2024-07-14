@@ -33,6 +33,7 @@
     vscode
     chromium
     pureref
+    btop
   ];
 
   nixpkgs.config = {
@@ -45,14 +46,11 @@
 
   home-manager.sharedModules = [
     {
-      wayland.windowManager.hyprland.enable = true;
       wayland.windowManager.hyprland.settings = {
-        "$mod" = "SUPER";
         monitor = [
           "DP-1,2560x1440@165.00Hz,0x0,1"
           "HDMI-A-1,2560x1440@59.95Hz,2560x0,1,transform,1"
         ];
-        input.kb_layout = "de";
       };
     }
   ];

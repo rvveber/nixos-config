@@ -2,9 +2,16 @@
   description = "NixOS configuration";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  inputs.home-manager.url = "github:nix-community/home-manager";
   inputs.nixos-hardware.url = "github:NixOS/nixos-hardware/master";
-  inputs.stylix.url = "github:danth/stylix";
+  inputs.home-manager = {
+    url = "github:nix-community/home-manager";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+  inputs.stylix = {
+    url = "github:danth/stylix";
+    inputs.nixpkgs.follows = "nixpkgs";
+    inputs.home-manager.follows = "home-manager";
+  };
 
   outputs = {
     self,
