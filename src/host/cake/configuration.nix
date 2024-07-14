@@ -3,6 +3,7 @@
   pkgs,
   lib,
   nixpkgs,
+  home-manager,
   ...
 }: {
   nix.settings.experimental-features = ["nix-command" "flakes"];
@@ -23,10 +24,37 @@
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
+    mullvad-vpn
+    mullvad-browser
+    steam-run
+    atlauncher
     spotify
     neovim
     vscode
     chromium
+    pureref
+  ];
+
+  nixpkgs.config = {
+    chromium = {
+      enableWideVine = true;
+    };
+  };
+
+  services.mullvad-vpn.enable = true;
+
+  home-manager.sharedModules = [
+    {
+      wayland.windowManager.hyprland.enable = true;
+      wayland.windowManager.hyprland.settings = {
+        "$mod" = "SUPER";
+        monitor = [
+          "DP-1,2560x1440@165.00Hz,0x0,1"
+          "HDMI-A-1,2560x1440@59.95Hz,2560x0,1,transform,1"
+        ];
+        input.kb_layout = "de";
+      };
+    }
   ];
 
   system.stateVersion = "24.05";
