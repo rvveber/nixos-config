@@ -8,6 +8,7 @@
 }: {
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
+  boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -48,8 +49,8 @@
     {
       wayland.windowManager.hyprland.settings = {
         monitor = [
-          "DP-1,2560x1440@165.00Hz,0x0,1"
-          "HDMI-A-1,2560x1440@59.95Hz,2560x0,1,transform,1"
+          "DP-1,2560x1440@165.00Hz,0x280,1"
+          "HDMI-A-1,2560x1440@59.95Hz,2560x0,1.25,transform,1"
         ];
       };
     }

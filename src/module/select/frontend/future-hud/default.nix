@@ -24,6 +24,9 @@
   programs.hyprland.enable = true;
   programs.hyprlock.enable = true;
 
+  # Suggest applications to use native wayland instead of xorg (xwayland)
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+
   home-manager.sharedModules = [
     # Hyprland configuration
     {
@@ -94,6 +97,9 @@
             enabled = true;
           };
         };
+        xwayland = {
+          force_zero_scaling = true;
+        };
       };
     }
     # Ags configuration
@@ -103,6 +109,7 @@
       };
     }
   ];
+
 
   # Stylix configuration
   stylix = {
