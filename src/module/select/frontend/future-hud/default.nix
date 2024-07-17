@@ -82,11 +82,24 @@
         windowrulev2 = [
           "suppressevent maximize, class:.*"
         ];
+        decoration = {
+          rounding = 15;
+          active_opacity = 1;
+          inactive_opacity = 1;
+          drop_shadow = true;
+          shadow_range = 24;
+          "col.shadow" = lib.mkForce "rgba(00b4ffee)";
+          "col.shadow_inactive" = lib.mkForce "rgba(00000000)";
+          dim_inactive = true;
+          dim_strength = 0.3;
+        };
         general = {
-          gaps_in = 2;
-          gaps_out = 2;
-          border_size = 2;
+          gaps_in = 6;
+          gaps_out = 12;
+          border_size = 3;
           layout = "dwindle";
+          "col.inactive_border" = lib.mkForce "rgba(00000000)";
+          "col.active_border" = lib.mkForce "rgba(80d9ffff)";
         };
         misc = {
           force_default_wallpaper = 0;
@@ -100,6 +113,18 @@
         xwayland = {
           force_zero_scaling = true;
         };
+        bezier = [
+          "blink,0,3,0.2,-2"
+          "easeInOutQuint,0.83,0,0.17,1"
+          "easeOutExpo,0.16,1,0.3,1"
+        ];
+        animation = [
+          "global,1,4,easeOutExpo"
+          #"border,1,3,blink"
+          #"window,1,2,easeInOutQuint,popin 85%"
+          #"layersIn,1,3,blink"
+          #"fadeLayersIn,1,5,easeOutExpo"
+        ];
       };
     }
     # Ags configuration
