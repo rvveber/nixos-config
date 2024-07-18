@@ -15,7 +15,7 @@ RESET='\033[0m'
 
 rm -r "${DIR_ROOT}/.direnv"
 
-devenv gc
+devenv gc || echo "devenv not installed. ignoring."
 
 nix-env --list-generations
 

@@ -91,7 +91,7 @@
           "col.shadow" = lib.mkForce "rgba(00b4ffee)";
           "col.shadow_inactive" = lib.mkForce "rgba(00000000)";
           dim_inactive = true;
-          dim_strength = 0.3;
+          dim_strength = 0.1;
         };
         general = {
           gaps_in = 6;
@@ -134,7 +134,6 @@
       };
     }
   ];
-
 
   # Stylix configuration
   stylix = {
