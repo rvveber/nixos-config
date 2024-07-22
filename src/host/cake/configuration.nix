@@ -35,6 +35,7 @@
     chromium
     pureref
     btop
+    flameshot
   ];
 
   nixpkgs.config = {

@@ -14,8 +14,8 @@ GREEN='\033[0;32m'
 RESET='\033[0m'
 
 
-# check that "direnv, devenv and statix" are installed
-for cmd in direnv devenv statix; do
+# check that "direnv, devenv, alejandra and statix" are installed
+for cmd in direnv devenv alejandra statix; do
   if ! command -v $cmd &> /dev/null; then
     printf "${RED}${ARROW} ERROR: This script requires the development module to be added to this host($(hostname)) first.${RESET}\n"
     printf "${RED}   HINT: If you already added it, restart your terminal.${RESET}\n"
@@ -35,4 +35,12 @@ else
     printf "${RED}${ARROW} ERROR: The statix check failed. Please fix the issues and try again.${RESET}\n"
     exit 1
   fi
+fi
+
+# Run alejandra
+if alejandra "${DIR_ROOT}" --quiet; then
+  printf "${GREEN}${ARROW} SUCCESS: The alejandra formatting finished successfully.${RESET}\n"
+else
+  printf "${RED}${ARROW} ERROR: The alejandra formatting was unsuccessful.${RESET}\n"
+  exit 1
 fi

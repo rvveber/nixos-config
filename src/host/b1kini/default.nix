@@ -12,5 +12,6 @@
     ../../module/add/software/home-manager.nix
     ../../module/add/software/gnupg-agent.nix
     ../../module/add/software/development.nix
+    ../../module/add/software/docker.nix
   ];
 }

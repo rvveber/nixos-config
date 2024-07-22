@@ -19,6 +19,11 @@
     ags
     wofi
     kitty
+
+    # screenshots
+    grim
+    slurp
+    satty
   ];
 
   programs.hyprland.enable = true;
@@ -36,19 +41,21 @@
         "$terminal" = ["kitty"];
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
+        "$screenshot" = ["grim -g '$(slurp -o -r -c '#ff0000ff')' - | satty --filename - --fullscreen --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png"];
         input.kb_layout = [config.console.keyMap];
         monitor = [
           ",preferred,auto,auto"
         ];
         bind = [
           "$mainMod, Q, exec, $terminal"
-          "$mainMod, C, killactive,"
-          "$mainMod + SHIFT, M, exit,"
+          "$mainMod, C, killactive"
+          "$mainMod + SHIFT, M, exit"
           "$mainMod, E, exec, $fileManager"
           "$mainMod, V, togglefloating,"
           "$mainMod, R, exec, $menu"
-          "$mainMod, P, pseudo,"
-          "$mainMod, J, togglesplit,"
+          "$mainMod, S, exec, $screenshot"
+          "$mainMod, P, pseudo"
+          "$mainMod, J, togglesplit"
 
           # Switch workspaces with mainMod + [0-9]
           "$mainMod, 1, workspace, 1"
