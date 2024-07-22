@@ -41,7 +41,7 @@
         "$terminal" = ["kitty"];
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
-        "$screenshot" = ["grim -g '$(slurp -o -r -c '#ff0000ff')' - | satty --filename - --fullscreen --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png"];
+        "$screenshot" = ["grim -g \"$(slurp -o -r -c '#ff0000ff')\" - | satty --filename - --fullscreen --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png"];
         input.kb_layout = [config.console.keyMap];
         monitor = [
           ",preferred,auto,auto"
