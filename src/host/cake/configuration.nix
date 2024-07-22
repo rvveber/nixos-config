@@ -8,7 +8,9 @@
 }: {
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
-  boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernel.sysctl = {"vm.swappiness" = 70;};
+  #boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -36,6 +38,7 @@
     pureref
     btop
     flameshot
+    inkscape
   ];
 
   nixpkgs.config = {
@@ -50,17 +53,24 @@
     {
       wayland.windowManager.hyprland.settings = {
         monitor = [
-          "DP-1,2560x1440@165.00Hz,0x280,1"
-          "HDMI-A-1,2560x1440@59.95Hz,2560x0,1.25,transform,1"
+          "HDMI-A-1,2560x1440@59.95Hz,2560x0,1"
+          "DP-3,2560x1440@59.95Hz,0x0,1"
         ];
       };
     }
   ];
 
-  swapDevices = [ {
-    device = "/var/lib/swapfile";
-    size = 16*1024;
-  } ];
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 32 * 1024;
+    }
+  ];
+
+  programs.nix-ld = {
+    enable = true;
+    libraries = pkgs.steam-run.fhsenv.args.multiPkgs pkgs;
+  };
 
   system.stateVersion = "24.05";
 }
