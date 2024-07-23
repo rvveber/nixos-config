@@ -1,6 +1,4 @@
-# Edit this configuration file to define what should be installed on
-# your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+# host specific configuration that can't be encapsulated in re-usable modules atm.
 {
   config,
   pkgs,
@@ -46,9 +44,9 @@
     {
       wayland.windowManager.hyprland.settings = {
         monitor = [
-          "DP-1,2560x1440@59.95Hz,0x0,1"
-          "HDMI-A-1,2560x1440@144.00Hz,2560x0,1"
-          "eDP-1,2880x1800@120.00Hz,5120x0,2"
+          "DP-1,2560x1440@59.95Hz,0x0,1.6"
+          "HDMI-A-1,2560x1440@144.00Hz,1600x0,1"
+          "eDP-1,2880x1800@120.00Hz,4160x0,2"
         ];
       };
     }

@@ -6,6 +6,8 @@
   home-manager,
   ...
 }: {
+  # TODO: find out where the translated directory name for "Bilder/Bildschirmfotos" comes, and find a way to link it dynamically.
+
   imports = [
     ../../../add/software/home-manager.nix
     stylix.nixosModules.stylix
@@ -24,6 +26,10 @@
     grim
     slurp
     satty
+
+    # copy/paste
+    wl-copy
+    wl-paste
   ];
 
   programs.hyprland.enable = true;
@@ -41,8 +47,12 @@
         "$terminal" = ["kitty"];
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
-        "$screenshot" = ["grim -g \"$(slurp -o -r -c '#ff0000ff')\" - | satty --filename - --fullscreen --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png"];
-        input.kb_layout = [config.console.keyMap];
+        "$screenshot" = ["grim -g \"$(slurp -o -r -c '#ff0000ff')\" - | satty --filename - --fullscreen --output-filename ~/Bilder/Bildschirmfotos/satty-$(date '+%Y%m%d-%H:%M:%S').png"];
+        input = {
+          kb_layout = [config.console.keyMap];
+          sensitivity = "0.5";
+          accel_profile = "flat";
+        };
         monitor = [
           ",preferred,auto,auto"
         ];
@@ -126,7 +136,7 @@
           "easeOutExpo,0.16,1,0.3,1"
         ];
         animation = [
-          "global,1,4,easeOutExpo"
+          "global,1,5,easeOutExpo"
           #"border,1,3,blink"
           #"window,1,2,easeInOutQuint,popin 85%"
           #"layersIn,1,3,blink"

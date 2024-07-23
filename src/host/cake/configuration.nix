@@ -1,9 +1,7 @@
+# host specific configuration that can't be encapsulated in re-usable modules atm.
 {
   config,
-  pkgs,
   lib,
-  nixpkgs,
-  home-manager,
   ...
 }: {
   nix.settings.experimental-features = ["nix-command" "flakes"];
