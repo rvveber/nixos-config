@@ -15,9 +15,13 @@
 
   # Frontend choices
   environment.systemPackages = with pkgs; [
+    # hyprland essentials
     xdg-desktop-portal-hyprland
     hyprpaper
     hyprpicker
+
+    # theme essentials
+    wl-clipboard
     ags
     wofi
     kitty
@@ -26,10 +30,6 @@
     grim
     slurp
     satty
-
-    # copy/paste
-    wl-copy
-    wl-paste
   ];
 
   programs.hyprland.enable = true;
