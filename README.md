@@ -69,28 +69,26 @@ cp -r src/user/i src/user/$(whoami)
 ```
 10. Test, that everything is working
 ```shell
-sudo bin/switch
+bin/switch
 ```
 11. Done! You now have a minimal multi-host, multi-user NixOS configuration
 ***
 
 ### Updating
-Update all packages, by simply running `bin/update` and apply with `sudo bin/switch`
+Update the system by running `bin/update` and `bin/switch` afterwards.
+
+### Garbage Collection
+Simple. Run `bin/collect-garbage`.
+Info: This deletes older boot entries too.
 
 ### Development
-You will most likely want expand this configuration, you're in luck, because thats exactly what this repository aims to assist you with. 
+If you enable the development module (optional) - your nix configuration will automatically be statically checked, 
+formated, and you will get nix-lang language features.
 
-If you'd like to enable nix's development features in general, you'll need to add the `module/add/software/development.nix` module to your hosts default.nix.
+If you'd like to enable development features in general, you'll need to add the `module/add/software/development.nix` module to your hosts default.nix.
 
 Then, the various tools to assist development with nix, will be loaded automatically when you enter the directory where you cloned this repository.
 
-As an added bonus, these scripts will be ran automatically, on `bin/update` and `bin/switch`.
-
-- `bin/lint` to check and (optionally) fix static errors
-- `bin/format` to format the nix configuration to standards
-
-
 ### Future
 This repository is ever evolving, so if you have certain requests featurewise, don't hesitate to create issues.
-I try to keep it minimal, but i'm also using it for myself, in the future i'll create a second repository
-that acts as pure boilerplate and will be even more minimal than now.
+I try to keep it minimal, but i'm also using it for myself, in the future i'll create a second repository that acts as pure boilerplate and will be even more minimal than now.
