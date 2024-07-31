@@ -8,6 +8,7 @@
     pkgs.cachix
     pkgs.devenv
     pkgs.git
+    pkgs.koji # cli tool for conventional commits
   ];
   nix.settings = {
     extra-substituters = [

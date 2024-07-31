@@ -26,7 +26,6 @@
 
   environment.systemPackages = with pkgs; [
     mullvad-vpn
-    mullvad-browser
     steam-run
     atlauncher
     spotify

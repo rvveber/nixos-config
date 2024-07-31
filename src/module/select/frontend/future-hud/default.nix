@@ -6,8 +6,6 @@
   home-manager,
   ...
 }: {
-  # TODO: find out where the translated directory name for "Bilder/Bildschirmfotos" comes, and find a way to link it dynamically.
-
   imports = [
     ../../../add/software/home-manager.nix
     stylix.nixosModules.stylix
@@ -47,7 +45,8 @@
         "$terminal" = ["kitty"];
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
-        "$screenshot" = ["grim -g \"$(slurp -o -r -c '#ff0000ff')\" - | satty --filename - --fullscreen --output-filename ~/Bilder/Bildschirmfotos/satty-$(date '+%Y%m%d-%H:%M:%S').png"];
+        "$screenshot" = ["${toString ./assets/scripts/take-screenshot.sh}"];
+        debug.disable_logs = false;
         input = {
           kb_layout = [config.console.keyMap];
           sensitivity = "0.5";
@@ -103,20 +102,20 @@
           rounding = 15;
           active_opacity = 1;
           inactive_opacity = 1;
-          drop_shadow = true;
-          shadow_range = 24;
-          "col.shadow" = lib.mkForce "rgba(00b4ffee)";
-          "col.shadow_inactive" = lib.mkForce "rgba(00000000)";
-          dim_inactive = true;
-          dim_strength = 0.1;
+          #drop_shadow = true;
+          #shadow_range = 24;
+          #"col.shadow" = lib.mkForce "rgba(00b4ffee)";
+          #"col.shadow_inactive" = lib.mkForce "rgba(00000000)";
+          #dim_inactive = true;
+          #dim_strength = 0.1;
         };
         general = {
           gaps_in = 6;
           gaps_out = 12;
           border_size = 3;
           layout = "dwindle";
-          "col.inactive_border" = lib.mkForce "rgba(00000000)";
-          "col.active_border" = lib.mkForce "rgba(80d9ffff)";
+          #"col.inactive_border" = lib.mkForce "rgba(00000000)";
+          #"col.active_border" = lib.mkForce "rgba(80d9ffff)";
         };
         misc = {
           force_default_wallpaper = 0;
@@ -136,7 +135,7 @@
           "easeOutExpo,0.16,1,0.3,1"
         ];
         animation = [
-          "global,1,5,easeOutExpo"
+          #"global,1,5,easeOutExpo"
           #"border,1,3,blink"
           #"window,1,2,easeInOutQuint,popin 85%"
           #"layersIn,1,3,blink"
@@ -155,9 +154,9 @@
   # Stylix configuration
   stylix = {
     enable = true;
-    cursor.package = pkgs.breeze-hacked-cursor-theme;
+    cursor.package = pkgs.bibata-cursors;
     fonts.serif = config.stylix.fonts.sansSerif;
-    cursor.name = "Breeze_Hacked";
+    cursor.name = "Bibata-Modern-Ice";
     polarity = "dark";
     image = ./assets/background/scene.png;
     opacity.terminal = 0.5;

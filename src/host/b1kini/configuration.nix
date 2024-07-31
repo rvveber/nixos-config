@@ -38,6 +38,14 @@
     neovim
     vscode
     chromium
+
+    logseq
+    mullvad-vpn
+    inkscape
+  ];
+
+  nixpkgs.config.permittedInsecurePackages = [
+    "electron-27.3.11" # EOL Electron - needed for LogSeq
   ];
 
   home-manager.sharedModules = [
@@ -45,7 +53,7 @@
       wayland.windowManager.hyprland.settings = {
         monitor = [
           "DP-1,2560x1440@59.95Hz,0x0,1.6"
-          "HDMI-A-1,2560x1440@144.00Hz,1600x0,1"
+          "HDMI-A-1,2560x1440@59.95Hz,1600x0,1"
           "eDP-1,2880x1800@120.00Hz,4160x0,2"
         ];
       };
