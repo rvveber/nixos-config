@@ -6,10 +6,7 @@
   ...
 }: {
   nix.settings.experimental-features = ["nix-command" "flakes"];
-
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernel.sysctl = {"vm.swappiness" = 70;};
-  #boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
+  boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -19,8 +16,8 @@
 
   services.xserver = {
     enable = true;
-    displayManager.gdm.enable = true;
-    desktopManager.gnome.enable = true;
+    #displayManager.gdm.enable = true;
+    #desktopManager.gnome.enable = true;
   };
 
   nixpkgs.config.allowUnfree = true;
@@ -35,7 +32,6 @@
     chromium
     pureref
     btop
-    flameshot
     inkscape
   ];
 
@@ -55,13 +51,6 @@
           "HDMI-A-1,2560x1440@119.99Hz,2560x0,1"
         ];
       };
-    }
-  ];
-
-  swapDevices = [
-    {
-      device = "/var/lib/swapfile";
-      size = 32 * 1024;
     }
   ];
 

@@ -1,0 +1,1 @@
+Hosts are always named after the (really good) [mnemonic wordlist](https://gist.github.com/bwbaugh/bf78612ef58ad0402a05)

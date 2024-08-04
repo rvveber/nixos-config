@@ -17,6 +17,7 @@
     xdg-desktop-portal-hyprland
     hyprpaper
     hyprpicker
+    hyprlock
 
     # theme essentials
     wl-clipboard
@@ -36,9 +37,50 @@
   # Suggest applications to use native wayland instead of xorg (xwayland)
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
+  # Stylix configuration
+  stylix = {
+    enable = true;
+    autoEnable = true;
+    base16Scheme = {
+      slug = "FHUD";
+      author = "github.com/rvveber";
+      scheme = "FHUD";
+      base00 = "#020708";
+      base01 = "#040b0c";
+      base02 = "#050e10";
+      base03 = "#232d2f";
+      base04 = "#3d4f51";
+      base05 = "#89dfec";
+      base06 = "#89dfec";
+      base07 = "#89dfec";
+      base08 = "#ed8ca8";
+      base09 = "#e4d386";
+      base0A = "#f2e8b5";
+      base0B = "#33daff";
+      base0C = "#33daff";
+      base0D = "#33daff";
+      base0E = "#33daff";
+      base0F = "#33daff";
+      base10 = "#040b0c";
+      base11 = "#020708";
+      base12 = "#e44471";
+      base13 = "#e5be0c";
+      base14 = "#33daff";
+      base15 = "#33daff";
+      base16 = "#47bcff";
+      base17 = "#318bf2";
+    };
+    cursor.package = pkgs.bibata-cursors;
+    fonts.serif = config.stylix.fonts.sansSerif;
+    cursor.name = "Bibata-Modern-Ice";
+    polarity = "dark";
+    image = ./assets/background/scene.png;
+    opacity.terminal = 0.5;
+  };
+
   home-manager.sharedModules = [
-    # Hyprland configuration
     {
+      stylix.enable = true;
       wayland.windowManager.hyprland.enable = true;
       wayland.windowManager.hyprland.settings = {
         "$mainMod" = ["SUPER"];
@@ -49,7 +91,7 @@
         debug.disable_logs = false;
         input = {
           kb_layout = [config.console.keyMap];
-          sensitivity = "0.5";
+          sensitivity = "0.4";
           accel_profile = "flat";
         };
         monitor = [
@@ -99,23 +141,11 @@
           "suppressevent maximize, class:.*"
         ];
         decoration = {
-          rounding = 15;
           active_opacity = 1;
           inactive_opacity = 1;
-          #drop_shadow = true;
-          #shadow_range = 24;
-          #"col.shadow" = lib.mkForce "rgba(00b4ffee)";
-          #"col.shadow_inactive" = lib.mkForce "rgba(00000000)";
-          #dim_inactive = true;
-          #dim_strength = 0.1;
         };
         general = {
-          gaps_in = 6;
-          gaps_out = 12;
-          border_size = 3;
           layout = "dwindle";
-          #"col.inactive_border" = lib.mkForce "rgba(00000000)";
-          #"col.active_border" = lib.mkForce "rgba(80d9ffff)";
         };
         misc = {
           force_default_wallpaper = 0;
@@ -142,23 +172,115 @@
           #"fadeLayersIn,1,5,easeOutExpo"
         ];
       };
-    }
-    # Ags configuration
-    {
+      programs.hyprlock.enable = true;
+      programs.hyprlock.settings = {
+        background = [
+          {
+            monitor = "";
+            path = ["${toString ./assets/background/scene.png}"]; # only png supported for now
+            blur_size = 4;
+            blur_passes = 3; # 0 disables blurring
+            noise = 0.0117;
+            contrast = 1.3000; # Vibrant
+            brightness = 0.8000;
+            vibrancy = 0.2100;
+            vibrancy_darkness = 0.0;
+          }
+        ];
+
+        label = [
+          # Hours
+          {
+            monitor = "";
+            text = "cmd[update:1000] echo \"<b><big> $(date +\"%H\") </big></b>\"";
+            color = "rgb(${config.lib.stylix.colors.base06})";
+            font_size = 112;
+            font_family = "Geist Mono 10";
+            shadow_passes = 3;
+            shadow_size = 4;
+
+            position = "0, 220";
+            halign = "center";
+            valign = "center";
+          }
+          # Minutes
+          {
+            monitor = "";
+            text = "cmd[update:1000] echo '<b><big> $(date +'%M') </big></b>'";
+            color = "rgb(${config.lib.stylix.colors.base06})";
+            font_size = 112;
+            font_family = "Geist Mono 10";
+            shadow_passes = 3;
+            shadow_size = 4;
+
+            position = "0, 80";
+            halign = "center";
+            valign = "center";
+          }
+          # Today
+          {
+            monitor = "";
+            text = "cmd[update:18000000] echo '<b><big> '$(date +'%A')' </big></b>'";
+            color = "rgb(${config.lib.stylix.colors.base07})";
+            font_size = 22;
+            font_family = "JetBrainsMono Nerd Font 10";
+
+            position = "0, 30";
+            halign = "center";
+            valign = "center";
+          }
+          # Week
+          {
+            monitor = "";
+            text = "cmd[update:18000000] echo '<b> '$(date +'%d %b')' </b>'";
+            color = "rgb(${config.lib.stylix.colors.base07})";
+            font_size = 18;
+            font_family = "JetBrainsMono Nerd Font 10";
+            position = "0, 6";
+            halign = "center";
+            valign = "center";
+          }
+          # Degrees
+          {
+            monitor = "";
+            text = "cmd[update:18000000] echo '<b>Feels like<big> $(curl -s 'wttr.in?format=%t' | tr -d '+') </big></b>'";
+            color = "rgb(${config.lib.stylix.colors.base07})";
+            font_size = 18;
+            font_family = "Geist Mono 10";
+
+            position = "0, 40";
+            halign = "center";
+            valign = "bottom";
+          }
+        ];
+        input-field = [
+          {
+            monitor = "";
+            size = "250, 50";
+            outline_thickness = "3";
+
+            dots_size = "0.26"; # Scale of input-field height, 0.2 - 0.8
+            dots_spacing = "0.64"; # Scale of dots' absolute size, 0.0 - 1.0
+            dots_center = "true";
+            dots_rounding = "-1";
+
+            rounding = "22";
+            outer_color = "rgb(${config.lib.stylix.colors.base00})";
+            inner_color = "rgb(${config.lib.stylix.colors.base00})";
+            font_color = "rgb(${config.lib.stylix.colors.base06})";
+            fade_on_empty = "true";
+            placeholder_text = "<i>Password...</i>"; # Text rendered in the input box when it's empty.
+
+            position = "0, 120";
+            halign = "center";
+            valign = "bottom";
+          }
+        ];
+      };
+      # Ags configuration
       home.file = {
-        ".config/ags".source = ./assets/configuration/ags;
+        ".config/ags".source = ./assets/widgets;
       };
     }
   ];
-
-  # Stylix configuration
-  stylix = {
-    enable = true;
-    cursor.package = pkgs.bibata-cursors;
-    fonts.serif = config.stylix.fonts.sansSerif;
-    cursor.name = "Bibata-Modern-Ice";
-    polarity = "dark";
-    image = ./assets/background/scene.png;
-    opacity.terminal = 0.5;
-  };
 }

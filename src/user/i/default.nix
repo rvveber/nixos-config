@@ -15,6 +15,8 @@
     ];
   };
 
+  services.greetd.settings.initial_session.user = "i";
+
   imports = [
     home-manager.nixosModules.home-manager
     {
