@@ -14,12 +14,6 @@
   networking.hostName = "cake";
   networking.networkmanager.enable = true;
 
-  services.xserver = {
-    enable = true;
-    #displayManager.gdm.enable = true;
-    #desktopManager.gnome.enable = true;
-  };
-
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
@@ -33,6 +27,7 @@
     pureref
     btop
     inkscape
+    godot_4
   ];
 
   nixpkgs.config = {

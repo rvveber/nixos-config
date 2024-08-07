@@ -12,6 +12,7 @@
     inputs.nixpkgs.follows = "nixpkgs";
     inputs.home-manager.follows = "home-manager";
   };
+  inputs.hyprlock.url = "git+https://github.com/hyprwm/Hyprlock?submodules=1";
 
   outputs = {
     self,
