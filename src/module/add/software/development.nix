@@ -5,9 +5,12 @@
 }: {
   programs.direnv.enable = true;
   environment.systemPackages = [
+    pkgs.git
+    pkgs.gnumake
+    
     pkgs.cachix
     pkgs.devenv
-    pkgs.git
+    
     pkgs.koji # cli tool for conventional commits
   ];
   nix.settings = {
