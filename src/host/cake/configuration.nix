@@ -14,29 +14,12 @@
   networking.hostName = "cake";
   networking.networkmanager.enable = true;
 
-  nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
-    mullvad-vpn
-    steam-run
     atlauncher
-    spotify
-    neovim
-    vscode
-    chromium
     pureref
-    btop
-    inkscape
     godot_4
   ];
-
-  nixpkgs.config = {
-    chromium = {
-      enableWideVine = true;
-    };
-  };
-
-  services.mullvad-vpn.enable = true;
 
   home-manager.sharedModules = [
     {
@@ -49,10 +32,7 @@
     }
   ];
 
-  programs.nix-ld = {
-    enable = true;
-    libraries = pkgs.steam-run.fhsenv.args.multiPkgs pkgs;
-  };
+
 
   system.stateVersion = "24.05";
 }

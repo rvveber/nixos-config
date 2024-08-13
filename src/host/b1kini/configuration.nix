@@ -20,8 +20,6 @@
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
 
-  nixpkgs.config.allowUnfree = true;
-
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
@@ -33,20 +31,8 @@
     kubectl
     kubernetes-helm
     helm-docs
-
-    spotify
-    neovim
-    vscode
-    chromium
-
-    logseq
-    mullvad-vpn
-    inkscape
   ];
 
-  nixpkgs.config.permittedInsecurePackages = [
-    "electron-27.3.11" # EOL Electron - needed for LogSeq
-  ];
 
   home-manager.sharedModules = [
     {
