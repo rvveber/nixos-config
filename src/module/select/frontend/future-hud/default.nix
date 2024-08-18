@@ -30,7 +30,6 @@
       grim
       slurp
       satty
-
       imagemagick
     ];
     sessionVariables = {
