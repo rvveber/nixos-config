@@ -7,10 +7,10 @@
   environment.systemPackages = [
     pkgs.git
     pkgs.gnumake
-    
+
     pkgs.cachix
     pkgs.devenv
-    
+
     pkgs.koji # cli tool for conventional commits
   ];
   nix.settings = {

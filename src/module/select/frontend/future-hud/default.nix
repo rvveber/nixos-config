@@ -11,33 +11,42 @@
     stylix.nixosModules.stylix
   ];
 
-  # Frontend choices
-  environment.systemPackages = with pkgs; [
-    # hyprland essentials
-    xdg-desktop-portal-hyprland
-    hyprpaper
-    hyprpicker
-    hyprlock
+  #############################
+  #region Programs
+  environment = {
+    systemPackages = with pkgs; [
+      # hyprland essentials
+      xdg-desktop-portal-hyprland
+      hyprpaper
+      hyprpicker
+      hyprlock
+      hyprland-workspaces
 
-    # theme essentials
-    wl-clipboard
-    ags
-    wofi
-    kitty
+      # theme essentials
+      wl-clipboard
+      ags
 
-    # screenshots
-    grim
-    slurp
-    satty
-  ];
+      # screenshots
+      grim
+      slurp
+      satty
 
-  programs.hyprland.enable = true;
-  programs.hyprlock.enable = true;
+      imagemagick
+    ];
+    sessionVariables = {
+      NIXOS_OZONE_WL = "1"; # Suggest applications to use native wayland instead of xorg (xwayland)
+    };
+  };
 
-  # Suggest applications to use native wayland instead of xorg (xwayland)
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  programs = {
+    hyprland.enable = true;
+    hyprlock.enable = true;
+  };
+  #endregion
+  #############################
 
-  # Stylix configuration
+  #############################
+  #region Theme
   stylix = {
     enable = true;
     autoEnable = true;
@@ -45,8 +54,8 @@
       slug = "FHUD";
       author = "github.com/rvveber";
       scheme = "FHUD";
-      base00 = "#020708";
-      base01 = "#040b0c";
+      base00 = "#050e10";
+      base01 = "#050e10";
       base02 = "#050e10";
       base03 = "#232d2f";
       base04 = "#3d4f51";
@@ -61,8 +70,8 @@
       base0D = "#33daff";
       base0E = "#33daff";
       base0F = "#33daff";
-      base10 = "#040b0c";
-      base11 = "#020708";
+      base10 = "#050e10";
+      base11 = "#050e10";
       base12 = "#e44471";
       base13 = "#e5be0c";
       base14 = "#33daff";
@@ -75,12 +84,18 @@
     cursor.name = "Bibata-Modern-Ice";
     polarity = "dark";
     image = ./assets/background/scene.png;
-    opacity.terminal = 0.5;
+    opacity.terminal = 0.9;
   };
+  #endregion
+  #############################
 
+  #############################
+  #region Functionality
   home-manager.sharedModules = [
     {
       stylix.enable = true;
+      programs.kitty.enable = true;
+      programs.hyprlock.enable = true;
       wayland.windowManager.hyprland.enable = true;
       wayland.windowManager.hyprland.settings = {
         "$mainMod" = ["SUPER"];
@@ -100,13 +115,21 @@
         bind = [
           "$mainMod, Q, exec, $terminal"
           "$mainMod, C, killactive"
-          "$mainMod + SHIFT, M, exit"
           "$mainMod, E, exec, $fileManager"
           "$mainMod, V, togglefloating,"
+          "$mainMod, F, fullscreen,1"
+          "$mainMod + SHIFT, F, fullscreen,0"
           "$mainMod, R, exec, $menu"
           "$mainMod, S, exec, $screenshot"
           "$mainMod, P, pseudo"
           "$mainMod, J, togglesplit"
+          "$mainMod + SHIFT, M, exit"
+
+          # Move focues with mainMod + ARROWS
+          "$mainMod, LEFT, focuswindow, l"
+          "$mainMod, RIGHT, focuswindow, r"
+          "$mainMod, UP, focuswindow, u"
+          "$mainMod, DOWN, focuswindow, d"
 
           # Switch workspaces with mainMod + [0-9]
           "$mainMod, 1, workspace, 1"
@@ -121,16 +144,16 @@
           "$mainMod, 0, workspace, 10"
 
           # Move active window to a workspace with mainMod + SHIFT + [0-9]
-          "$mainMod SHIFT, 1, movetoworkspace, 1"
-          "$mainMod SHIFT, 2, movetoworkspace, 2"
-          "$mainMod SHIFT, 3, movetoworkspace, 3"
-          "$mainMod SHIFT, 4, movetoworkspace, 4"
-          "$mainMod SHIFT, 5, movetoworkspace, 5"
-          "$mainMod SHIFT, 6, movetoworkspace, 6"
-          "$mainMod SHIFT, 7, movetoworkspace, 7"
-          "$mainMod SHIFT, 8, movetoworkspace, 8"
-          "$mainMod SHIFT, 9, movetoworkspace, 9"
-          "$mainMod SHIFT, 0, movetoworkspace, 10"
+          "$mainMod SHIFT, 1, movetoworkspacesilent, 1"
+          "$mainMod SHIFT, 2, movetoworkspacesilent, 2"
+          "$mainMod SHIFT, 3, movetoworkspacesilent, 3"
+          "$mainMod SHIFT, 4, movetoworkspacesilent, 4"
+          "$mainMod SHIFT, 5, movetoworkspacesilent, 5"
+          "$mainMod SHIFT, 6, movetoworkspacesilent, 6"
+          "$mainMod SHIFT, 7, movetoworkspacesilent, 7"
+          "$mainMod SHIFT, 8, movetoworkspacesilent, 8"
+          "$mainMod SHIFT, 9, movetoworkspacesilent, 9"
+          "$mainMod SHIFT, 0, movetoworkspacesilent, 10"
         ];
         bindm = [
           # Move/resize windows with mainMod + LMB/RMB and dragging
@@ -147,6 +170,13 @@
         general = {
           layout = "dwindle";
         };
+        dwindle = {
+          preserve_split = true;
+          smart_split = true;
+          smart_resizing = true;
+          # default_split_ratio of phi calculate with nix lang
+          # default_split_ratio = 0.618033;
+        };
         misc = {
           force_default_wallpaper = 0;
           disable_hyprland_logo = true;
@@ -155,6 +185,7 @@
           blur = {
             enabled = true;
           };
+          #screen_shader = "${toString ./assets/shader.frag}";
         };
         xwayland = {
           force_zero_scaling = true;
@@ -179,7 +210,11 @@
       };
     }
   ];
+  #endregion
+  #############################
 
+  #############################
+  #region Lockscreen
   environment.etc."xdg/hypr/hyprlock.conf".text = ''
     background {
         monitor =
@@ -188,7 +223,7 @@
         blur_size = 4
         blur_passes = 3 # 0 disables blurring
         noise = 0.0117
-        contrast = 1.3000 # Vibrant!!!
+        contrast = 1.3000
         brightness = 0.8000
         vibrancy = 0.2100
         vibrancy_darkness = 0.0
@@ -285,4 +320,6 @@
         valign = bottom
     }
   '';
+  #endregion
+  #############################
 }
