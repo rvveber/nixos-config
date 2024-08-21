@@ -102,7 +102,7 @@
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
         "$screenshot" = ["${toString ./assets/scripts/take-screenshot.sh}"];
-        debug.disable_logs = false;
+        debug.disable_logs = true;
         input = {
           kb_layout = [config.console.keyMap];
           sensitivity = "0.4";
@@ -168,6 +168,8 @@
         };
         general = {
           layout = "dwindle";
+          gaps_in = 2;
+          gaps_out = 2;
         };
         dwindle = {
           preserve_split = true;
@@ -195,7 +197,7 @@
           "easeOutExpo,0.16,1,0.3,1"
         ];
         animation = [
-          #"global,1,5,easeOutExpo"
+          "global,1,5,easeOutExpo"
           #"border,1,3,blink"
           #"window,1,2,easeInOutQuint,popin 85%"
           #"layersIn,1,3,blink"

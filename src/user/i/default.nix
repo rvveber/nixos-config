@@ -12,10 +12,26 @@
     extraGroups = ["networkmanager" "wheel"];
     packages = with pkgs; [
       thunderbird
+      spotify
+      neovim
+      vscode
+      chromium
+      logseq
+      mullvad-vpn
+      inkscape
+      ranger
     ];
   };
-
+ 
+  nixpkgs.config.chromium.enableWideVine = true;
+  # TODO: Move to free options exclusively
+  nixpkgs.config.allowUnfree = true;
+  # TODO: Remove once unnecessary
+  nixpkgs.config.permittedInsecurePackages = [
+    "electron-27.3.11" # EOL Electron - needed for LogSeq
+  ];
   services.greetd.settings.initial_session.user = "i";
+  services.mullvad-vpn.enable = true;
 
   imports = [
     home-manager.nixosModules.home-manager

@@ -12,6 +12,7 @@
 
     ../../module/add/software/gnupg-agent.nix
     ../../module/add/software/development.nix
-    ../../module/add/software/docker.nix
+    ../../module/add/software/containerization.nix
+    ../../module/add/software/virtualization.nix
   ];
 }
