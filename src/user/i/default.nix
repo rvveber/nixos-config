@@ -22,7 +22,7 @@
       ranger
     ];
   };
- 
+
   nixpkgs.config.chromium.enableWideVine = true;
   # TODO: Move to free options exclusively
   nixpkgs.config.allowUnfree = true;

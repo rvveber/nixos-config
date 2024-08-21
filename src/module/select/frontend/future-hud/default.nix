@@ -21,9 +21,13 @@
       hyprpicker
       hyprlock
       hyprland-workspaces
+      hyprpicker    # screen-space color picker
+      hyprshade
 
-      # theme essentials
+      # frontend essentials
       wl-clipboard
+
+      # frontend widgets
       ags
 
       # screenshots

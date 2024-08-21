@@ -14,7 +14,6 @@
   networking.hostName = "cake";
   networking.networkmanager.enable = true;
 
-
   environment.systemPackages = with pkgs; [
     atlauncher
     pureref
@@ -31,8 +30,6 @@
       };
     }
   ];
-
-
 
   system.stateVersion = "24.05";
 }

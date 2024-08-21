@@ -33,7 +33,6 @@
     helm-docs
   ];
 
-
   home-manager.sharedModules = [
     {
       wayland.windowManager.hyprland.settings = {
