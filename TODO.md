@@ -1,0 +1,1 @@
+- [ ] Find out, what is more scalable, system wide configuration, or home-manager and if we need to use one or the other, or if we can use both

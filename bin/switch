@@ -28,6 +28,7 @@ fi
 
 # execute git add src - to have new files tracked and available in the nix store, important for flake mechanism
 git add "${DIR_ROOT}/src"
+git commit -m "autocommit new configuration for switch"
 
 # Syncing the src directory to /etc/nixos for compatiblity sake and rebuild the system configuration
 #sudo rsync -az --no-p --no-g --chown=root:root --chmod=ugo=rwX --delete "${DIR_ROOT}/src/" /etc/nixos
