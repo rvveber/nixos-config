@@ -11,8 +11,6 @@
     stylix.nixosModules.stylix
   ];
 
-  #############################
-  #region Programs
   environment = {
     systemPackages = with pkgs; [
       # hyprland essentials
@@ -45,11 +43,7 @@
     hyprland.enable = true;
     hyprlock.enable = true;
   };
-  #endregion
-  #############################
 
-  #############################
-  #region Theme
   stylix = {
     enable = true;
     autoEnable = true;
@@ -86,14 +80,10 @@
     fonts.serif = config.stylix.fonts.sansSerif;
     cursor.name = "Bibata-Modern-Ice";
     polarity = "dark";
-    image = ./assets/background/scene.png;
+    image = ./assets/background/crisp_ui.png;
     opacity.terminal = 0.9;
   };
-  #endregion
-  #############################
 
-  #############################
-  #region Functionality
   home-manager.sharedModules = [
     {
       stylix.enable = true;
@@ -215,15 +205,11 @@
       };
     }
   ];
-  #endregion
-  #############################
 
-  #############################
-  #region Lockscreen
   environment.etc."xdg/hypr/hyprlock.conf".text = ''
     background {
         monitor =
-        path = ${toString ./assets/background/scene.png} # only png supported for now
+        path = ${toString ./assets/background/crisp_ui.png} # only png supported for now
         # all these options are taken from hyprland, see https://wiki.hyprland.org/Configuring/Variables/#blur for explanations
         blur_size = 4
         blur_passes = 3 # 0 disables blurring
@@ -325,6 +311,5 @@
         valign = bottom
     }
   '';
-  #endregion
-  #############################
+
 }

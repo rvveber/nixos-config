@@ -31,5 +31,20 @@
     }
   ];
 
+  # the store can be optimised during every build. This may slow down build
+  nix.settings.auto-optimise-store = true;
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
+  };
+
+  services.trezord.enable = true;
+
+  programs.nix-ld = {
+    enable = true;
+    libraries = pkgs.steam-run.fhsenv.args.multiPkgs pkgs;
+  };
+
   system.stateVersion = "24.05";
 }
