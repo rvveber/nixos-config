@@ -24,13 +24,25 @@
     fsType = "ext4";
   };
 
-  boot.initrd.luks.devices."luks-487c565a-3e00-4364-bd6b-2779040432ff".device = "/dev/disk/by-uuid/487c565a-3e00-4364-bd6b-2779040432ff";
-
   fileSystems."/boot" = {
     device = "/dev/disk/by-uuid/C09B-0309";
     fsType = "vfat";
     options = ["fmask=0022" "dmask=0022"];
   };
+
+  boot.initrd.luks.devices."luks-487c565a-3e00-4364-bd6b-2779040432ff" = {
+    device = "/dev/disk/by-uuid/487c565a-3e00-4364-bd6b-2779040432ff";
+    allowDiscards = true; #TODO investigate if explicitly necessary for TRIM
+  };
+  
+  # periodic TRIM 
+  services.fstrim = {
+    enable = true;
+    interval= "weekly"; # the default
+  };
+
+
+
 
   swapDevices = [];
 

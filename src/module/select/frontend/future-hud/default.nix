@@ -99,8 +99,9 @@
         debug.disable_logs = true;
         input = {
           kb_layout = [config.console.keyMap];
-          sensitivity = "0.4";
+          sensitivity = "0.31";
           accel_profile = "flat";
+          force_no_accel = true;
         };
         monitor = [
           ",preferred,auto,auto"
