@@ -17,9 +17,8 @@
       vscode
       chromium
       logseq
-      mullvad-vpn
       inkscape
-      ranger
+      yazi
     ];
   };
 

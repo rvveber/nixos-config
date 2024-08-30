@@ -19,7 +19,7 @@
       hyprpicker
       hyprlock
       hyprland-workspaces
-      hyprpicker    # screen-space color picker
+      hyprpicker # screen-space color picker
       hyprshade
 
       # frontend essentials
@@ -202,7 +202,8 @@
 
       # Ags configuration
       home.file = {
-        ".config/ags".source = ./assets/widgets;
+        ".config/ags/config.js".source = ./assets/widgets/config.js;
+        ".config/ags/applauncher.js".source = ./assets/widgets/applauncher.js;
       };
     }
   ];
@@ -312,5 +313,4 @@
         valign = bottom
     }
   '';
-
 }
