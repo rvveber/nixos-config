@@ -6,44 +6,30 @@
   home-manager,
   ...
 }: {
+  # dependencies
   imports = [
-    ../../../add/software/home-manager.nix
+    ../../../../../add/application/home-manager.nix
+    ../../../../../add/frontend/wayland-hyprland.nix
     stylix.nixosModules.stylix
   ];
-
   environment = {
     systemPackages = with pkgs; [
-      # hyprland essentials
-      xdg-desktop-portal-hyprland
-      hyprpaper
-      hyprpicker
-      hyprlock
-      hyprland-workspaces
-      hyprpicker # screen-space color picker
+      # hyprland extras
       hyprshade
+      hyprlock
 
-      # frontend essentials
-      wl-clipboard
-
-      # frontend widgets
+      # UI
       ags
 
-      # screenshots
+      # screenshotting
       grim
       slurp
       satty
       imagemagick
     ];
-    sessionVariables = {
-      NIXOS_OZONE_WL = "1"; # Suggest applications to use native wayland instead of xorg (xwayland)
-    };
   };
 
-  programs = {
-    hyprland.enable = true;
-    hyprlock.enable = true;
-  };
-
+  # Theme
   stylix = {
     enable = true;
     autoEnable = true;
@@ -76,14 +62,16 @@
       base16 = "#47bcff";
       base17 = "#318bf2";
     };
+    opacity.terminal = 0.9;
     cursor.package = pkgs.bibata-cursors;
     fonts.serif = config.stylix.fonts.sansSerif;
     cursor.name = "Bibata-Modern-Ice";
     polarity = "dark";
-    image = ./assets/background/crisp_ui.png;
-    opacity.terminal = 0.9;
+    # background
+    image = ./src/background/crisp_ui.png;
   };
 
+  # Hyprland
   home-manager.sharedModules = [
     {
       stylix.enable = true;
@@ -95,7 +83,7 @@
         "$terminal" = ["kitty"];
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
-        "$screenshot" = ["${toString ./assets/scripts/take-screenshot.sh}"];
+        "$screenshot" = ["${toString ./src/scripts/take-screenshot.sh}"];
         debug.disable_logs = true;
         input = {
           kb_layout = [config.console.keyMap];
@@ -181,7 +169,7 @@
           blur = {
             enabled = true;
           };
-          #screen_shader = "${toString ./assets/shader.frag}";
+          #screen_shader = "${toString ./src/shader.frag}";
         };
         xwayland = {
           force_zero_scaling = true;
@@ -202,16 +190,20 @@
 
       # Ags configuration
       home.file = {
-        ".config/ags/config.js".source = ./assets/widgets/config.js;
-        ".config/ags/applauncher.js".source = ./assets/widgets/applauncher.js;
+        ".config/ags" = {
+          source = ./src/widgets;
+          recursive = true;
+        };
       };
     }
   ];
 
+  # Lockscreen
+  programs.hyprlock.enable = true;
   environment.etc."xdg/hypr/hyprlock.conf".text = ''
     background {
         monitor =
-        path = ${toString ./assets/background/crisp_ui.png} # only png supported for now
+        path = ${toString ./src/background/crisp_ui.png} # only png supported for now
         # all these options are taken from hyprland, see https://wiki.hyprland.org/Configuring/Variables/#blur for explanations
         blur_size = 4
         blur_passes = 3 # 0 disables blurring

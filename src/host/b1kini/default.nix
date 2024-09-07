@@ -1,18 +1,22 @@
 {...}: {
   imports = [
-    ./hardware-configuration.nix
-    ./configuration.nix
+    # concrete
+    ./hardware.nix
+    ./customization.nix
 
-    ../../module/add/software/home-manager.nix
-    ../../module/select/locale/de_DE.nix
-    ../../module/select/frontend/future-hud
+    # abstract
+    ../../module/add/purpose/development.nix
+    ../../module/add/purpose/containerization.nix
+    ../../module/add/purpose/virtualization.nix
 
     ../../module/add/hardware/media.nix
     ../../module/add/hardware/bluetooth.nix
+    ../../module/add/hardware/ssd.nix
 
-    ../../module/add/software/gnupg-agent.nix
-    ../../module/add/software/development.nix
-    ../../module/add/software/containerization.nix
-    ../../module/add/software/virtualization.nix
+    ../../module/add/application/home-manager.nix
+    ../../module/add/application/gnupg-agent.nix
+
+    ../../module/select/locale/de_DE
+    ../../module/select/customization/frontend/wayland-hyprland
   ];
 }

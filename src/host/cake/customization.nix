@@ -1,4 +1,8 @@
-# host specific configuration that can't be encapsulated in re-usable modules atm.
+# Place host specific configuration here. 
+# (Initially copied from configuration.nix)
+#
+# Either if you want to override something a module defines.
+# Or if you want to add something quickly, without thinking about how to encapsulate it in a module.
 {
   config,
   lib,
@@ -18,6 +22,7 @@
     atlauncher
     pureref
     godot_4
+    blender
   ];
 
   home-manager.sharedModules = [
