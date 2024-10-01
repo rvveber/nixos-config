@@ -12,6 +12,7 @@
     pkgs.devenv
 
     pkgs.koji # cli tool for conventional commits
+    pkgs.git-absorb # https://github.com/tummychow/git-absorb
   ];
   nix.settings = {
     extra-substituters = [
