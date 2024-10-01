@@ -17,6 +17,6 @@
     ../../module/add/application/gnupg-agent.nix
 
     ../../module/select/locale/de_DE
-    ../../module/select/customization/frontend/wayland-hyprland
+    ../../module/select/customization/frontend/wayland-hyprland/rvveber-fhud
   ];
 }
