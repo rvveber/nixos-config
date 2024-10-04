@@ -83,7 +83,8 @@
         "$terminal" = ["kitty"];
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
-        "$screenshot" = ["${toString ./src/scripts/take-screenshot.sh}"];
+        "$take_screenshot" = ["${toString ./src/scripts/take-screenshot.sh}"];
+        "$resize_to_direction" = ["${toString ./src/scripts/resize-to-direction.sh}"];
         debug.disable_logs = true;
         input = {
           kb_layout = [config.console.keyMap];
@@ -95,23 +96,42 @@
           ",preferred,auto,auto"
         ];
         bind = [
-          "$mainMod, Q, exec, $terminal"
-          "$mainMod, C, killactive"
+          "$mainMod, $mainMod_L, exec, $menu"
+          "$mainMod, $mainMod_R, exec, $menu"
+
+          "$mainMod, Return, exec, $terminal"
+          "$mainMod, Q, killactive"
           "$mainMod, E, exec, $fileManager"
           "$mainMod, V, togglefloating,"
           "$mainMod, F, fullscreen,1"
           "$mainMod + SHIFT, F, fullscreen,0"
-          "$mainMod, R, exec, $menu"
-          "$mainMod, S, exec, $screenshot"
+          "$mainMod, S, exec, $take_screenshot"
           "$mainMod, P, pseudo"
           "$mainMod, J, togglesplit"
           "$mainMod + SHIFT, M, exit"
 
+          # kill mode, where you can kill an app by clicking on it
+          "$mainMod + SHIFT, Q, exec, hyprctl kill"
+
           # Move focues with mainMod + ARROWS
-          "$mainMod, LEFT, focuswindow, l"
-          "$mainMod, RIGHT, focuswindow, r"
-          "$mainMod, UP, focuswindow, u"
-          "$mainMod, DOWN, focuswindow, d"
+          "$mainMod, LEFT, movefocus, l"
+          "$mainMod, RIGHT, movefocus, r"
+          "$mainMod, UP, movefocus, u"
+          "$mainMod, DOWN, movefocus, d"
+
+          # Move window into direction
+          "$mainMod SHIFT, LEFT, movewindow, l"
+          "$mainMod SHIFT, RIGHT, movewindow, r"
+          "$mainMod SHIFT, UP, movewindow, u"
+          "$mainMod SHIFT, DOWN, movewindow, d"
+
+          # Change distribution into a direction by fibonacci sequence
+
+          "$mainMod Ctrl_L, LEFT, exec, $resize_to_direction l"
+          "$mainMod Ctrl_L, RIGHT, exec, $resize_to_direction r"
+          "$mainMod Ctrl_L, UP, exec, $resize_to_direction u"
+          "$mainMod Ctrl_L, DOWN, exec, $resize_to_direction d"
+
 
           # Switch workspaces with mainMod + [0-9]
           "$mainMod, 1, workspace, 1"
@@ -137,6 +157,7 @@
           "$mainMod SHIFT, 9, movetoworkspacesilent, 9"
           "$mainMod SHIFT, 0, movetoworkspacesilent, 10"
         ];
+        # m -> mouse
         bindm = [
           # Move/resize windows with mainMod + LMB/RMB and dragging
           "$mainMod, mouse:272, movewindow"

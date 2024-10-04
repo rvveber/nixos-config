@@ -1,4 +1,4 @@
-# Place host specific configuration here. 
+# Place host specific configuration here.
 # (Initially copied from configuration.nix)
 #
 # Either if you want to override something a module defines.
