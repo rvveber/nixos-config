@@ -3,7 +3,11 @@
   config,
   ...
 }: {
-  # TODO: incorperate into containerization.nix and make choosable via options
+  # dependencies
+  imports = [
+    ../../../../add/application/containerization.nix
+  ];
+  
   virtualisation.docker.enable = true;
   virtualisation.docker.rootless = {
     enable = true;

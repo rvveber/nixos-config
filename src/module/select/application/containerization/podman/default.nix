@@ -3,8 +3,11 @@
   config,
   ...
 }: {
-  # Enable common container config files in /etc/containers
-  virtualisation.containers.enable = true;
+  # dependencies
+  imports = [
+    ../../../../add/application/containerization.nix
+  ];
+
   virtualisation = {
     podman = {
       enable = true;
