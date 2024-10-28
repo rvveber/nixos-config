@@ -84,7 +84,6 @@
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
         "$take_screenshot" = ["${toString ./src/scripts/take-screenshot.sh}"];
-        "$resize_to_direction" = ["${toString ./src/scripts/resize-to-direction.sh}"];
         debug.disable_logs = true;
         input = {
           kb_layout = [config.console.keyMap];
@@ -124,13 +123,6 @@
           "$mainMod SHIFT, RIGHT, movewindow, r"
           "$mainMod SHIFT, UP, movewindow, u"
           "$mainMod SHIFT, DOWN, movewindow, d"
-
-          # Change distribution into a direction by fibonacci sequence
-
-          "$mainMod Ctrl_L, LEFT, exec, $resize_to_direction l"
-          "$mainMod Ctrl_L, RIGHT, exec, $resize_to_direction r"
-          "$mainMod Ctrl_L, UP, exec, $resize_to_direction u"
-          "$mainMod Ctrl_L, DOWN, exec, $resize_to_direction d"
 
           # Switch workspaces with mainMod + [0-9]
           "$mainMod, 1, workspace, 1"
@@ -178,8 +170,6 @@
           preserve_split = true;
           smart_split = true;
           smart_resizing = true;
-          # default_split_ratio of phi calculate with nix lang
-          # default_split_ratio = 0.618033;
         };
         misc = {
           force_default_wallpaper = 0;
