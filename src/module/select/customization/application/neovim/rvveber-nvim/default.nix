@@ -18,10 +18,10 @@
     unzip
     zig
     nerdfonts
-
-    # development with typescript
   ];
-
+  environment.sessionVariables = {
+    MYVIMRC = builtins.toString ./src/config/init.lua;
+  };
   # nvim configuration
   home-manager.sharedModules = [
     {

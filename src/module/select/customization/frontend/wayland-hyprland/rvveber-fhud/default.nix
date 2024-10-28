@@ -132,7 +132,6 @@
           "$mainMod Ctrl_L, UP, exec, $resize_to_direction u"
           "$mainMod Ctrl_L, DOWN, exec, $resize_to_direction d"
 
-
           # Switch workspaces with mainMod + [0-9]
           "$mainMod, 1, workspace, 1"
           "$mainMod, 2, workspace, 2"

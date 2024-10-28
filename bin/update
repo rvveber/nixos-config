@@ -23,6 +23,6 @@ fi
 # execute git add src - to have new files tracked and available in the nix store, important for flake mechanism
 git add "${DIR_ROOT}/src"
 
-nix flake update "${DIR_ROOT}/src" \
+nix flake update --flake "${DIR_ROOT}/src" \
 	--extra-experimental-features nix-command \
 	--extra-experimental-features flakes

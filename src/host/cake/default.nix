@@ -16,7 +16,7 @@
     ../../module/add/application/gaming.nix
 
     ../../module/select/locale/de_DE
-    
+
     ../../module/select/customization/frontend/wayland-hyprland/rvveber-fhud
   ];
 }

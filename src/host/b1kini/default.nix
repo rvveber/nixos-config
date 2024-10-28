@@ -16,7 +16,7 @@
     ../../module/select/application/containerization/docker
 
     ../../module/select/locale/de_DE
-    
+
     ../../module/select/customization/frontend/wayland-hyprland/rvveber-fhud
   ];
 }
