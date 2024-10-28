@@ -10,7 +10,9 @@
   ...
 }: {
   nix.settings.experimental-features = ["nix-command" "flakes"];
-  boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
+  # boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
+
+  boot.kernelParams = ["nvidia.NVreg_PreserveVideoMemoryAllocations=1"];
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
@@ -18,9 +20,12 @@
   networking.hostName = "cake";
   networking.networkmanager.enable = true;
 
+  # Enable the GNOME Desktop Environment.
+  # services.xserver.displayManager.gdm.enable = true;
+  # services.xserver.desktopManager.gnome.enable = true;
+
   environment.systemPackages = with pkgs; [
     atlauncher
-    pureref
     godot_4
     blender
   ];
@@ -37,7 +42,7 @@
   ];
 
   # the store can be optimised during every build. This may slow down build
-  nix.settings.auto-optimise-store = true;
+  #nix.settings.auto-optimise-store = true;
   nix.gc = {
     automatic = true;
     dates = "weekly";

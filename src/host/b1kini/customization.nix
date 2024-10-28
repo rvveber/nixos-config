@@ -33,6 +33,12 @@
     helm-docs
   ];
 
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
+  };
+
   home-manager.sharedModules = [
     {
       wayland.windowManager.hyprland.settings = {
