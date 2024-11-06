@@ -40,4 +40,20 @@
     "electron-27.3.11" # EOL Electron - needed for LogSeq
   ];
   services.greetd.settings.initial_session.user = "i";
+
+  # use zsh shell and customize
+  imports = [../../module/select/application/shell/zsh];
+  users.users.i.shell = pkgs.zsh;
+  programs.zsh = {
+    ohMyZsh = {
+      enable = true;
+      plugins = [
+        "git"
+        "zsh-autosuggestions"
+        "zsh-syntax-highlighting"
+        "you-should-use"
+      ];
+    };
+    promptInit = "source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
+  };
 }

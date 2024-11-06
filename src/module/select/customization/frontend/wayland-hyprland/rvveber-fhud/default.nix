@@ -75,8 +75,13 @@
   home-manager.sharedModules = [
     {
       stylix.enable = true;
-      programs.kitty.enable = true;
-      programs.hyprlock.enable = true;
+      programs.kitty = {
+        enable = true;
+        settings = {
+          confirm_os_window_close = 0;
+          enable_audio_bell = false;
+        };
+      };
       wayland.windowManager.hyprland.enable = true;
       wayland.windowManager.hyprland.settings = {
         "$mainMod" = ["SUPER"];
@@ -108,6 +113,9 @@
           "$mainMod, P, pseudo"
           "$mainMod, J, togglesplit"
           "$mainMod + SHIFT, M, exit"
+
+          # lock the screen
+          "$mainMod, L, exec, hyprlock"
 
           # kill mode, where you can kill an app by clicking on it
           "$mainMod + SHIFT, Q, exec, hyprctl kill"
@@ -153,6 +161,10 @@
           # Move/resize windows with mainMod + LMB/RMB and dragging
           "$mainMod, mouse:272, movewindow"
           "$mainMod, mouse:273, resizewindow"
+        ];
+        bindl = [
+          ", switch:Lid Switch, exec, hyprlock"
+          #", switch:on:Lid Switch, exec, hyprctl keyword monitor eDP-1, disable"
         ];
         windowrulev2 = [
           "suppressevent maximize, class:.*"
@@ -229,7 +241,7 @@
         monitor =
         text = cmd[update:1000] echo "<b><big> $(date +"%H") </big></b>"
         color = rgb(${config.lib.stylix.colors.base06})
-        font_size = 112
+        font_size = 55
         font_family = Geist Mono 10
         shadow_passes = 3
         shadow_size = 4
@@ -244,12 +256,12 @@
         monitor =
         text = cmd[update:1000] echo "<b><big> $(date +"%M") </big></b>"
         color = rgb(${config.lib.stylix.colors.base06})
-        font_size = 112
+        font_size = 55
         font_family = Geist Mono 10
         shadow_passes = 3
         shadow_size = 4
 
-        position = 0, 80
+        position = 0, 120
         halign = center
         valign = center
     }
@@ -262,7 +274,7 @@
         font_size = 22
         font_family = JetBrainsMono Nerd Font 10
 
-        position = 0, 30
+        position = 0, 40
         halign = center
         valign = center
     }
