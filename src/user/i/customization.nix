@@ -13,7 +13,7 @@
     isNormalUser = true;
     home = "/home/i";
     description = "Robin Weber";
-    extraGroups = ["networkmanager" "wheel" "docker"];
+    extraGroups = ["networkmanager" "wheel"];
     packages = with pkgs; [
       thunderbird
       spotify
@@ -30,10 +30,40 @@
     ];
   };
 
+  # use zsh shell and customize
+  imports = [../../module/select/application/shell/zsh];
+  users.users.i.shell = pkgs.zsh;
+
   home-manager.users.i = {
     home.username = "i";
     home.homeDirectory = "/home/i";
     home.stateVersion = "24.05";
+
+    programs = {
+      zsh = {
+        zplug = {
+          enable = true;
+          plugins = [
+            {name = "zsh-users/zsh-autosuggestions";}
+            {
+              name = "romkatv/powerlevel10k";
+              tags = ["as:theme" "depth:1"];
+            }
+            {
+              name = "plugins/git";
+              tags = ["from:oh-my-zsh"];
+            }
+            {
+              name = "zsh-users/zsh-syntax-highlighting";
+              tags = ["defer:2"];
+            }
+            {name = "MichaelAquilina/zsh-you-should-use.git";}
+          ];
+        };
+      };
+      yazi.enableZshIntegration = true;
+      direnv.enableZshIntegration = true;
+    };
   };
 
   nixpkgs.config.chromium.enableWideVine = true;
@@ -44,20 +74,4 @@
     "electron-27.3.11" # EOL Electron - needed for LogSeq
   ];
   services.greetd.settings.initial_session.user = "i";
-
-  # use zsh shell and customize
-  imports = [../../module/select/application/shell/zsh];
-  users.users.i.shell = pkgs.zsh;
-  programs.zsh = {
-    ohMyZsh = {
-      enable = true;
-      plugins = [
-        "git"
-        "zsh-autosuggestions"
-        "zsh-syntax-highlighting"
-        "you-should-use"
-      ];
-    };
-    promptInit = "source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
-  };
 }

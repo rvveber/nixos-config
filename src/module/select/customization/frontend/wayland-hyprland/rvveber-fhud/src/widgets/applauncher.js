@@ -17,7 +17,7 @@ const AppItem = app => Widget.Button({
             Widget.Label({
                 class_name: "title",
                 label: app.name,
-                xalign: 0,
+                xalign: 8,
                 vpack: "center",
                 truncate: "end",
             }),
@@ -25,7 +25,7 @@ const AppItem = app => Widget.Button({
     }),
 })
 
-const Applauncher = ({ width = 500, height = 500, spacing = 12 }) => {
+const Applauncher = ({ width = 400, height = 644, spacing = 8 }) => {
     // list of application buttons
     let applications = query("").map(AppItem)
 
@@ -65,7 +65,7 @@ const Applauncher = ({ width = 500, height = 500, spacing = 12 }) => {
 
     return Widget.Box({
         vertical: true,
-        css: `margin: ${spacing * 2}px;`,
+        css: `margin: ${spacing * 2}px; border-radius: 1000px;`,
         children: [
             entry,
 
@@ -100,8 +100,8 @@ export const applauncher = Widget.Window({
     visible: false,
     keymode: "exclusive",
     child: Applauncher({
-        width: 500,
-        height: 500,
-        spacing: 12,
+        width: 400,
+        height: 644,
+        spacing: 8,
     }),
 })

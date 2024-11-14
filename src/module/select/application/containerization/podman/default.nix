@@ -29,4 +29,9 @@
     # https://www.redhat.com/sysadmin/podman-compose-docker-compose
     # https://www.redhat.com/sysadmin/compose-kubernetes-podman
   ];
+
+  environment.sessionVariables = {
+      PODMAN_COMPOSE_WARNING_LOGS = 0;
+  };
+
 }

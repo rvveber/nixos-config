@@ -89,6 +89,7 @@
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
         "$take_screenshot" = ["${toString ./src/scripts/take-screenshot.sh}"];
+        "$lock_and_suspend" = ["${toString ./src/scripts/lock-and-suspend.sh}"];
         debug.disable_logs = true;
         input = {
           kb_layout = [config.console.keyMap];
@@ -163,8 +164,7 @@
           "$mainMod, mouse:273, resizewindow"
         ];
         bindl = [
-          ", switch:Lid Switch, exec, hyprlock"
-          #", switch:on:Lid Switch, exec, hyprctl keyword monitor eDP-1, disable"
+          ", switch:on:Lid Switch, exec, $lock_and_suspend"
         ];
         windowrulev2 = [
           "suppressevent maximize, class:.*"
@@ -327,4 +327,7 @@
         valign = bottom
     }
   '';
+
+  # Let hyprland handle the lid switch to do custom commands
+  services.logind.lidSwitch = "ignore";
 }

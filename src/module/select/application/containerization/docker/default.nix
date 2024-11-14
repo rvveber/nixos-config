@@ -10,7 +10,7 @@
 
   virtualisation.docker.enable = true;
   virtualisation.docker.rootless = {
-    enable = true;
+    enable = false; # in rootless mode, the uid and gid of your user need to be mapped correctly, or the files in the container will be owned as root (0)
     setSocketVariable = true;
   };
 }
