@@ -14,6 +14,7 @@
     ../../module/add/application/home-manager.nix
     ../../module/add/application/development.nix
     ../../module/add/application/gaming.nix
+    ../../module/add/application/appimage.nix
 
     ../../module/select/locale/de_DE
 

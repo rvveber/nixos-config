@@ -22,7 +22,11 @@
       logseq
       inkscape
       yazi
+
       k3sup
+      kubernetes-helm
+      kubectl
+      helm-docs
     ];
   };
 
