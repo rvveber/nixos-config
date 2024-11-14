@@ -23,7 +23,7 @@
     powerManagement.enable = true;
     powerManagement.finegrained = false;
     open = false;
-    nvidiaSettings = true;
+    nvidiaSettings = false;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
     # production 550.120
     # beta 560.35.03
