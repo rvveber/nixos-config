@@ -32,4 +32,4 @@ git add "${DIR_ROOT}/src"
 # Syncing the src directory to /etc/nixos for compatiblity sake and rebuild the system configuration
 #sudo rsync -az --no-p --no-g --chown=root:root --chmod=ugo=rwX --delete "${DIR_ROOT}/src/" /etc/nixos
 
-sudo nixos-rebuild switch --flake "${DIR_ROOT}/src#"
+sudo nixos-rebuild switch --flake "${DIR_ROOT}/src#" --verbose --option allow-import-from-derivation false
