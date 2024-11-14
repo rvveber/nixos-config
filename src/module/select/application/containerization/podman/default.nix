@@ -31,7 +31,6 @@
   ];
 
   environment.sessionVariables = {
-      PODMAN_COMPOSE_WARNING_LOGS = 0;
+    PODMAN_COMPOSE_WARNING_LOGS = "false";
   };
-
 }
