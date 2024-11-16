@@ -50,6 +50,7 @@
   };
 
   services.trezord.enable = true;
+  services.flatpak.enable = true; # until i figured out, how to package versions
 
   programs.nix-ld.enable = true;
 

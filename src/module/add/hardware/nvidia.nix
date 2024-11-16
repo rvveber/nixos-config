@@ -36,7 +36,7 @@
       wayland.windowManager.hyprland = {
         enable = true;
         systemd.enable = false; # Conflicts with uwsm
-        hyprland.settings = {
+        settings = {
           env = [
             "GBM_BACKEND,nvidia-drm"
             "__GLX_VENDOR_LIBRARY_NAME,nvidia"
