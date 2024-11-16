@@ -15,10 +15,21 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     stylix = {
+      # url = "github:danth/stylix?rev=199d1fd97163ca03117356c4878d74626a820593";
       url = "github:danth/stylix";
+      #unlock revision once they fix this hiccup
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+    # astal = {
+    #   url = "github:Aylur/astal";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
+    # ags = {
+    #   url = "github:Aylur/ags";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    #   inputs.astal.follows = "astal";
+    # };
   };
 
   # The outputs attribute is a *function*

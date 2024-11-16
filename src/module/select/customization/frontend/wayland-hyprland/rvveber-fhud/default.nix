@@ -88,18 +88,20 @@
         "$terminal" = ["kitty"];
         "$fileManager" = ["dolphin"];
         "$menu" = ["ags -t applauncher"];
+        #"$menu" = ["ags request 'open win-applauncher'"];
         "$take_screenshot" = ["${toString ./src/scripts/take-screenshot.sh}"];
         "$lock_and_suspend" = ["${toString ./src/scripts/lock-and-suspend.sh}"];
-        debug.disable_logs = true;
+        exec-once = [
+          "uwsm app -- ags"
+        ];
         input = {
           kb_layout = [config.console.keyMap];
           sensitivity = "0.31";
           accel_profile = "flat";
           force_no_accel = true;
         };
-        monitor = [
-          ",preferred,auto,auto"
-        ];
+        bindn = ["    , Escape   , exec, ags request closeAll"];
+        bindr = ["CAPS, Caps_Lock, exec, ags request fetchCapsState"];
         bind = [
           "$mainMod, $mainMod_L, exec, $menu"
           "$mainMod, $mainMod_R, exec, $menu"
@@ -114,6 +116,11 @@
           "$mainMod, P, pseudo"
           "$mainMod, J, togglesplit"
           "$mainMod + SHIFT, M, exit"
+
+          #"$mainMod SHIFT, E    , exec, ags toggle win-powermenu"
+          #"$mainMod      , D    , exec, ags toggle win-applauncher"
+          #"$mainMod      , V    , exec, ags toggle win-clipboard"
+          #"              , Print, exec, ags toggle win-screenshot"
 
           # lock the screen
           "$mainMod, L, exec, hyprlock"
@@ -172,6 +179,10 @@
         decoration = {
           active_opacity = 1;
           inactive_opacity = 1;
+          blur = {
+            enabled = true;
+          };
+          #screen_shader = "${toString ./src/shader.frag}";
         };
         general = {
           layout = "dwindle";
@@ -182,19 +193,6 @@
           preserve_split = true;
           smart_split = true;
           smart_resizing = true;
-        };
-        misc = {
-          force_default_wallpaper = 0;
-          disable_hyprland_logo = true;
-        };
-        decoration = {
-          blur = {
-            enabled = true;
-          };
-          #screen_shader = "${toString ./src/shader.frag}";
-        };
-        xwayland = {
-          force_zero_scaling = true;
         };
         bezier = [
           "blink,0,3,0.2,-2"
