@@ -21,9 +21,9 @@
     nerdfonts
   ];
 
-  environment.sessionVariables = {
-    MYVIMRC = builtins.toString ./src/config/init.lua;
-  };
+  # environment.sessionVariables = {
+  #  MYVIMRC = builtins.toString ./src/config/init.lua;
+  # };
 
   # nvim configuration
   home-manager.sharedModules = [

@@ -66,6 +66,11 @@
     };
   };
 
+  environment.shellAliases = {
+    v = "nvim";
+    vi = "nvim";
+  };
+
   nixpkgs.config.chromium.enableWideVine = true;
   # TODO: Move to free options exclusively
   nixpkgs.config.allowUnfree = true;
