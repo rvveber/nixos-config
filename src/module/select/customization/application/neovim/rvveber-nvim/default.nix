@@ -8,6 +8,7 @@
   imports = [
     ../../../../../add/application/home-manager.nix
     ../../../../../add/application/neovim.nix
+    ../../../../../add/hack/replace-node-with-bun.nix
   ];
 
   # nvim plugins need the following packages to be installed
@@ -19,9 +20,11 @@
     zig
     nerdfonts
   ];
+
   environment.sessionVariables = {
     MYVIMRC = builtins.toString ./src/config/init.lua;
   };
+
   # nvim configuration
   home-manager.sharedModules = [
     {
