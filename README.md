@@ -1,60 +1,40 @@
 This config structure for NixOS aims to be:
-- self-explainatory
-- minimal
-- flake based
+- beginner-friendly (imports only - avoids custom nix libraries)
+- self-explainatory (heavy use of self-describing file structure and comments)
+- easily universally extendable
+- flake based (updated regularely)
 - multi-host compatible
 - multi-user compatible
-- easily universally extendable
-
-It optionally includes home-manager.
-
-***
-Don't get discouraged by all the files in the root, they are optional development assisting tools.
-What is important for the NixOS configuration, is only the `src` directory.
-***
 
 ## Quick Start
 Make this config structure your own
-1. (fork this repository)
-2. `git clone <repository-uri>`
-3. create configuration for your host - (be sure to have set the hostname in configuration.nix)
+1. [Change hostname in configuration.nix](https://letmegooglethat.com/?q=nixos+set+hostname) and [switch the system once](https://nixos.wiki/wiki/Nixos-rebuild)
+2. (fork this repository)
+3. `git clone <https-repository-url>` and `cd nixos-config`
+4. create configuration for your host
 ```shell
 mkdir src/host/$(hostname)
 ```
-4. copy over your host configuration.nix and hardware-configuration.nix 
+5. copy over your host configuration.nix and hardware-configuration.nix 
 ```shell
 cp /etc/nixos/*configuration.nix src/host/$(hostname)
 ```
-5. create `src/host/$(hostname)/default.nix`, that acts as entrypoint
+6. rename them to better describe their new context (and to fit in this project)
 ```shell
-nano src/host/$(hostname)/default.nix
+mv src/host/$(hostname)/hardware-configuration.nix src/host/$(hostname)/hardware.nix \
+mv src/host/$(hostname)/configuration.nix src/host/$(hostname)/customization.nix
 ```
-6. paste the following boilerplate and customize to your needs
-```nix
-{ ... }:
-{
-    imports = [
-        ./hardware-configuration.nix
-        ./configuration.nix
-
-        # import (or create) your locale - sets keyboard and timezone stuff
-        ../../module/select/locale/de_DE.nix
-
-        # import (or create) hardware features
-        ../../module/add/hardware/audio.nix
-        ../../module/add/hardware/nvidia.nix
-
-        # (optional) import development module - enables everything to further develop this config
-        ../../module/add/software/development.nix
-    ];
-}
-```
-7. copy the `user/i` directory to a directory with your username - acts as entrypoint for user configurations
+7. create a `src/host/$(hostname)/default.nix`, that acts as entrypoint. 
+To keep it simple, copy a default.nix from one of my hosts e.g. `b1kini` and edit as you wish.
 ```shell
-cp -r src/user/i src/user/$(whoami)
+cp src/host/b1kini/default.nix src/host/$(hostname)/default.nix
 ```
-8. in the files in it, replace all occurances of the user `i` with your username
-9. in `src/flake.nix` add a new nixosConfigurations entry for your hostname and user combination (can be multiple)
+8. copy the `user/i` directory to a directory with the username you'd like to have - acts as entrypoint for user specific configuration
+```shell
+cp -r src/user/i src/user/yourusername
+```
+9. in the files in it, replace all occurances of the user `i` with your username
+10. in `src/flake.nix` add a new `nixosConfigurations` entry for your hostname and user combination (can be multiple)
 ```nix
     ...
     nixosConfigurations.<HOSTNAME> = nixpkgs.lib.nixosSystem {
@@ -69,16 +49,18 @@ cp -r src/user/i src/user/$(whoami)
 ```
 10. Test, that everything is working
 ```shell
-bin/switch
+bin/build
 ```
-11. Done! You now have a minimal multi-host, multi-user NixOS configuration
+11. Make sure to update your users password via root.
+12. Done! You now have a minimal NixOS configuration
+without complicated overlays and without a lot of custom nix lang functions.
 ***
 
 ### Updating
-Update the system by running `bin/update` and `bin/switch` afterwards.
+Update the system by running `bin/update` and `bin/build` afterwards.
 
 ### Garbage Collection
-Simple. Run `bin/collect-garbage`.
+Simple. Run `bin/gc`.
 Info: This deletes older boot entries too.
 
 ### Development
@@ -88,7 +70,3 @@ formated, and you will get nix-lang language features.
 If you'd like to enable development features in general, you'll need to add the `module/add/software/development.nix` module to your hosts default.nix.
 
 Then, the various tools to assist development with nix, will be loaded automatically when you enter the directory where you cloned this repository.
-
-### Future
-This repository is ever evolving, so if you have certain requests featurewise, don't hesitate to create issues.
-I try to keep it minimal, but i'm also using it for myself, in the future i'll create a second repository that acts as pure boilerplate and will be even more minimal than now.

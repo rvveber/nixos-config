@@ -22,8 +22,8 @@ RESET='\033[0m'
 # if development module is enabled for this host - run development scripts first
 if command -v direnv >/dev/null && command -v devenv >/dev/null && command -v statix >/dev/null; then
   printf "${CYAN}${ARROW} INFO: Detected support for the development module${RESET}\n"
-  printf "${CYAN}${ARROW} INFO: Running bin/check automatically${RESET}\n"
-  ${DIR_BIN}/check
+  printf "${CYAN}${ARROW} INFO: Running bin/validate automatically${RESET}\n"
+  ${DIR_BIN}/validate
 fi
 
 # execute git add src - to have new files tracked and available in the nix store, important for flake mechanism
