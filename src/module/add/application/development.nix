@@ -14,7 +14,8 @@
     koji # cli tool for conventional commits
     git-absorb # https://github.com/tummychow/git-absorb
 
-    nerdfonts # glyphs for development
+    # glyphs for development
+    nerd-fonts.symbols-only
   ];
 
   nix.extraOptions = ''

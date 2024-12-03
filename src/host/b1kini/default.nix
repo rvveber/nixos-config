@@ -13,7 +13,7 @@
     ../../module/add/application/gnupg-agent.nix
     ../../module/add/application/development.nix
     ../../module/add/application/virtualization.nix
-    ../../module/select/application/containerization/podman
+    ../../module/select/application/containerization/docker
 
     ../../module/select/locale/de_DE
 

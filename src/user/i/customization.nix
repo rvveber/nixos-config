@@ -13,7 +13,7 @@
     isNormalUser = true;
     home = "/home/i";
     description = "Robin Weber";
-    extraGroups = ["networkmanager" "wheel"];
+    extraGroups = ["networkmanager" "wheel" "docker"];
     packages = with pkgs; [
       thunderbird
       spotify

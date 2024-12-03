@@ -18,7 +18,7 @@
     ripgrep
     unzip
     zig
-    nerdfonts
+    nerd-fonts.symbols-only
   ];
 
   # environment.sessionVariables = {

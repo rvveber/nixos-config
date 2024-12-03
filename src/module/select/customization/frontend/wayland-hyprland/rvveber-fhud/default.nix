@@ -25,6 +25,7 @@
       grim
       slurp
       satty
+      wayfreeze
       imagemagick
     ];
   };
@@ -270,7 +271,7 @@
         text = cmd[update:18000000] echo "<b><big> "$(date +'%A')" </big></b>"
         color = rgb(${config.lib.stylix.colors.base07})
         font_size = 22
-        font_family = JetBrainsMono Nerd Font 10
+        font_family = JetBrainsMono Nerd Font 10 #TODO: assert dependency Nerdfonts is given
 
         position = 0, 40
         halign = center
@@ -283,7 +284,7 @@
         text = cmd[update:18000000] echo "<b> "$(date +'%d %b')" </b>"
         color = rgb(${config.lib.stylix.colors.base07})
         font_size = 18
-        font_family = JetBrainsMono Nerd Font 10
+        font_family = JetBrainsMono Nerd Font 10 #TODO: assert dependency Nerdfonts is given
 
         position = 0, 6
         halign = center
