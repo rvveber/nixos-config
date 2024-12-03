@@ -32,4 +32,3 @@ wait
 
 # Output the final file path for reference
 echo "Screenshot saved to: $FINAL_OUTPUT_PATH"
-S

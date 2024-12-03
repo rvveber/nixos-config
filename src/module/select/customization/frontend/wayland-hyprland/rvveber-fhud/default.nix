@@ -291,18 +291,18 @@
         valign = center
     }
 
-    # Degrees
-    label {
-        monitor =
-        text = cmd[update:18000000] echo "<b>Feels like<big> $(curl -s 'wttr.in?format=%t' | tr -d '+') </big></b>"
-        color = rgb(${config.lib.stylix.colors.base07})
-        font_size = 18
-        font_family = Geist Mono 10
+    # # Degrees
+    # label {
+    #     monitor =
+    #     text = cmd[update:18000000] echo "<b>Feels like<big> $(curl -s 'wttr.in?format=%t' | tr -d '+') </big></b>"
+    #     color = rgb(${config.lib.stylix.colors.base07})
+    #     font_size = 18
+    #     font_family = Geist Mono 10
 
-        position = 0, 40
-        halign = center
-        valign = bottom
-    }
+    #     position = 0, 40
+    #     halign = center
+    #     valign = bottom
+    # }
 
     input-field {
         monitor =
