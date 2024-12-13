@@ -2,7 +2,6 @@
   libs,
   pkgs,
   config,
-  home-manager,
   ...
 }: {
   programs.zsh = {
