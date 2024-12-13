@@ -21,15 +21,10 @@
   };
 
   programs = {
-    hyprland.enable = true;
-    # Universal Wayland Session Manager
-    uwsm = {
+    uwsm.enable = true;
+    hyprland = {
       enable = true;
-      waylandCompositors.hyprland = {
-        binPath = "/run/current-system/sw/bin/Hyprland";
-        comment = "Hyprland session managed by uwsm";
-        prettyName = "Hyprland";
-      };
+      withUWSM = true;
     };
   };
 
@@ -70,7 +65,7 @@
   # Shell independent login script
   environment.interactiveShellInit = ''
     if uwsm check may-start; then
-      exec uwsm start -S hyprland-uwsm.desktop
+      exec sh -c 'uwsm start hyprland-uwsm.desktop || exec "''${SHELL:-/bin/sh}"'
     fi
   '';
 }
