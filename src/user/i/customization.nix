@@ -13,6 +13,7 @@
   # nixos config - per user
   users.users.i = {
     isNormalUser = true;
+    useDefaultShell = true;
     home = "/home/i";
     description = "Robin Weber";
     extraGroups = ["networkmanager" "wheel" "docker"];
@@ -32,7 +33,6 @@
 
       insomnia
     ];
-    shell = pkgs.zsh;
   };
 
   nixpkgs.config.chromium.enableWideVine = true;
@@ -43,9 +43,11 @@
     "electron-27.3.11" # EOL Electron - needed for LogSeq
   ];
 
-  environment.shellAliases = {
-    v = "nvim";
-    vi = "nvim";
+  environment = {
+    shellAliases = {
+      v = "nvim";
+      vi = "nvim";
+    };
   };
 
   ############################
@@ -59,9 +61,11 @@
   home-manager.users.i.programs = {
     zsh = {
       enable = true;
-      dotDir = ".config/zsh";
       enableCompletion = true;
+      autosuggestion.enable = true;
       syntaxHighlighting.enable = true;
+      dotDir = ".config/zsh";
+
       zplug = {
         enable = true;
         plugins = [
@@ -81,6 +85,12 @@
           {name = "MichaelAquilina/zsh-you-should-use";}
         ];
       };
+
+      # You may have some issues with the marlonrichert/zsh-autocomplete plugin on NixOS. That's because the default NixOS configuration overrides keybinds for up and down arrow keys. To fix this issue, you need to add this somewhere in your .zshrc (either manually if your .zshrc is not managed by Nix, or with packages.zsh.initExtra)
+      initExtra = ''
+        bindkey "''${key[Up]}" up-line-or-search
+      '';
+
       initExtraFirst = ''
         (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv export zsh)"
 

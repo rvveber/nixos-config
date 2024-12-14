@@ -2,5 +2,5 @@ All files in the `modules/add` directory are optional and compatible with each o
 
 Import them in
 `host/<host>/default.nix`
-or 
+or
 `user/<user>/default.nix`

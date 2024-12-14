@@ -1,6 +1,6 @@
-All modules in the `modules/select` directory are optional. 
-Do not combine these with other modules of the same type.
-The type of the module is derived from its parent directories.
+All modules in the `modules/select` directory are optional and GLOBALLY exclusive. 
+Do NOT combine these with modules of the same type.
+The "type" of the module is derived from its parent directories.
 e.g. 
 `modules/select/locale/de_DE` is of type `locale`.
 only select one `locale`.

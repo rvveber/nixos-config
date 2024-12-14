@@ -13,7 +13,7 @@
 
   boot.initrd.availableKernelModules = ["xhci_pci" "ehci_pci" "ahci" "usbhid" "usb_storage" "sd_mod" "sr_mod"];
   boot.kernelModules = [];
-  boot.kernelParams = ["libata.noacpi=1"];
+  boot.kernelParams = ["libata.noacpi=1" "nvidia.NVreg_PreserveVideoMemoryAllocations=1"];
 
   fileSystems."/" = {
     device = "/dev/disk/by-uuid/6f3478ce-1902-4dbd-aa71-5c46899d85e3";
@@ -21,7 +21,7 @@
   };
 
   boot.initrd.luks.devices."luks-3f8b1b13-8d81-453a-9e08-f0c02c908df3".device = "/dev/disk/by-uuid/3f8b1b13-8d81-453a-9e08-f0c02c908df3";
-
+  boot.initrd.luks.devices."luks-71cfbe03-2af1-4e86-b2f9-9e4ca147568b".device = "/dev/disk/by-uuid/71cfbe03-2af1-4e86-b2f9-9e4ca147568b";
   fileSystems."/boot" = {
     device = "/dev/disk/by-uuid/4553-95FF";
     fsType = "vfat";
