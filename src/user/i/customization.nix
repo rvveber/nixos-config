@@ -10,6 +10,23 @@
   ...
 }: {
   ############################
+  # nixos config - global
+  nixpkgs.config.chromium.enableWideVine = true;
+  # TODO: Move to free options exclusively
+  nixpkgs.config.allowUnfree = true;
+  # TODO: Remove once unnecessary
+  nixpkgs.config.permittedInsecurePackages = [
+    "electron-27.3.11" # EOL Electron - needed for LogSeq
+  ];
+
+  environment = {
+    shellAliases = {
+      v = "nvim";
+      vi = "nvim";
+    };
+  };
+
+  ############################
   # nixos config - per user
   users.users.i = {
     isNormalUser = true;
@@ -30,24 +47,7 @@
       kubernetes-helm
       kubectl
       helm-docs
-
-      insomnia
     ];
-  };
-
-  nixpkgs.config.chromium.enableWideVine = true;
-  # TODO: Move to free options exclusively
-  nixpkgs.config.allowUnfree = true;
-  # TODO: Remove once unnecessary
-  nixpkgs.config.permittedInsecurePackages = [
-    "electron-27.3.11" # EOL Electron - needed for LogSeq
-  ];
-
-  environment = {
-    shellAliases = {
-      v = "nvim";
-      vi = "nvim";
-    };
   };
 
   ############################
@@ -61,35 +61,40 @@
   home-manager.users.i.programs = {
     zsh = {
       enable = true;
-      enableCompletion = true;
+      dotDir = ".config/zsh";
+      history.size = 1000;
+      history.ignoreAllDups = true;
+      history.path = "$XDG_CONFIG_HOME/zsh/.zsh_history";
+      history.ignorePatterns = ["rm *" "pkill *" "cp *"];
+
+      # Disable completion if zsh is enabled system-wide to avoid doubled compinit calls
+      enableCompletion =
+        if config.programs.zsh.enable
+        then !config.programs.zsh.enableCompletion
+        else true;
+      # For debugging load-times
+      zprof.enable = false;
+
       autosuggestion.enable = true;
       syntaxHighlighting.enable = true;
-      dotDir = ".config/zsh";
-
-      zplug = {
-        enable = true;
-        plugins = [
-          {name = "zsh-users/zsh-autosuggestions";}
-          {
-            name = "romkatv/powerlevel10k";
-            tags = ["as:theme" "depth:1"];
-          }
-          {
-            name = "plugins/git";
-            tags = ["from:oh-my-zsh"];
-          }
-          {
-            name = "zsh-users/zsh-syntax-highlighting";
-            tags = ["defer:2"];
-          }
-          {name = "MichaelAquilina/zsh-you-should-use";}
-        ];
-      };
-
-      # You may have some issues with the marlonrichert/zsh-autocomplete plugin on NixOS. That's because the default NixOS configuration overrides keybinds for up and down arrow keys. To fix this issue, you need to add this somewhere in your .zshrc (either manually if your .zshrc is not managed by Nix, or with packages.zsh.initExtra)
-      initExtra = ''
-        bindkey "''${key[Up]}" up-line-or-search
-      '';
+      plugins = [
+        {
+          name = pkgs.zsh-nix-shell.pname;
+          inherit (pkgs.zsh-nix-shell) src;
+        }
+        {
+          name = pkgs.zsh-z.pname;
+          inherit (pkgs.zsh-z) src;
+        }
+        {
+          name = pkgs.zsh-autopair.pname;
+          inherit (pkgs.zsh-autopair) src;
+        }
+        {
+          name = pkgs.zsh-powerlevel10k.pname;
+          inherit (pkgs.zsh-powerlevel10k) src;
+        }
+      ];
 
       initExtraFirst = ''
         (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv export zsh)"
@@ -98,13 +103,24 @@
         if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
           source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
         fi
-        test -f ~/.config/zsh/.p10k.zsh && source ~/.config/zsh/.p10k.zsh
+        test -f ~/${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh && source ~/${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh
         source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
 
         (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv hook zsh)"
       '';
+
+      # Default NixOS configuration overrides keybinds for up and down arrow keys.
+      initExtra = ''
+        bindkey "''${key[Up]}" up-line-or-search
+      '';
     };
-    yazi.enableZshIntegration = true;
-    direnv.enableZshIntegration = true;
+    yazi = {
+      enable = true;
+      enableZshIntegration = true;
+    };
+    direnv = {
+      enable = true;
+      enableZshIntegration = true;
+    };
   };
 }

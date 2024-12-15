@@ -1,6 +1,6 @@
 # NixOS KISS config
 
-> It is the perfect config for a NixOS beginner that wants to have a minimal but usable system on multiple machines, with the flexibility to adapt the config for different usecases on *a per machine* *_and_* *per user basis*.
+> It is the perfect config for a NixOS beginner that wants to have a simple, minimal, beautiful and fast system on multiple machines, with the flexibility to adapt the config for different usecases on *a per machine* *_and_* *per user basis*.
 
 Features
 - beginner-friendly (imports only)
@@ -13,6 +13,7 @@ Features
 - opinionated and well thought out 
 - based on best-practices
 - home-manager included, without beeing handeled specially
+- pre-made frontend config, to kickstart your own
 
 ## Quick Start
 If you just installed NixOS from e.g. the [ISO](https://nixos.org/download/#nix-more):
@@ -80,20 +81,19 @@ If you'd like to enable development features in general, you can add the `module
 
 Then, the various tools to assist development with nix, will be loaded automatically when you enter the directory where you cloned this repository.
 
-### Default customizations
-> Bare essentials, for freedom of mind and perfomance.
-That i use for my daily development work
+### What you will get
+> Pre-made configuration, with a focus on freedom of mind, perfomance and therefore productivity.<br>I use it daily for development and infrastructure related work.
 
-If you follow the quickstart, copy the config for `b1kini` and `i` (as mentioned). 
+If you follow the quickstart, copy the config for `b1kini` and `i` (as mentioned).<br>
 You will get:
 
 #### A pre-made frontend config
-- Hyprland (preconfigured with bwspm inspired keybinds)
-- Beautiful minimalistic Lockscreen
-- All UI scripted with AGS exclusively
+- [Hyprland](https://hyprland.org/) (Embracing the future by going wayland exclusively)
+- [Hyprlock](https://wiki.hyprland.org/Hypr-Ecosystem/hyprlock/) (Beautiful Lockscreen)
+- Systemwide theming through [stylix](https://github.com/danth/stylix)<br>(pre-configured with clean FutureHUD colors)
+- All UI scripted with [AGS](https://github.com/Aylur/ags) exclusively<br>(Flexible, extendable, no need for anything else)
 
-- Login via bare tty
-- Autostart with uwsm
+- Login via bare tty<br>(no display/login manager necessary)<br>(Autostart with [uwsm](https://github.com/Vladimir-csp/uwsm) for best practice systemd integration)
 - Automatic lock and suspend when using laptop
 
 - `<super>` opens app launcher (ags)
@@ -101,9 +101,9 @@ You will get:
 - `<super> + s` for solid screenshotting (wayland-freeze, grim, satty, magick)
 
 #### A pre-made nvim config
-- based on kickstart.nvim
-- bun and zig, instead of node and gcc for fastest plugin-installs, -compiles and -runtime
+- based on [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim)<br>(Solid kickstart)
+- [bun](https://bun.sh/) and [zig](https://ziglang.org/) - instead of node and gcc<br>(For fastest plugin-installs and runtime)
 
 #### A pre-made ZSH config
-- powerlevel10k, customization at first startup
-- compatible with direnv
+- [powerlevel10k](https://github.com/romkatv/powerlevel10k)<br>(You customize at first startup)
+- compatible with [direnv](https://direnv.net/)

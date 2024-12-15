@@ -15,9 +15,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     stylix = {
-      # url = "github:danth/stylix?rev=199d1fd97163ca03117356c4878d74626a820593";
       url = "github:danth/stylix";
-      #unlock revision once they fix this hiccup
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
