@@ -16,14 +16,18 @@
     git
     gnumake
     ripgrep
+    cargo
     unzip
     zig
     nerd-fonts.symbols-only
   ];
 
-  # environment.sessionVariables = {
-  #  MYVIMRC = builtins.toString ./src/config/init.lua;
-  # };
+  environment = {
+    shellAliases = {
+      v = "nvim";
+      vi = "nvim";
+    };
+  };
 
   # nvim configuration
   home-manager.sharedModules = [

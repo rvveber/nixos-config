@@ -21,8 +21,9 @@
 
   environment.systemPackages = with pkgs; [
     atlauncher
-    godot_4
-    blender
+
+    # gamedev
+    godot_4-mono
   ];
 
   nix.gc = {
@@ -31,7 +32,7 @@
     options = "--delete-older-than 14d";
   };
 
-  services.trezord.enable = true;
+  services.trezord.enable = false; # not in combination with insecure packages
   services.flatpak.enable = true; # until i figured out, how to package versions
 
   programs.nix-ld.enable = true;

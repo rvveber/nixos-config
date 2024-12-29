@@ -17,14 +17,8 @@
   # TODO: Remove once unnecessary
   nixpkgs.config.permittedInsecurePackages = [
     "electron-27.3.11" # EOL Electron - needed for LogSeq
+    "dotnet-sdk-6.0.428" # Needed for godot mono...
   ];
-
-  environment = {
-    shellAliases = {
-      v = "nvim";
-      vi = "nvim";
-    };
-  };
 
   ############################
   # nixos config - per user
@@ -35,18 +29,27 @@
     description = "Robin Weber";
     extraGroups = ["networkmanager" "wheel" "docker"];
     packages = with pkgs; [
+      # essentials
       thunderbird
-      spotify
-      vscode
       chromium
-      logseq
-      inkscape
       yazi
 
+      # editing
+      gimp #Raster
+      inkscape #Vector
+      tenacity #Audio
+      blender #3D
+
+      # devops
       k3sup
       kubernetes-helm
       kubectl
       helm-docs
+
+      # testing
+      spotify
+      vscode
+      logseq
     ];
   };
 

@@ -11,21 +11,37 @@
 }: {
   imports = [(modulesPath + "/installer/scan/not-detected.nix")];
 
-  boot.initrd.availableKernelModules = ["xhci_pci" "ehci_pci" "ahci" "usbhid" "usb_storage" "sd_mod" "sr_mod"];
-  boot.kernelModules = [];
-  boot.kernelParams = ["libata.noacpi=1" "nvidia.NVreg_PreserveVideoMemoryAllocations=1"];
+  boot = {
+    initrd = {
+      availableKernelModules = ["xhci_pci" "ehci_pci" "ahci" "usbhid" "usb_storage" "sd_mod" "sr_mod"];
+      luks.devices = {
+        "luks-71cfbe03-2af1-4e86-b2f9-9e4ca147568b".device = "/dev/disk/by-uuid/71cfbe03-2af1-4e86-b2f9-9e4ca147568b";
+        "luks-3f8b1b13-8d81-453a-9e08-f0c02c908df3".device = "/dev/disk/by-uuid/3f8b1b13-8d81-453a-9e08-f0c02c908df3";
+      };
+    };
 
-  fileSystems."/" = {
-    device = "/dev/disk/by-uuid/6f3478ce-1902-4dbd-aa71-5c46899d85e3";
-    fsType = "ext4";
+    kernelModules = [];
+    kernelParams = ["libata.noacpi=1" "nvidia.NVreg_PreserveVideoMemoryAllocations=1"];
   };
 
-  boot.initrd.luks.devices."luks-3f8b1b13-8d81-453a-9e08-f0c02c908df3".device = "/dev/disk/by-uuid/3f8b1b13-8d81-453a-9e08-f0c02c908df3";
-  boot.initrd.luks.devices."luks-71cfbe03-2af1-4e86-b2f9-9e4ca147568b".device = "/dev/disk/by-uuid/71cfbe03-2af1-4e86-b2f9-9e4ca147568b";
-  fileSystems."/boot" = {
-    device = "/dev/disk/by-uuid/4553-95FF";
-    fsType = "vfat";
-    options = ["fmask=0022" "dmask=0022"];
+  fileSystems = {
+    "/" = {
+      device = "/dev/disk/by-uuid/6f3478ce-1902-4dbd-aa71-5c46899d85e3";
+      fsType = "ext4";
+    };
+    "/boot" = {
+      device = "/dev/disk/by-uuid/4553-95FF";
+      fsType = "vfat";
+      options = ["fmask=0022" "dmask=0022"];
+    };
+    "/mnt/sdb1" = {
+      device = "/dev/sdb1";
+      fsType = "btrfs";
+    };
+    "/mnt/sdb2" = {
+      device = "/dev/sdb2";
+      fsType = "ntfs3";
+    };
   };
 
   swapDevices = [{device = "/dev/disk/by-uuid/cfd164a9-bf38-43ff-ac38-f7c5771af6b1";}];
