@@ -19,6 +19,9 @@
     "electron-27.3.11" # EOL Electron - needed for LogSeq
     "dotnet-sdk-6.0.428" # Needed for godot mono...
   ];
+  services.mullvad-vpn = {
+    enable = true;
+  };
 
   ############################
   # nixos config - per user
@@ -115,6 +118,8 @@
       # Default NixOS configuration overrides keybinds for up and down arrow keys.
       initExtra = ''
         bindkey "''${key[Up]}" up-line-or-search
+
+        mullvad connect
       '';
     };
     yazi = {
