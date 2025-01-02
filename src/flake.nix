@@ -56,5 +56,12 @@
         ./user/i
       ];
     };
+    nixosConfigurations.mystery = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = attrs;
+      modules = [
+        ./host/mystery
+      ];
+    };
   };
 }
