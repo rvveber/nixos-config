@@ -1,0 +1,4 @@
+{...}:
+{
+  imports = [./disko-config.nix];
+}
