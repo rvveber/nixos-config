@@ -7,6 +7,7 @@
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
   networking.hostName = "mystery";
+  networking.hostId = "3610905c";
 
   boot.loader.grub = {
     efiSupport = true;

@@ -13,7 +13,6 @@
     ./disko-config.nix
   ];
 
-  disko.devices.disk.main.device = "/dev/vda";
 
   boot.initrd.availableKernelModules = ["ata_piix" "uhci_hcd" "virtio_pci" "sr_mod" "virtio_blk"];
   boot.initrd.kernelModules = [];

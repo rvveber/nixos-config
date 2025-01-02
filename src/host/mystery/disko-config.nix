@@ -8,11 +8,10 @@
   imports = [
     disko.nixosModules.disko
   ];
-
+  disko.devices.disk.main.device = "/dev/vda";
   disko.devices = {
     disk = {
       main = {
-        device = "/dev/sda";
         type = "disk";
         content = {
           type = "gpt";
