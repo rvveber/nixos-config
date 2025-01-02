@@ -9,6 +9,7 @@
   networking.hostName = "mystery";
 
   boot.loader.grub = {
+    enabled = true;
     efiSupport = true;
     efiInstallAsRemovable = true;
   };
