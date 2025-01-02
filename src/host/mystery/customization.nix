@@ -9,10 +9,7 @@
   networking.hostName = "mystery";
   networking.hostId = "3610905c";
 
-  boot.loader.grub = {
-    efiSupport = true;
-    efiInstallAsRemovable = true;
-  };
+  boot.loader.systemd-boot.enable = true;
   services.openssh.enable = true;
 
   nix.gc = {
