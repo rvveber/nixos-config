@@ -1,4 +1,7 @@
 {...}:
 {
-  imports = [./disko-config.nix];
+  imports = [
+    ./hardware.nix
+    ./customization.nix
+  ];
 }
