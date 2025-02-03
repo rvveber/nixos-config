@@ -45,6 +45,7 @@
 
       # devops
       k3sup
+      mullvad-vpn
       kubernetes-helm
       kubectl
       helm-docs

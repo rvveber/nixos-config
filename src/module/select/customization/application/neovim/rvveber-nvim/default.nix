@@ -27,6 +27,11 @@
       v = "nvim";
       vi = "nvim";
     };
+    sessionVariables = {
+      MYVIMRC = [
+        "${toString ./src/config/init.lua}"
+      ];
+    };
   };
 
   # nvim configuration
