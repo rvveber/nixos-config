@@ -48,6 +48,7 @@
       mullvad-vpn
       kubernetes-helm
       kubectl
+      kubelogin-oidc
       helm-docs
 
       # testing
