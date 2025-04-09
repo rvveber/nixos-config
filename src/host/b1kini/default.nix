@@ -13,6 +13,7 @@
     ../../module/add/application/gnupg-agent.nix
     ../../module/add/application/development.nix
     ../../module/add/application/virtualization.nix
+    ../../module/add/application/avahi.nix
     ../../module/select/application/containerization/docker
 
     ../../module/select/locale/de_DE

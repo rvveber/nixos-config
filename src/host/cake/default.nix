@@ -15,6 +15,7 @@
     ../../module/add/application/development.nix
     ../../module/add/application/gaming.nix
     ../../module/add/application/appimage.nix
+    ../../module/add/application/avahi.nix
 
     ../../module/select/locale/de_DE
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# requires: grim slurp wayfreeze magick satty
 
 # Define variables
 # If xdg-user-dir is available use it, otherwise use the default path

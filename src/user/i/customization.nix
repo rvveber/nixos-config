@@ -6,22 +6,19 @@
 {
   config,
   pkgs,
+  lib,
   home-manager,
   ...
 }: {
   ############################
   # nixos config - global
-  nixpkgs.config.chromium.enableWideVine = true;
-  # TODO: Move to free options exclusively
-  nixpkgs.config.allowUnfree = true;
+
   # TODO: Remove once unnecessary
   nixpkgs.config.permittedInsecurePackages = [
-    "electron-27.3.11" # EOL Electron - needed for LogSeq
     "dotnet-sdk-6.0.428" # Needed for godot mono...
   ];
-  services.mullvad-vpn = {
-    enable = true;
-  };
+
+  nixpkgs.config.allowUnfree = true;
 
   ############################
   # nixos config - per user
@@ -34,14 +31,14 @@
     packages = with pkgs; [
       # essentials
       thunderbird
-      chromium
+      (chromium.override {enableWideVine = true;})
       yazi
 
       # editing
       gimp #Raster
       inkscape #Vector
       tenacity #Audio
-      blender #3D
+      # blender #3D
 
       # devops
       k3sup
@@ -54,8 +51,11 @@
       # testing
       spotify
       vscode
-      logseq
     ];
+  };
+
+  services.mullvad-vpn = {
+    enable = true;
   };
 
   ############################
@@ -68,6 +68,9 @@
 
   home-manager.users.i.programs = {
     zsh = {
+      # TODO: .zshrc
+      # https://wiki.archlinux.org/title/Zsh#Key_bindings
+
       enable = true;
       dotDir = ".config/zsh";
       history.size = 1000;
@@ -117,11 +120,12 @@
         (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv hook zsh)"
       '';
 
-      # Default NixOS configuration overrides keybinds for up and down arrow keys.
       initExtra = ''
+        # Default NixOS configuration overrides keybinds for up and down arrow keys.
         bindkey "''${key[Up]}" up-line-or-search
 
-        mullvad connect
+        # Avoid vim mode
+        bindkey -e
       '';
     };
     yazi = {

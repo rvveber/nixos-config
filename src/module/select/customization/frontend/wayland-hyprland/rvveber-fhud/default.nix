@@ -1,9 +1,7 @@
 {
   config,
   pkgs,
-  lib,
   stylix,
-  home-manager,
   ...
 }: {
   # dependencies
@@ -11,6 +9,10 @@
     ../../../../../add/application/home-manager.nix
     ../../../../../add/frontend/wayland-hyprland.nix
     stylix.nixosModules.stylix
+
+    ./src/widgets/default.nix
+    # derivation that builds ags widgets
+    # todo: extract into its own repo (flake: ./src/widgets/flake.nix) or directly make rvveber-fhud itself a flake
   ];
   environment = {
     systemPackages = with pkgs; [
@@ -18,15 +20,15 @@
       hyprshade
       hyprlock
 
-      # UI
-      ags
-
       # screenshotting
       grim
       slurp
       satty
       wayfreeze
       imagemagick
+
+      # pasting
+      wtype
     ];
   };
 
@@ -65,6 +67,7 @@
     };
     opacity.terminal = 0.9;
     cursor.package = pkgs.bibata-cursors;
+    cursor.size = 24;
     fonts.serif = config.stylix.fonts.sansSerif;
     cursor.name = "Bibata-Modern-Ice";
     polarity = "dark";
@@ -92,8 +95,9 @@
         #"$menu" = ["ags request 'open win-applauncher'"];
         "$take_screenshot" = ["${toString ./src/scripts/take-screenshot.sh}"];
         "$lock_and_suspend" = ["${toString ./src/scripts/lock-and-suspend.sh}"];
+        "$paste_timestamp" = ["${toString ./src/scripts/paste-timestamp.sh}"];
         exec-once = [
-          "uwsm app -- ags"
+          "uwsm app -- /usr/bin/env rvveber-fhud-widgets"
         ];
         input = {
           kb_layout = [config.console.keyMap];
@@ -113,10 +117,11 @@
           "$mainMod, V, togglefloating,"
           "$mainMod, F, fullscreen,1"
           "$mainMod + SHIFT, F, fullscreen,0"
-          "$mainMod, S, exec, $take_screenshot"
           "$mainMod, P, pseudo"
           "$mainMod, J, togglesplit"
           "$mainMod + SHIFT, M, exit"
+          "$mainMod, S, exec, $take_screenshot"
+          "$mainMod, less, exec, $paste_timestamp"
 
           #"$mainMod SHIFT, E    , exec, ags toggle win-powermenu"
           #"$mainMod      , D    , exec, ags toggle win-applauncher"
@@ -207,14 +212,6 @@
           #"layersIn,1,3,blink"
           #"fadeLayersIn,1,5,easeOutExpo"
         ];
-      };
-
-      # Ags configuration
-      home.file = {
-        ".config/ags" = {
-          source = ./src/widgets;
-          recursive = true;
-        };
       };
     }
   ];

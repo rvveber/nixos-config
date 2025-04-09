@@ -23,15 +23,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
-    # astal = {
-    #   url = "github:Aylur/astal";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
-    # ags = {
-    #   url = "github:Aylur/ags";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    #   inputs.astal.follows = "astal";
-    # };
+    astal = {
+      url = "github:aylur/astal";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    ags = {
+      url = "github:aylur/ags";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   # The outputs attribute is a *function*

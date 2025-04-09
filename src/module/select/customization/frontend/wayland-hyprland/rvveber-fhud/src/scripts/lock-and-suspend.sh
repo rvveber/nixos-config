@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
+# requires: hyprland hyprlock
 
-###
 # this script should be called on lid-switch
-###
 
 # If the device is connected to multiple displays avoid suspending
 monitor_count=$(hyprctl monitors | grep -c "^Monitor ")

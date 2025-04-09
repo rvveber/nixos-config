@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   home-manager,
   ...
@@ -8,6 +9,7 @@
     systemPackages = with pkgs; [
       # wayland essentials
       wl-clipboard
+      wtype
       xdg-desktop-portal
 
       # hyprland essentials
@@ -17,6 +19,7 @@
       hyprpaper
       hyprland-workspaces
       hyprpicker
+      hyprcursor
     ];
   };
 
@@ -43,9 +46,6 @@
             "QT_AUTO_SCREEN_SCALE_FACTOR,1"
             "QT_QPA_PLATFORM,wayland"
             "QT_WAYLAND_DISABLE_WINDOWDECORATION,1"
-          ];
-          monitor = [
-            ",preferred,auto,auto"
           ];
           misc = {
             force_default_wallpaper = 0;

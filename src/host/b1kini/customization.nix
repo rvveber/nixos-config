@@ -24,9 +24,9 @@
     {
       wayland.windowManager.hyprland.settings = {
         monitor = [
-          "DP-2,2560x1440@59.95Hz,0x0,1.6"
-          "HDMI-A-1,2560x1440@59.95Hz,1600x0,1"
-          "eDP-1,2880x1800@120.00Hz,4160x0,2"
+          "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, -1600x160, 1.6"
+          "desc:MNR A32, 2560x1440@120.00Hz, 0x0, 1"
+          "desc:Tianma Microelectronics Ltd, disable"
         ];
       };
     }
