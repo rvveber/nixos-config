@@ -41,7 +41,7 @@
     ];
   in {
     packages.${system}.default = pkgs.stdenv.mkDerivation {
-      name = "app-launcher";
+      name = "rvveber-app-launcher";
       src = ./.;
       inherit nativeBuildInputs;
       buildInputs = astalPackages ++ [pkgs.gjs];
