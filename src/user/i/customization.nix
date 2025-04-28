@@ -31,14 +31,14 @@
     packages = with pkgs; [
       # essentials
       thunderbird
-      (chromium.override {enableWideVine = true;})
+      (chromium.override {enableWideVine = false;})
       yazi
+      ausweisapp
 
       # editing
       gimp #Raster
       inkscape #Vector
       tenacity #Audio
-      # blender #3D
 
       # devops
       k3sup
@@ -107,26 +107,27 @@
         }
       ];
 
-      initExtraFirst = ''
-        (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv export zsh)"
+      initContent = lib.mkMerge [
+        (lib.mkBefore ''
+          (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv export zsh)"
 
-        # enable instant prompt
-        if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
-          source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
-        fi
-        test -f ~/${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh && source ~/${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh
-        source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+          # enable instant prompt
+          if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
+            source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
+          fi
+          test -f ~/${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh && source ~/${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh
+          source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
 
-        (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv hook zsh)"
-      '';
+          (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv hook zsh)"
+        '')
+        (lib.mkAfter ''
+          # Default NixOS configuration overrides keybinds for up and down arrow keys.
+          bindkey "''${key[Up]}" up-line-or-search
 
-      initExtra = ''
-        # Default NixOS configuration overrides keybinds for up and down arrow keys.
-        bindkey "''${key[Up]}" up-line-or-search
-
-        # Avoid vim mode
-        bindkey -e
-      '';
+          # Avoid vim mode
+          bindkey -e
+        '')
+      ];
     };
     yazi = {
       enable = true;

@@ -1,0 +1,65 @@
+// https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-4-16/gtk/theme/Default/_colors-public.scss
+$fg-color: #{"@theme_fg_color"};
+$bg-color: #{"@theme_bg_color"};
+$selected-bg: #{"@theme_selected_bg_color"};
+$selected-fg: #{"@theme_selected_fg_color"};
+
+window.AppLauncher {
+    background-color: rgba(0, 0, 0, 0.9);
+    border-radius: 12px;
+    min-width: 600px;
+    min-height: 480px;
+    
+    searchentry {
+        padding: 8px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+    
+    box categoriesBox {
+        padding: 4px;
+        
+        button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: normal;
+            
+            &:checked {
+                background-color: $selected-bg;
+                color: $selected-fg;
+            }
+        }
+    }
+    
+    flowbox {
+        padding: 12px;
+        
+        flowboxchild {
+            padding: 8px;
+            border-radius: 8px;
+            background-color: transparent;
+            transition: background-color 0.2s ease;
+            
+            &:hover {
+                background-color: rgba(128, 128, 128, 0.3);
+            }
+            
+            &:active, &:selected {
+                background-color: rgba(128, 128, 128, 0.5);
+            }
+            
+            box {
+                padding: 6px;
+                
+                image {
+                    margin-bottom: 4px;
+                }
+                
+                label {
+                    font-size: 12px;
+                    font-weight: normal;
+                }
+            }
+        }
+    }
+}

@@ -10,7 +10,8 @@
     ../../../../../add/frontend/wayland-hyprland.nix
     stylix.nixosModules.stylix
 
-    ./src/widgets/default.nix
+    ./src/widgets/legacy/default.nix
+    ./src/widgets/app-launcher/default.nix
     # derivation that builds ags widgets
     # todo: extract into its own repo (flake: ./src/widgets/flake.nix) or directly make rvveber-fhud itself a flake
   ];
@@ -91,8 +92,7 @@
         "$mainMod" = ["SUPER"];
         "$terminal" = ["kitty"];
         "$fileManager" = ["dolphin"];
-        "$menu" = ["ags -t applauncher"];
-        #"$menu" = ["ags request 'open win-applauncher'"];
+        "$menu" = ["uwsm app -- /usr/bin/env rvveber-app-launcher"];
         "$take_screenshot" = ["${toString ./src/scripts/take-screenshot.sh}"];
         "$lock_and_suspend" = ["${toString ./src/scripts/lock-and-suspend.sh}"];
         "$paste_timestamp" = ["${toString ./src/scripts/paste-timestamp.sh}"];

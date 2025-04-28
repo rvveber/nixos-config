@@ -26,7 +26,7 @@
         monitor = [
           "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, -1600x160, 1.6"
           "desc:MNR A32, 2560x1440@120.00Hz, 0x0, 1"
-          "desc:Tianma Microelectronics Ltd, disable"
+          "desc:Tianma Microelectronics Ltd, 2880x1800@120.00Hz, 2560x540, 2"
         ];
       };
     }

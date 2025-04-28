@@ -1,9 +1,10 @@
-import { App, Astal, Gtk, Gdk } from "astal/gtk4";
+import { App, Astal, Gtk, Gdk, Widget } from "astal/gtk4";
 import { Variable } from "astal";
 
 const time = Variable("").poll(1000, "date");
 
-export default function Bar(gdkmonitor: Gdk.Monitor) {
+
+export default function Bar2(gdkmonitor: Gdk.Monitor) {
   const { TOP, LEFT, RIGHT } = Astal.WindowAnchor;
 
   return (
@@ -29,3 +30,14 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
     </window>
   );
 }
+
+function Bar(): Widget.ButtonProps {
+  return Widget.Button({
+    visible: true,
+    cssClasses: ["Bar"],
+    gdkmonitor: Gdk.Monitor,
+    exclusivity: Astal.Exclusivity.EXCLUSIVE,
+    anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT | Astal.WindowAnchor.RIGHT,
+    application: App
+  });
+};
