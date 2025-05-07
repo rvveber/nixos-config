@@ -11,7 +11,7 @@
     stylix.nixosModules.stylix
 
     ./src/widgets/legacy/default.nix
-    ./src/widgets/app-launcher/default.nix
+    # ./src/widgets/app-launcher/default.nix
     # derivation that builds ags widgets
     # todo: extract into its own repo (flake: ./src/widgets/flake.nix) or directly make rvveber-fhud itself a flake
   ];
