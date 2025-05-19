@@ -25,7 +25,7 @@
       grim
       slurp
       satty
-      wayfreeze
+      hyprpicker
       imagemagick
 
       # pasting
@@ -93,8 +93,8 @@
         "$terminal" = ["kitty"];
         "$fileManager" = ["dolphin"];
         "$menu" = ["uwsm app -- /usr/bin/env rvveber-app-launcher"];
-        "$take_screenshot" = ["${toString ./src/scripts/take-screenshot.sh}"];
-        "$lock_and_suspend" = ["${toString ./src/scripts/lock-and-suspend.sh}"];
+        "$take_screenshot" = ["uwsm app -- ${toString ./src/scripts/take-screenshot.sh}"];
+        "$lock_and_suspend" = ["uwsm app -- ${toString ./src/scripts/lock-and-suspend.sh}"];
         "$paste_timestamp" = ["${toString ./src/scripts/paste-timestamp.sh}"];
         exec-once = [
           "uwsm app -- /usr/bin/env rvveber-fhud-widgets"
