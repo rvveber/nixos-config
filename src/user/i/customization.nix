@@ -32,6 +32,7 @@
       # essentials
       thunderbird
       (chromium.override {enableWideVine = false;})
+      # Switch to brave in the future
       yazi
       ausweisapp
 
@@ -51,6 +52,7 @@
       # testing
       spotify
       vscode
+      jujutsu
     ];
   };
 
