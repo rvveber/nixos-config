@@ -25,8 +25,14 @@
       wayland.windowManager.hyprland.settings = {
         monitor = [
           "desc:Tianma Microelectronics Ltd, 2880x1800@120.00Hz, 0x0, 2"
-          "desc:MNR A32, 2560x1440@165.00Hz, 1440x300, 1"
-          "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, 4000x300, 1, transform, 1"
+          "desc:MNR A32, 2560x1440@165.00Hz, 1440x-500, 1"
+          "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, 4000x-1200, 1, transform, 1"
+        ];
+        workspace = [
+          # See frontend/wayland-hyprland/rvveber/src/scripts/switch-workspace-group.sh for details.
+          "11, monitor:desc:Tianma Microelectronics Ltd, persistent:true, default:true"
+          "21, monitor:desc:MNR A32, persistent:true, default:true"
+          "31, monitor:desc:Ancor Communications Inc ASUS PB258, persistent:true, default:true"
         ];
       };
     }

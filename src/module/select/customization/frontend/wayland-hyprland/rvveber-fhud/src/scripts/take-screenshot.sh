@@ -2,11 +2,14 @@
 # requires: grim slurp hyprpicker magick satty
 
 # Define variables
-# If xdg-user-dir is available use it, otherwise use the default path
-if command -v xdg-user-dir &> /dev/null; then
+# Determine the Pictures directory
+echo $XDG_PICTURES_DIR
+if [ -n "$XDG_PICTURES_DIR" ]; then
+  OUTPUT_DIR="$XDG_PICTURES_DIR/Screenshots"
+elif command -v xdg-user-dir &> /dev/null; then
   OUTPUT_DIR=$(xdg-user-dir PICTURES)/Screenshots
 else
-  OUTPUT_DIR=$HOME/Pictures/Screenshots
+  OUTPUT_DIR="$HOME/Pictures/Screenshots"
 fi
 TIMESTAMP=$(date +%Y%m%d)
 SECONDS_SINCE_MIDNIGHT=$(($(date +%s) - $(date -d "$(date +%Y-%m-%d)" +%s)))
@@ -47,7 +50,7 @@ fi
 
 # Process the screenshot with magick and satty
 magick "${FINAL_OUTPUT_PATH}" -quality 75 "${FINAL_OUTPUT_PATH}"
-satty -f "${FINAL_OUTPUT_PATH}" --early-exit --save-after-copy --output-filename "${FINAL_OUTPUT_PATH}" --copy-command "wl-copy" --font-family "Source Code Pro" --disable-notifications --corner-roundness 10
+satty -f "${FINAL_OUTPUT_PATH}" --initial-tool "rectangle" --early-exit --save-after-copy --output-filename "${FINAL_OUTPUT_PATH}" --copy-command "wl-copy" --font-family "Source Code Pro" --disable-notifications --corner-roundness 5
 
 # Output the final file path for reference
 echo "Screenshot saved to: $FINAL_OUTPUT_PATH"
