@@ -13,16 +13,13 @@
     ./src/widgets/legacy/default.nix
     # ./src/widgets/app-launcher/default.nix
     # derivation that builds ags widgets
-    # todo: extract into its own repo (flake: ./src/widgets/flake.nix) or directly make rvveber-fhud itself a flake
+    # TODO: extract into its own repo (flake: ./src/widgets/flake.nix) or directly make rvveber-fhud itself a flake
   ];
   environment = {
     systemPackages = with pkgs; [
       # hyprland extras
       hyprshade
       hyprlock
-
-      # pasting
-      wtype
 
       # scripts
       jq
@@ -31,7 +28,12 @@
       satty
       hyprpicker
       imagemagick
+      socat
     ];
+    # TODO: make this its own kitty module and import it
+    shellAliases = {
+      ssh = "kitty +kitten ssh"; # copies kitty terminfo to server you ssh into
+    };
   };
 
   # Theme
@@ -81,6 +83,7 @@
   home-manager.sharedModules = [
     {
       stylix.enable = true;
+      # kitty
       programs.kitty = {
         enable = true;
         settings = {
@@ -88,6 +91,7 @@
           enable_audio_bell = false;
         };
       };
+      # hyprland
       wayland.windowManager.hyprland.enable = true;
       wayland.windowManager.hyprland.settings = {
         "$mainMod" = ["SUPER"];
@@ -99,8 +103,10 @@
         "$paste_timestamp" = ["${toString ./src/scripts/paste-timestamp.sh}"];
         "$switch_workspace" = ["${toString ./src/scripts/switch-workspace-group.sh}"];
         "$move_to_workspace" = ["${toString ./src/scripts/move-to-workspace-group.sh}"];
+        "$handle_monitor_change" = ["${toString ./src/scripts/handle-monitor-change.sh}"];
         exec-once = [
           "uwsm app -- /usr/bin/env rvveber-fhud-widgets"
+          "$handle_monitor_change"
         ];
         input = {
           kb_layout = [config.console.keyMap];

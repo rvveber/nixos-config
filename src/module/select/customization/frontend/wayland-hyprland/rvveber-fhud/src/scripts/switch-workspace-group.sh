@@ -84,10 +84,10 @@
 #   ```nix
 #   # In your Hyprland configuration
 #   wayland.windowManager.hyprland.settings.workspace = [
-#     "11, monitor:DP-1, persistent:true, default:true"      # Monitor 1, Group 1 (11-20)
+#     "11, monitor:DP-1, persistent:true, default:true"     # Monitor 1, Group 1 (11-20)
 #     "12, monitor:DP-1, persistent:true"
 #     # ... up to 10 workspaces for this monitor group
-#     "21, monitor:HDMI-A-1, persistent:true, default:true"  # Monitor 2, Group 2 (21-30)
+#     "21, monitor:HDMI-A-1, persistent:true, default:true" # Monitor 2, Group 2 (21-30)
 #     "22, monitor:HDMI-A-1, persistent:true"
 #     # ... up to 10 workspaces for this monitor group
 #     "31, monitor:desc:Some Other Monitor, persistent:true, default:true" # Monitor 3, Group 3 (31-40)
@@ -179,7 +179,7 @@ calculate_all_monitor_base_ids() {
     while read -r monitor_id monitor_name; do
         # Filter workspaces for the current monitor_id and sort them
         local current_monitor_ws_ids_str
-        current_monitor_ws_ids_str=$(echo "$all_workspaces_info" | awk -v mid="$monitor_id" '$2 == mid {print $1}' | sort -n | tr '\\n' ' ')
+        current_monitor_ws_ids_str=$(echo "$all_workspaces_info" | awk -v mid="$monitor_id" '$2 == mid {print $1}' | sort -n | tr '\n' ' ')
         
         monitor_workspace_ids["$monitor_id"]="${current_monitor_ws_ids_str% }" # Store space-separated IDs
 
@@ -224,7 +224,7 @@ determine_alternate_group() {
     local env_alternate_group_str="${WORKSPACE_IDS_ALTERNATE_GROUP:-}"
 
     if [[ -n "$env_alternate_group_str" ]]; then
-        log "WORKSPACE_IDS_ALTERNATE_GROUP is set. Raw value: \\"$env_alternate_group_str\\""
+        log "WORKSPACE_IDS_ALTERNATE_GROUP is set. Raw value: \"$env_alternate_group_str\""
         # Convert space-separated string to array
         read -r -a env_ws_ids <<< "$env_alternate_group_str"
         log "Parsed env_ws_ids (count: ${#env_ws_ids[@]}): [${env_ws_ids[*]}]"
@@ -246,7 +246,7 @@ determine_alternate_group() {
         alternate_group_ws_ids=("${env_ws_ids[@]}")
         # Sort them numerically to correctly determine the defining base ID from the first element
         log "Alternate group IDs before sort: [${alternate_group_ws_ids[*]}]"
-        IFS=$'\\n' alternate_group_ws_ids=($(sort -n <<<"${alternate_group_ws_ids[*]}"))
+        IFS=$'\n' alternate_group_ws_ids=($(sort -n <<<"${alternate_group_ws_ids[*]}"))
         unset IFS
         log "Alternate group IDs after sort: [${alternate_group_ws_ids[*]}]"
 
@@ -301,27 +301,36 @@ main() {
     fi
     validate_target_group_num "$TARGET_GROUP_INPUT"
 
+    local cursor_pos
+    cursor_pos=$(hyprctl cursorpos -j || echo '{"x":-1,"y":-1}')
+    local original_cursor_x
+    original_cursor_x=$(echo "$cursor_pos" | jq -r '.x')
+    local original_cursor_y
+    original_cursor_y=$(echo "$cursor_pos" | jq -r '.y')
+    
+    if [[ "$original_cursor_x" -eq -1 ]]; then
+        log "Warning: Could not determine original cursor position. Cursor will not be restored."
+    else
+        log "Original cursor position: x=$original_cursor_x, y=$original_cursor_y"
+    fi
+
     local target_ws_offset
     target_ws_offset=$(calculate_target_offset "$TARGET_GROUP_INPUT")
 
     log "Target group input: $TARGET_GROUP_INPUT, Workspace offset: $target_ws_offset"
     log "Override flag: $OVERRIDE_FLAG_INPUT"
 
-    # Phase 1: Calculate all monitor base IDs and the overall minimum
     calculate_all_monitor_base_ids
-
-    # Phase 2: Determine the Alternate Group
     determine_alternate_group
 
-    # Phase 3: Get active workspace and its monitor
     local active_ws_id
     active_ws_id=$(get_active_workspace_id)
     log "Active workspace ID: $active_ws_id"
 
-    local all_workspaces_info_for_active_lookup # Memoize for this lookup
+    local all_workspaces_info_for_active_lookup
     all_workspaces_info_for_active_lookup="$(get_all_workspaces_info)"
     
-    local focused_monitor_hypr_id # Hyprland's ID for the monitor hosting the active_ws_id
+    local focused_monitor_hypr_id
     focused_monitor_hypr_id=$(echo "$all_workspaces_info_for_active_lookup" | awk -v awid="$active_ws_id" '$1 == awid {print $2; exit}')
     
     if [[ -z "$focused_monitor_hypr_id" ]]; then
@@ -329,9 +338,9 @@ main() {
     fi
     log "Monitor hosting active workspace (Hyprland ID): $focused_monitor_hypr_id"
 
-    local dispatch_commands=""
+    local other_monitors_commands=""
+    local focused_monitor_command=""
 
-    # Phase 4: Switching Logic
     if [[ "$OVERRIDE_FLAG_INPUT" == "true" || "$OVERRIDE_FLAG_INPUT" == "1" ]]; then
         log "Override flag is active. Switching only focused monitor's workspace."
         local focused_monitor_base_id="${monitor_base_ids[$focused_monitor_hypr_id]:-}"
@@ -339,7 +348,7 @@ main() {
             die "Could not find base ID for focused monitor Hyprland ID $focused_monitor_hypr_id."
         fi
         local target_ws=$((focused_monitor_base_id + target_ws_offset))
-        dispatch_commands="dispatch focusmonitor $focused_monitor_hypr_id; dispatch workspace $target_ws;"
+        focused_monitor_command="dispatch focusmonitor $focused_monitor_hypr_id; dispatch workspace $target_ws;"
         log "Focused monitor (ID $focused_monitor_hypr_id) base: $focused_monitor_base_id, target: $target_ws"
     else
         log "Override flag is not active. Group switching logic applies."
@@ -354,20 +363,15 @@ main() {
             log "Active workspace $active_ws_id is in the Main Group. Switching Main Group monitors."
         fi
 
-        local commands_for_focused_monitor=""
-        local commands_for_other_monitors=""
-
         for monitor_hypr_id in "${!monitor_base_ids[@]}"; do
             local current_monitor_base_id="${monitor_base_ids[$monitor_hypr_id]}"
             local should_this_monitor_switch=false
 
             if $active_ws_is_in_alternate_group; then
-                # Switch if this monitor belongs to the Alternate Group
                 if [[ "$current_monitor_base_id" -eq "$alternate_group_defining_base_id" ]]; then
                     should_this_monitor_switch=true
                 fi
             else
-                # Active WS is in Main Group. Switch if this monitor also belongs to Main Group
                 if [[ "$current_monitor_base_id" -ne "$alternate_group_defining_base_id" ]]; then
                     should_this_monitor_switch=true
                 fi
@@ -375,26 +379,30 @@ main() {
 
             if $should_this_monitor_switch; then
                 local target_ws=$((current_monitor_base_id + target_ws_offset))
-                local current_command="dispatch focusmonitor $monitor_hypr_id; dispatch workspace $target_ws;"
-                
-                if [[ "$monitor_hypr_id" == "$focused_monitor_hypr_id" ]]; then
-                    commands_for_focused_monitor="$current_command"
-                    log "Monitor (ID $monitor_hypr_id) is FOCUSED. Base: $current_monitor_base_id, target: $target_ws. Queuing for end of batch."
+                local command_pair="dispatch focusmonitor $monitor_hypr_id; dispatch workspace $target_ws;"
+
+                if [[ "$monitor_hypr_id" -eq "$focused_monitor_hypr_id" ]]; then
+                    focused_monitor_command=$command_pair
+                    log "Monitor (ID $monitor_hypr_id) is the FOCUSED one. Target: $target_ws. Saving for last."
                 else
-                    commands_for_other_monitors+="$current_command"
-                    log "Monitor (ID $monitor_hypr_id) is OTHER. Base: $current_monitor_base_id, target: $target_ws. Adding to batch."
+                    other_monitors_commands+=$command_pair
+                    log "Monitor (ID $monitor_hypr_id) is an OTHER one. Target: $target_ws. Adding to batch."
                 fi
             else
                 log "Monitor (ID $monitor_hypr_id) base: $current_monitor_base_id. Not switching."
             fi
         done
-        dispatch_commands="${commands_for_other_monitors}${commands_for_focused_monitor}"
     fi
 
-    # Phase 5: Execute dispatch commands
-    if [[ -n "$dispatch_commands" ]]; then
-        log "Executing hyprctl batch: $dispatch_commands"
-        if ! hyprctl --batch "$dispatch_commands"; then
+    local final_dispatch_commands="${other_monitors_commands}${focused_monitor_command}"
+
+    if [[ "$original_cursor_x" -ne -1 ]]; then
+        final_dispatch_commands+="dispatch movecursor ${original_cursor_x} ${original_cursor_y};"
+    fi
+
+    if [[ -n "$final_dispatch_commands" ]]; then
+        log "Executing hyprctl batch: $final_dispatch_commands"
+        if ! hyprctl --batch "$final_dispatch_commands"; then
             die "hyprctl batch command failed."
         fi
         log "Workspace switch command sent."
@@ -406,9 +414,3 @@ main() {
 # --- Run ---
 main "$@"
 exit 0
-
-
-
-
-
-

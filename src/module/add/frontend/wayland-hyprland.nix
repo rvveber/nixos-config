@@ -10,7 +10,7 @@
       # wayland essentials
       wl-clipboard
       wtype
-      xdg-desktop-portal
+      xdg-desktop-portal-gtk
 
       # hyprland essentials
       xdg-desktop-portal-hyprland

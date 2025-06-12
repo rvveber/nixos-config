@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   home-manager,
   ...
@@ -27,10 +28,8 @@
       v = "nvim";
       vi = "nvim";
     };
-    sessionVariables = {
-      MYVIMRC = [
-        "${toString ./src/config/init.lua}"
-      ];
+    variables = {
+      MYVIMRC = "${toString ./src/config/init.lua}";
     };
   };
 

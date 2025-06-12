@@ -14,6 +14,8 @@
     koji # cli tool for conventional commits
     git-absorb # https://github.com/tummychow/git-absorb
 
+    hurl
+
     # glyphs for development
     nerd-fonts.symbols-only
   ];
