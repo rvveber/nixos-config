@@ -15,6 +15,7 @@
     ../../module/add/application/virtualization.nix
     ../../module/add/application/avahi.nix
     ../../module/select/application/containerization/docker
+    ../../module/add/application/gaming.nix
 
     ../../module/select/locale/de_DE
 

@@ -10,7 +10,7 @@
     ../../../../../add/frontend/wayland-hyprland.nix
     stylix.nixosModules.stylix
 
-    ./src/widgets/legacy/default.nix
+    #./src/widgets/legacy/default.nix
     # ./src/widgets/app-launcher/default.nix
     # derivation that builds ags widgets
     # TODO: extract into its own repo (flake: ./src/widgets/flake.nix) or directly make rvveber-fhud itself a flake
@@ -36,6 +36,29 @@
     };
   };
 
+# 0    base00   BACKGROUND               (near-black) 14:18:01
+# 1    base08   ERROR                    (red)      14:18:01
+# 2    base0B   SUCCESS                  (green)    14:18:01
+# 3    base0A   WARNING                  (yellow)   14:18:01
+# 4    base0D   INFO                     (blue)     14:18:01
+# 5    base0E   PROMPT / HEADER          (magenta)  14:18:01
+# 6    base0C   DEBUG                    (cyan)     14:18:01
+# 7    base05   FOREGROUND               (light grey) 14:18:01
+# 8    base03   BRIGHT-BLACK / COMMENTS  (grey)     14:18:01
+# 9    base10   BRIGHT-ERROR             (bright red) 14:18:01
+# 10   base11   BRIGHT-CRITICAL          (bright orange) 14:18:01
+# 11   base12   BRIGHT-WARNING           (bright yellow) 14:18:01
+# 12   base13   BRIGHT-SUCCESS           (bright green) 14:18:01
+# 13   base14   BRIGHT-DEBUG             (bright cyan) 14:18:01
+# 14   base15   BRIGHT-INFO              (bright blue) 14:18:01
+# 15   base16   BRIGHT-PROMPT            (bright magenta) 14:18:01
+# 16   base01   ALT-BACKGROUND           (very-dark grey) 14:18:01
+# 17   base02   SELECTION-BG             (mid grey) 14:18:01
+# 18   base04   DIM-FOREGROUND           (soft grey) 14:18:01
+# 19   base06   LIGHT-FOREGROUND         (almost white) 14:18:01
+# 20   base09   CRITICAL / URGENT        (orange)   14:18:01
+# 21   base0F   TRACE / MISC ACCENT      (brown / rust) 14:18:01
+
   # Theme
   stylix = {
     enable = true;
@@ -44,30 +67,30 @@
       slug = "FHUD";
       author = "github.com/rvveber";
       scheme = "FHUD";
-      base00 = "#050e10";
-      base01 = "#050e10";
-      base02 = "#050e10";
-      base03 = "#232d2f";
-      base04 = "#3d4f51";
-      base05 = "#89dfec";
-      base06 = "#89dfec";
-      base07 = "#89dfec";
-      base08 = "#ed8ca8";
-      base09 = "#e4d386";
-      base0A = "#f2e8b5";
-      base0B = "#33daff";
-      base0C = "#33daff";
-      base0D = "#33daff";
-      base0E = "#33daff";
-      base0F = "#33daff";
-      base10 = "#050e10";
-      base11 = "#050e10";
-      base12 = "#e44471";
-      base13 = "#e5be0c";
-      base14 = "#33daff";
-      base15 = "#33daff";
-      base16 = "#47bcff";
-      base17 = "#318bf2";
+      base00 = "#050e10"; # BACKGROUND (near-black)
+      base01 = "#050e10"; # ALT-BACKGROUND (very dark grey)
+      base02 = "#050e10"; # SELECTION-BG (mid grey)
+      base03 = "#232d2f"; # COMMENTS / BRIGHT-BLACK (grey)
+      base04 = "#3d4f51"; # DIM-FOREGROUND (soft grey)
+      base05 = "#ff128c"; # FOREGROUND (default text)
+      base06 = "#ff128c"; # LIGHT-FOREGROUND (almost white)
+      base07 = "#ff128c"; # BRIGHT-FOREGROUND (white)
+      base08 = "#ed8ca8"; # ERROR (red)
+      base09 = "#e4d386"; # CRITICAL / URGENT (orange)
+      base0A = "#f2e8b5"; # WARNING (yellow)
+      base0B = "#33daff"; # SUCCESS (green)
+      base0C = "#33daff"; # DEBUG (cyan)
+      base0D = "#33daff"; # INFO (blue)
+      base0E = "#33daff"; # PROMPT / HEADING / ACCENT (magenta)
+      base0F = "#33daff"; # TRACE / MISC (brown / alternative accent)
+      base10 = "#050e10"; # BRIGHT-ERROR (bright red)
+      base11 = "#050e10"; # BRIGHT-CRITICAL (bright orange)
+      base12 = "#e44471"; # BRIGHT-WARNING (bright yellow)
+      base13 = "#e5be0c"; # BRIGHT-SUCCESS (bright green)
+      base14 = "#33daff"; # BRIGHT-DEBUG (bright cyan)
+      base15 = "#33daff"; # BRIGHT-INFO (bright blue)
+      base16 = "#47bcff"; # BRIGHT-PROMPT (bright magenta)
+      base17 = "#318bf2"; # BRIGHT-TRACE / BRIGHT-MISC (bright brown / extra accent)
     };
     opacity.terminal = 0.9;
     cursor.package = pkgs.bibata-cursors;

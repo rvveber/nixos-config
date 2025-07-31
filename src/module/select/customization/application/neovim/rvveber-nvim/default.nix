@@ -9,7 +9,7 @@
   imports = [
     ../../../../../add/application/home-manager.nix
     ../../../../../add/application/neovim.nix
-    ../../../../../add/hack/replace-node-with-bun.nix
+    #../../../../../add/hack/replace-node-with-bun.nix
   ];
 
   # nvim plugins need the following packages to be installed
