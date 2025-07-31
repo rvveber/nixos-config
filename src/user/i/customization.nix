@@ -108,15 +108,19 @@
 
         initContent = lib.mkMerge [
           (lib.mkBefore ''
+            # direnv wrapper
             (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv export zsh)"
 
             # enable instant prompt
             if [[ -r "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh" ]]; then
               source "''${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-''${(%):-%n}.zsh"
             fi
-            test -f ~/${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh && source ~/${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh
-            source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
 
+            # load p10k config
+            test -f ${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh && source ${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh
+            source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
+            
+            # direnv wrapper
             (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv hook zsh)"
           '')
           (lib.mkAfter ''
