@@ -36,29 +36,6 @@
     };
   };
 
-# 0    base00   BACKGROUND               (near-black) 14:18:01
-# 1    base08   ERROR                    (red)      14:18:01
-# 2    base0B   SUCCESS                  (green)    14:18:01
-# 3    base0A   WARNING                  (yellow)   14:18:01
-# 4    base0D   INFO                     (blue)     14:18:01
-# 5    base0E   PROMPT / HEADER          (magenta)  14:18:01
-# 6    base0C   DEBUG                    (cyan)     14:18:01
-# 7    base05   FOREGROUND               (light grey) 14:18:01
-# 8    base03   BRIGHT-BLACK / COMMENTS  (grey)     14:18:01
-# 9    base10   BRIGHT-ERROR             (bright red) 14:18:01
-# 10   base11   BRIGHT-CRITICAL          (bright orange) 14:18:01
-# 11   base12   BRIGHT-WARNING           (bright yellow) 14:18:01
-# 12   base13   BRIGHT-SUCCESS           (bright green) 14:18:01
-# 13   base14   BRIGHT-DEBUG             (bright cyan) 14:18:01
-# 14   base15   BRIGHT-INFO              (bright blue) 14:18:01
-# 15   base16   BRIGHT-PROMPT            (bright magenta) 14:18:01
-# 16   base01   ALT-BACKGROUND           (very-dark grey) 14:18:01
-# 17   base02   SELECTION-BG             (mid grey) 14:18:01
-# 18   base04   DIM-FOREGROUND           (soft grey) 14:18:01
-# 19   base06   LIGHT-FOREGROUND         (almost white) 14:18:01
-# 20   base09   CRITICAL / URGENT        (orange)   14:18:01
-# 21   base0F   TRACE / MISC ACCENT      (brown / rust) 14:18:01
-
   # Theme
   stylix = {
     enable = true;
