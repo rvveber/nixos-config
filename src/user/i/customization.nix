@@ -119,7 +119,7 @@
             # load p10k config
             test -f ${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh && source ${config.home-manager.users.i.programs.zsh.dotDir}/.p10k.zsh
             source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme
-            
+
             # direnv wrapper
             (( ''${+commands[direnv]} )) && emulate zsh -c "$(direnv hook zsh)"
           '')

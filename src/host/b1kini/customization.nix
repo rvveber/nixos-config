@@ -22,11 +22,16 @@
   system.stateVersion = "24.11";
   home-manager.sharedModules = [
     {
+      #    0x0---------> X
+      #    |
+      #    |
+      #    v Y
       wayland.windowManager.hyprland.settings = {
         monitor = [
-          "desc:Tianma Microelectronics Ltd, 2880x1800@120.00Hz, 0x0, 2"
-          "desc:MNR A32, 2560x1440@165.00Hz, 1440x-500, 1"
-          "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, 4000x-1200, 1, transform, 1"
+          "desc:Tianma Microelectronics Ltd, 2880x1800@120.00Hz, 560x1440, 2"
+          # "desc:MNR A32, 2560x1440@165.00Hz, 1440x-500, 1"
+          # "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, 4000x-1200, 1, transform, 1"
+          "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, 0x0, 1"
         ];
         workspace = [
           # See frontend/wayland-hyprland/rvveber/src/scripts/switch-workspace-group.sh for details.
