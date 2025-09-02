@@ -206,6 +206,9 @@
         };
         dwindle = {
           preserve_split = true;
+          #default_split_ratio = 2 * 0.618033988;
+          split_bias = 0;
+          force_split = 2;
           smart_split = true;
           smart_resizing = true;
         };
