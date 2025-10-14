@@ -22,14 +22,10 @@
       url = "github:danth/stylix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    astal = {
-      url = "github:aylur/astal";
+    rvveber-fhud = {
+      url = "path:./module/select/customization/frontend/wayland-hyprland/rvveber-fhud";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
-    ags = {
-      url = "github:aylur/ags";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.astal.follows = "astal";
+      inputs.stylix.follows = "stylix";
     };
   };
 

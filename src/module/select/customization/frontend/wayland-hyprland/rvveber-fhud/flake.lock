@@ -3,12 +3,10 @@
     "ags": {
       "inputs": {
         "astal": [
-          "rvveber-fhud",
           "rvveber-shell",
           "astal"
         ],
         "nixpkgs": [
-          "rvveber-fhud",
           "rvveber-shell",
           "nixpkgs"
         ]
@@ -30,7 +28,6 @@
     "astal": {
       "inputs": {
         "nixpkgs": [
-          "rvveber-fhud",
           "rvveber-shell",
           "nixpkgs"
         ]
@@ -116,26 +113,6 @@
         "type": "github"
       }
     },
-    "disko": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1758287904,
-        "narHash": "sha256-IGmaEf3Do8o5Cwp1kXBN1wQmZwQN3NLfq5t4nHtVtcU=",
-        "owner": "nix-community",
-        "repo": "disko",
-        "rev": "67ff9807dd148e704baadbd4fd783b54282ca627",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "disko",
-        "type": "github"
-      }
-    },
     "firefox-gnome-theme": {
       "flake": false,
       "locked": {
@@ -206,49 +183,13 @@
         "type": "github"
       }
     },
-    "home-manager": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1759261733,
-        "narHash": "sha256-G104PUPKBgJmcu4NWs0LUaPpSOTD4jiq4mamLWu3Oc0=",
-        "owner": "nix-community",
-        "repo": "home-manager",
-        "rev": "5a21f4819ee1be645f46d6b255d49f4271ef6723",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "home-manager",
-        "type": "github"
-      }
-    },
-    "nixos-hardware": {
-      "locked": {
-        "lastModified": 1759261527,
-        "narHash": "sha256-wPd5oGvBBpUEzMF0kWnXge0WITNsITx/aGI9qLHgJ4g=",
-        "owner": "NixOS",
-        "repo": "nixos-hardware",
-        "rev": "e087756cf4abbe1a34f3544c480fc1034d68742f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "master",
-        "repo": "nixos-hardware",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1759036355,
-        "narHash": "sha256-0m27AKv6ka+q270dw48KflE0LwQYrO7Fm4/2//KCVWg=",
+        "lastModified": 1759381078,
+        "narHash": "sha256-gTrEEp5gEspIcCOx9PD8kMaF1iEmfBcTbO0Jag2QhQs=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e9f00bd893984bc8ce46c895c3bf7cac95331127",
+        "rev": "7df7ff7d8e00218376575f0acdcc5d66741351ee",
         "type": "github"
       },
       "original": {
@@ -301,33 +242,10 @@
     },
     "root": {
       "inputs": {
-        "disko": "disko",
-        "home-manager": "home-manager",
-        "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs",
-        "rvveber-fhud": "rvveber-fhud",
+        "rvveber-shell": "rvveber-shell",
         "stylix": "stylix"
       }
-    },
-    "rvveber-fhud": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "rvveber-shell": "rvveber-shell",
-        "stylix": [
-          "stylix"
-        ]
-      },
-      "locked": {
-        "path": "./module/select/customization/frontend/wayland-hyprland/rvveber-fhud",
-        "type": "path"
-      },
-      "original": {
-        "path": "./module/select/customization/frontend/wayland-hyprland/rvveber-fhud",
-        "type": "path"
-      },
-      "parent": []
     },
     "rvveber-shell": {
       "inputs": {
@@ -343,9 +261,7 @@
         "path": "./src/widgets/rvveber-shell",
         "type": "path"
       },
-      "parent": [
-        "rvveber-fhud"
-      ]
+      "parent": []
     },
     "stylix": {
       "inputs": {
@@ -368,11 +284,11 @@
         "tinted-zed": "tinted-zed"
       },
       "locked": {
-        "lastModified": 1759305203,
-        "narHash": "sha256-Mj3VQcpE5CVqfhi0Yp2B5qn5EcUwiPD4nCngxUiBHMg=",
+        "lastModified": 1759690047,
+        "narHash": "sha256-Vlpa0d1xOgPO9waHwxJNi6LcD2PYqB3EjwLRtSxXlHc=",
         "owner": "danth",
         "repo": "stylix",
-        "rev": "126e6c7625620e949d86578046fe97f418478c42",
+        "rev": "09022804b2bcd217f3a41a644d26b23d30375d12",
         "type": "github"
       },
       "original": {

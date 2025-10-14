@@ -9,7 +9,6 @@
     systemPackages = with pkgs; [
       # wayland essentials
       wl-clipboard
-      wtype
       xdg-desktop-portal-gtk
 
       # hyprland essentials

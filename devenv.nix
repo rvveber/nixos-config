@@ -12,6 +12,7 @@
     pkgs.nixd
     pkgs.nil
     pkgs.nix-doc
+    pkgs.brightnessctl
   ];
 
   # https://devenv.sh/languages/

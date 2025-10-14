@@ -1,0 +1,7 @@
+# temporary commented out to let AI search find these
+
+node_modules/
+@girs/
+result*
+
+
