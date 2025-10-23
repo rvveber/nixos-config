@@ -4,7 +4,6 @@
   home-manager,
   ...
 }: {
-
   # load nvidea driver for Xorg and Wayland
   services.xserver.videoDrivers = ["nvidia"];
 

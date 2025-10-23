@@ -49,8 +49,8 @@
       helm-docs
 
       # testing
-      spotify
       vscode
+      spotify
       jujutsu
     ];
   };

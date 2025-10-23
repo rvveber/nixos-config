@@ -60,16 +60,18 @@
           ags.packages.${system}.default
         ];
 
-        buildInputs = extraPackages ++ (with pkgs; [
-          glib
-          gjs
-        ]);
+        buildInputs =
+          extraPackages
+          ++ (with pkgs; [
+            glib
+            gjs
+          ]);
 
         preFixup = ''
           gappsWrapperArgs+=(
             --prefix PATH : ${pkgs.lib.makeBinPath [
-              pkgs.brightnessctl
-            ]}
+            pkgs.brightnessctl
+          ]}
           )
         '';
 
@@ -115,16 +117,18 @@
         ];
     in {
       default = pkgs.mkShell {
-        buildInputs = [
-          (ags.packages.${system}.default.override {
-            inherit extraPackages;
-          })
-          pkgs.brightnessctl
-          pkgs.nodejs
-          pkgs.typescript
-          pkgs.sass
-          pkgs.gobject-introspection
-        ] ++ astalPackages;
+        buildInputs =
+          [
+            (ags.packages.${system}.default.override {
+              inherit extraPackages;
+            })
+            pkgs.brightnessctl
+            pkgs.nodejs
+            pkgs.typescript
+            pkgs.sass
+            pkgs.gobject-introspection
+          ]
+          ++ astalPackages;
 
         shellHook = ''
           echo "🎨 rvveber-shell development environment"

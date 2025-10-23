@@ -37,9 +37,6 @@
         systemd.enable = false; # Conflicts with uwsm
         settings = {
           debug.disable_logs = true;
-          exec-once = [
-            "uwsm app -s b -- hyprpaper"
-          ];
           env = [
             "NIXOS_OZONE_WL,1" # Suggest applications to use native wayland instead of xorg (xwayland)
             "QT_AUTO_SCREEN_SCALE_FACTOR,1"

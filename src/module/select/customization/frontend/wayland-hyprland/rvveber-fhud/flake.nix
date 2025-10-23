@@ -87,8 +87,92 @@
     nixosModules.default = {
       config,
       pkgs,
+      lib,
       ...
-    }: {
+    }: let
+      theme = {
+        slug = "FHUD";
+        author = "github.com/rvveber";
+        scheme = "FHUD";
+        base00 = "#050e10"; # BACKGROUND (near-black)
+        base01 = "#1c3b42"; # ALT-BACKGROUND (very dark grey)
+        base02 = "#1c3b42"; # SELECTION-BG (mid grey)
+        base03 = "#1c3b42"; # COMMENTS / BRIGHT-BLACK (grey)
+        base04 = "#1c3b42"; # DIM-FOREGROUND (soft grey)
+        base05 = "#8eeaff"; # FOREGROUND (default text)
+        base06 = "#d3f7ff"; # LIGHT-FOREGROUND (almost white)
+        base07 = "#ffffff"; # BRIGHT-FOREGROUND (white)
+        base08 = "#ed8ca8"; # ERROR (red)
+        base09 = "#e4d386"; # CRITICAL / URGENT (orange)
+        base0A = "#f2e8b5"; # WARNING (yellow)
+        base0B = "#33ffaa"; # SUCCESS (green)
+        base0C = "#33daff"; # DEBUG (cyan)
+        base0D = "#33daff"; # INFO (blue)
+        base0E = "#33daff"; # PROMPT / HEADING / ACCENT (magenta)
+        base0F = "#33daff"; # TRACE / MISC (brown / alternative accent)
+        base10 = "#e44471"; # BRIGHT-ERROR (bright red)
+        base11 = "#e44471"; # BRIGHT-CRITICAL (bright orange)
+        base12 = "#e44471"; # BRIGHT-WARNING (bright yellow)
+        base13 = "#e5be0c"; # BRIGHT-SUCCESS (bright green)
+        base14 = "#33daff"; # BRIGHT-DEBUG (bright cyan)
+        base15 = "#33daff"; # BRIGHT-INFO (bright blue)
+        base16 = "#33daff"; # BRIGHT-PROMPT (bright magenta)
+        base17 = "#33daff"; # BRIGHT-TRACE / BRIGHT-MISC (bright brown / extra accent)
+      };
+      topographyWallpaperParams = {
+        OUTPUT_WIDTH = 2880;
+        OUTPUT_HEIGHT = 1800;
+        WORK_BASE_RESOLUTION = 2500;
+        CONTOUR_LEVEL_COUNT = 10;
+        OUTER_LINE_DARK_FRACTION = 38;
+        BASE_STROKE_WIDTH_PX = 1.25;
+        TOP_THICK_LEVEL_COUNT = 2;
+        TOP_THICK_STROKE_FACTOR = 2.5;
+        OUTER_DARK_LINE_OPACITY = 0.33;
+        INNER_LIGHT_LINE_OPACITY = 0.75;
+        DASH_EVERY_NTH_LEVEL = 0;
+        DASH_PATTERN_PX = "30,50";
+        DASH_OFFSET_PX = 0;
+        SYMBOL_EVERY_NTH_LEVEL = 0;
+        SYMBOL_SHAPE = "pipe";
+        SYMBOL_SIZE_PX = 20;
+        SYMBOL_STROKE_PX = 0.3;
+        SYMBOL_SPACING_PX = 32;
+        SYMBOL_OPACITY = 0.5;
+        SYMBOL_KEEP_BASE_LINE = false;
+        SYMBOL_ROTATE_WITH_PATH = true;
+        VIGNETTE_INSET_X_PX = 0;
+        VIGNETTE_INSET_Y_PX = 150;
+        VIGNETTE_COLOR = theme.base00;
+        VIGNETTE_OPACITY = 1.0;
+        VIGNETTE_EXPONENT = 1.8;
+        LARGE_BLOB_GRID_X = 1;
+        LARGE_BLOB_GRID_Y = 3;
+        SMALL_BLOB_GRID_X = 3;
+        SMALL_BLOB_GRID_Y = 6;
+        LARGE_BLOB_STRENGTH = 1.0;
+        SMALL_BLOB_STRENGTH = 0.6;
+        BLOB_POSITION_JITTER = 0.7;
+        BLOB_MARGIN_FRACTION = 0.22;
+        AA_SUPERSAMPLE = 1;
+        BACKGROUND = theme.base00;
+        FOREGROUND = theme.base05;
+      };
+      # Fast, smooth, non-crossing topo lines via ContourPy → SVG → rasterize
+      topographyWallpaper = pkgs.runCommand "wallpaper.png" (topographyWallpaperParams
+        // {
+          buildInputs = [
+            (pkgs.python3.withPackages (ps: [ps.numpy ps.contourpy]))
+            pkgs.librsvg
+            pkgs.vips
+          ];
+        }) ''
+        export PY=python3
+        export RSVG=rsvg-convert
+        export VIPS=vips
+        bash ${self}/src/scripts/generate-topography-wallpaper.sh
+      '';
+    in {
       # Import stylix first
       imports = [
         stylix.nixosModules.stylix
@@ -115,11 +199,11 @@
         pkgs.hyprpicker
         pkgs.imagemagick
         pkgs.socat
-        
+
         # Icon themes - must be installed separately for proper fallback
         pkgs.papirus-icon-theme
         pkgs.adwaita-icon-theme
-        pkgs.adwaita-icon-theme-legacy  # Additional icon coverage for older apps
+        pkgs.adwaita-icon-theme-legacy # Additional icon coverage for older apps
         pkgs.hicolor-icon-theme
       ];
 
@@ -132,35 +216,7 @@
       stylix = {
         enable = true;
         autoEnable = true;
-        base16Scheme = {
-          slug = "FHUD";
-          author = "github.com/rvveber";
-          scheme = "FHUD";
-          base00 = "#050e10"; # BACKGROUND (near-black)
-          base01 = "#1c3b42"; # ALT-BACKGROUND (very dark grey)
-          base02 = "#1c3b42"; # SELECTION-BG (mid grey)
-          base03 = "#1c3b42"; # COMMENTS / BRIGHT-BLACK (grey)
-          base04 = "#1c3b42"; # DIM-FOREGROUND (soft grey)
-          base05 = "#8eeaff"; # FOREGROUND (default text)
-          base06 = "#d3f7ff"; # LIGHT-FOREGROUND (almost white)
-          base07 = "#ffffff"; # BRIGHT-FOREGROUND (white)
-          base08 = "#ed8ca8"; # ERROR (red)
-          base09 = "#e4d386"; # CRITICAL / URGENT (orange)
-          base0A = "#f2e8b5"; # WARNING (yellow)
-          base0B = "#33ffaa"; # SUCCESS (green)
-          base0C = "#33daff"; # DEBUG (cyan)
-          base0D = "#33daff"; # INFO (blue)
-          base0E = "#33daff"; # PROMPT / HEADING / ACCENT (magenta)
-          base0F = "#33daff"; # TRACE / MISC (brown / alternative accent)
-          base10 = "#e44471"; # BRIGHT-ERROR (bright red)
-          base11 = "#e44471"; # BRIGHT-CRITICAL (bright orange)
-          base12 = "#e44471"; # BRIGHT-WARNING (bright yellow)
-          base13 = "#e5be0c"; # BRIGHT-SUCCESS (bright green)
-          base14 = "#33daff"; # BRIGHT-DEBUG (bright cyan)
-          base15 = "#33daff"; # BRIGHT-INFO (bright blue)
-          base16 = "#33daff"; # BRIGHT-PROMPT (bright magenta)
-          base17 = "#33daff"; # BRIGHT-TRACE / BRIGHT-MISC (bright brown / extra accent)
-        };
+        base16Scheme = theme;
         opacity.terminal = 0.9;
         cursor.package = pkgs.bibata-cursors;
         cursor.size = 24;
@@ -168,13 +224,13 @@
         cursor.name = "Bibata-Modern-Ice";
         polarity = "dark";
         # background
-        image = ./src/background/crisp_ui.png;
+        image = topographyWallpaper;
         # Icon theme configuration
         # Note: Stylix can only reference ONE icon package, but additional themes
         # should be installed separately in environment.systemPackages for fallback support
         icons = {
           enable = true;
-          package = pkgs.papirus-icon-theme;  # Primary theme
+          package = pkgs.papirus-icon-theme; # Primary theme
           dark = "Papirus-Dark";
         };
       };
@@ -189,7 +245,7 @@
           home.packages = with pkgs; [
             papirus-icon-theme
             adwaita-icon-theme
-            adwaita-icon-theme-legacy  # Additional icon coverage for older apps
+            adwaita-icon-theme-legacy # Additional icon coverage for older apps
             hicolor-icon-theme
           ];
 
@@ -262,7 +318,7 @@
               # Start FHUD components
               exec-once = [
                 "uwsm app -- /usr/bin/env rvveber-fhud-ui"
-                "uwsm app -- hyprshade auto"
+                # "uwsm app -- hyprshade auto"
                 "$handle_monitor_change"
               ];
 
@@ -386,14 +442,14 @@
       environment.etc."xdg/hypr/hyprlock.conf".text = ''
         background {
             monitor =
-            path = ${./src/background/crisp_ui.png}
+            path = ${config.stylix.image}
             # all these options are taken from hyprland, see https://wiki.hyprland.org/Configuring/Variables/#blur for explanations
-            blur_size = 4
-            blur_passes = 3 # 0 disables blurring
+            blur_size = 2
+            blur_passes = 2 # 0 disables blurring
             noise = 0.0117
             contrast = 1.3000
             brightness = 0.8000
-            vibrancy = 0.2100
+            vibrancy = 0.5
             vibrancy_darkness = 0.0
         }
 
