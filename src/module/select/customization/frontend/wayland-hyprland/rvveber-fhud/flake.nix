@@ -39,11 +39,13 @@
       take-screenshot = makeScriptPackage pkgs "take-screenshot" [
         pkgs.grim
         pkgs.slurp
+        pkgs.hyprland
         pkgs.hyprpicker
-        pkgs.imagemagick
+        pkgs.jq
         pkgs.satty
         pkgs.wl-clipboard
         pkgs.xdg-user-dirs
+        pkgs.libavif
       ];
 
       lock-and-suspend = makeScriptPackage pkgs "lock-and-suspend" [
@@ -120,16 +122,16 @@
         base17 = "#33daff"; # BRIGHT-TRACE / BRIGHT-MISC (bright brown / extra accent)
       };
       topographyWallpaperParams = {
-        OUTPUT_WIDTH = 2880;
-        OUTPUT_HEIGHT = 1800;
+        OUTPUT_WIDTH = 4096;
+        OUTPUT_HEIGHT = 2560;
         WORK_BASE_RESOLUTION = 2500;
         CONTOUR_LEVEL_COUNT = 10;
         OUTER_LINE_DARK_FRACTION = 38;
-        BASE_STROKE_WIDTH_PX = 1.25;
+        BASE_STROKE_WIDTH_PX = 1.5;
         TOP_THICK_LEVEL_COUNT = 2;
-        TOP_THICK_STROKE_FACTOR = 2.5;
-        OUTER_DARK_LINE_OPACITY = 0.33;
-        INNER_LIGHT_LINE_OPACITY = 0.75;
+        TOP_THICK_STROKE_FACTOR = 2.0;
+        OUTER_DARK_LINE_OPACITY = 0.3;
+        INNER_LIGHT_LINE_OPACITY = 0.8;
         DASH_EVERY_NTH_LEVEL = 0;
         DASH_PATTERN_PX = "30,50";
         DASH_OFFSET_PX = 0;
@@ -436,6 +438,14 @@
           };
         }
       ];
+
+      # Shader Configuration TODO: not yet working
+      environment.etc."xdg/hypr/hyprshade.toml".text = ''
+        [[shades]]
+        name = "blue-light-filter"
+        start_time = 15:45:00
+        end_time = 06:00:00
+      '';
 
       # Lockscreen Configuration
       programs.hyprlock.enable = true;
