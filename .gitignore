@@ -10,3 +10,7 @@ devenv.local.nix
 
 # pre-commit
 .pre-commit-config.yaml
+
+# local tooling
+.roo/
+.tmp/
