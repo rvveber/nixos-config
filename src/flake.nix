@@ -23,7 +23,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     rvveber-fhud = {
-      url = "path:./module/select/customization/frontend/wayland-hyprland/rvveber-fhud";
+      url = "path:./module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.stylix.follows = "stylix";
     };
@@ -43,23 +43,23 @@
       system = "x86_64-linux";
       specialArgs = attrs;
       modules = [
-        ./host/cake
-        ./user/i
+        ./hosts/cake
+        ./users/i
       ];
     };
     nixosConfigurations.b1kini = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = attrs;
       modules = [
-        ./host/b1kini
-        ./user/i
+        ./hosts/b1kini
+        ./users/i
       ];
     };
     nixosConfigurations.mystery = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = attrs;
       modules = [
-        ./host/mystery
+        ./hosts/mystery
       ];
     };
   };

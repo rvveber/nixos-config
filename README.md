@@ -11,6 +11,7 @@
 - Modular and easily extendable
 - Opinionated and based on best practices
 - Includes home-manager without special handling
+- Prefer Home Manager for user apps & dotfiles (still built by Nix); keep `module/host/*` for truly system-wide things (services, drivers, shells, etc.)
 - Pre-made frontend configuration to kickstart your own
 
 ### Pre-made Frontend Config
@@ -44,24 +45,24 @@
     ```
 6. Create a directory for your host configuration:
     ```shell
-    mkdir src/host/$(hostname)
+    mkdir src/hosts/$(hostname)
     ```
 7. Copy your host configuration files:
     ```shell
-    cp /etc/nixos/*configuration.nix src/host/$(hostname)
+    cp /etc/nixos/*configuration.nix src/hosts/$(hostname)
     ```
 8. Rename the configuration files:
     ```shell
-    mv src/host/$(hostname)/hardware-configuration.nix src/host/$(hostname)/hardware.nix
-    mv src/host/$(hostname)/configuration.nix src/host/$(hostname)/customization.nix
+    mv src/hosts/$(hostname)/hardware-configuration.nix src/hosts/$(hostname)/hardware.nix
+    mv src/hosts/$(hostname)/configuration.nix src/hosts/$(hostname)/customization.nix
     ```
 9. Create an entry point for your host:
     ```shell
-    cp src/host/b1kini/default.nix src/host/$(hostname)/default.nix
+    cp src/hosts/b1kini/default.nix src/hosts/$(hostname)/default.nix
     ```
 10. Copy and customize the user configuration:
     ```shell
-    cp -r src/user/i src/user/yourusername
+    cp -r src/users/i src/users/yourusername
     ```
 11. Replace occurrences of `i` with your username in the copied files.
 12. Update `src/flake.nix` with your hostname and user combination:
@@ -71,8 +72,8 @@
       system = "x86_64-linux";
       specialArgs = attrs;
       modules = [
-        ./host/<HOSTNAME>
-        ./user/<USERNAME>
+        ./hosts/<HOSTNAME>
+        ./users/<USERNAME>
       ];
     };
     // ...existing code...
@@ -101,6 +102,8 @@ bin/gc
 ## Development
 If you enable the development module (optional), your Nix configuration will automatically be statically checked, formatted, and you will gain Nix LSP.
 
-To enable development features, add the `module/add/software/development.nix` module to your host's `default.nix`.
+To enable development features:
+- system-wide (substituters / services): `src/module/host/add/application/development.nix`
+- per-user tools (git/direnv/dev tools): `src/module/user/add/application/development.nix`
 
 The various tools to assist development with Nix will be loaded automatically when you enter the directory where you cloned this repository.
