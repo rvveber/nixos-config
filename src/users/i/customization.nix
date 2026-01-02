@@ -30,31 +30,6 @@ in {
     home = homeDirectory;
     description = "Robin Weber";
     extraGroups = ["networkmanager" "wheel" "docker"];
-    packages = with pkgs; [
-      # essentials
-      thunderbird
-      (chromium.override {enableWideVine = true;})
-      # Switch to brave in the future
-      yazi
-      ausweisapp
-
-      # editing
-      gimp #Raster
-      inkscape #Vector
-
-      # devops
-      k3sup
-      mullvad-vpn
-      kubernetes-helm
-      kubectl
-      kubelogin-oidc
-      helm-docs
-
-      # testing
-      vscode
-      spotify
-      jujutsu
-    ];
   };
 
   services.mullvad-vpn = {
@@ -75,6 +50,8 @@ in {
     imports = [
       ../../module/user/select/customization/application/neovim/rvveber-nvim
       ../../module/user/add/hack/codex-to-api.nix
+      ../../module/user/add/application/development.nix
+      ../../module/user/add/application/devops.nix
     ];
 
     xdg.enable = true;
@@ -83,6 +60,22 @@ in {
       homeDirectory = homeDirectory;
       stateVersion = "24.05";
     };
+    home.packages = with pkgs; [
+      # essentials
+      thunderbird
+      (chromium.override {enableWideVine = true;})
+      yazi
+      ausweisapp
+
+      # editing
+      gimp # Raster
+      inkscape # Vector
+
+      # testing
+      vscode
+      spotify
+      jujutsu
+    ];
 
     programs = {
       zsh = {
