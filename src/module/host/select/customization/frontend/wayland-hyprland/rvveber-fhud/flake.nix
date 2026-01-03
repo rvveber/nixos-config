@@ -342,10 +342,8 @@
               # Main keybindings (restored from original)
               bind = [
                 # Application launchers
-                "$mainMod, $mainMod_L, exec, $menu"
-                "$mainMod, $mainMod_R, exec, $menu"
                 "$mainMod, Return, exec, $terminal"
-                "$mainMod, D, exec, $menu"
+                "$mainMod, A, exec, $menu"
 
                 # Window management
                 "$mainMod, Q, killactive"

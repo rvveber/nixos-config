@@ -2,7 +2,7 @@
 import GLib from "gi://GLib"
 import Gtk from "gi://Gtk?version=4.0"
 import { createPoll } from "ags/time"
-import { PopoverCard } from "../common"
+import { PopoverCard } from "../../components"
 
 const TIMESTAMP_FORMAT = "%Y-%m-%d · %H:%M"
 
@@ -22,18 +22,20 @@ const tooltip = createPoll("", 60000, () => {
   return `Week ${week} • ${weekday}`
 })
 
-export default function DateTimeDisplay() {
+export default function DateTimeDisplay({ className = "", ...props }: { className?: string } & any) {
   return (
-    <menubutton
-      class="TopBarButton"
-      focusable
-      receivesDefault
-      tooltipText={tooltip}
-    >
-      <label class="DataMono" label={timestamp} />
-      <PopoverCard width={280} className="CalendarPopover">
-        <Gtk.Calendar />
-      </PopoverCard>
-    </menubutton>
+    <box class={className} {...props}>
+      <menubutton
+        class="TopBarButton"
+        focusable
+        receivesDefault
+        tooltipText={tooltip}
+      >
+        <label class="DataMono" label={timestamp} />
+        <PopoverCard width={280} className="CalendarPopover">
+          <Gtk.Calendar />
+        </PopoverCard>
+      </menubutton>
+    </box>
   )
 }

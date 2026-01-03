@@ -1,8 +1,8 @@
 // @ts-nocheck
 import Gtk from "gi://Gtk?version=4.0"
 import { For, createBinding } from "gnim"
-import { bluetoothService } from "../../services/bluetooth"
-import { IconBadge, PopoverCard, IconButton } from "../../common"
+import { bluetoothService } from "../../../services/bluetooth"
+import { IconBadge, PopoverCard, IconButton } from "../../../components"
 
 function DeviceRow({ device }: { device: any }) {
   const alias = createBinding(device, "alias")
@@ -93,9 +93,8 @@ export default function BluetoothModule() {
   }
 
   return (
-    
+    <box class="TopBarSection TopBarSection--item">
       <menubutton
-        
         class="TopBarButton"
         focusable
         receivesDefault
@@ -121,6 +120,6 @@ export default function BluetoothModule() {
           </box>
         </PopoverCard>
       </menubutton>
-    
+    </box>
   )
 }

@@ -1,8 +1,8 @@
 // @ts-nocheck
 import Gtk from "gi://Gtk?version=4.0"
 import { For, createBinding } from "gnim"
-import { notificationService } from "../../services/notifications"
-import { IconBadge, PopoverCard, IconButton } from "../../common"
+import { notificationService } from "../../../services/notifications"
+import { IconBadge, PopoverCard, IconButton } from "../../../components"
 
 function formatTime(timestamp?: number) {
   if (!timestamp) return ""
@@ -47,9 +47,8 @@ export default function NotificationModule() {
   const badge = unreadCountAccessor()
 
   return (
-    
+    <box class="TopBarSection TopBarSection--item">
       <menubutton
-        
         class="TopBarButton"
         focusable
         receivesDefault
@@ -70,28 +69,34 @@ export default function NotificationModule() {
               />
             </box>
             <box spacing={6}>
-              <togglebutton
-                class="IconToggleButton"
+              <button
+                class={dontDisturb?.as((value) =>
+                  value ? "NotificationToggle NotificationToggle--active" : "NotificationToggle",
+                )}
                 focusable
-                active={dontDisturb}
-                onToggled={() => {
+                onClicked={() => {
+                  if (!notificationService.notifd) return
                   const current = dontDisturb?.get?.() ?? false
                   notificationService.notifd.dont_disturb = !current
                 }}
               >
-                <label label={dontDisturb?.as((value) => (value ? "Focus" : "Alert")) ?? "Mode"} />
-              </togglebutton>
+                <label
+                  label={dontDisturb?.as((value) => (value ? "Focus mode on" : "Focus mode off")) ?? "Focus mode"}
+                />
+              </button>
             </box>
-            <box orientation={Gtk.Orientation.VERTICAL} spacing={6}>
-              {notifications ? (
-                <For each={notifications}>{(notification) => <NotificationCard notification={notification} />}</For>
-              ) : (
-                <label label="No notifications" opacity={0.6} />
-              )}
-            </box>
+            <Gtk.ScrolledWindow heightRequest={280} class="NotificationList">
+              <box orientation={Gtk.Orientation.VERTICAL} spacing={6}>
+                {notifications ? (
+                  <For each={notifications}>{(notification) => <NotificationCard notification={notification} />}</For>
+                ) : (
+                  <label label="No notifications" opacity={0.6} />
+                )}
+              </box>
+            </Gtk.ScrolledWindow>
           </box>
         </PopoverCard>
       </menubutton>
-    
+    </box>
   )
 }

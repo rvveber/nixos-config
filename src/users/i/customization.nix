@@ -56,8 +56,8 @@ in {
 
     xdg.enable = true;
     home = {
-      username = username;
-      homeDirectory = homeDirectory;
+      inherit username;
+      inherit homeDirectory;
       stateVersion = "24.05";
     };
     home.packages = with pkgs; [

@@ -35,6 +35,7 @@
         io
         hyprland
         battery
+        powerprofiles
         wireplumber
         bluetooth
         network
@@ -65,6 +66,7 @@
           ++ (with pkgs; [
             glib
             gjs
+            pango
           ]);
 
         preFixup = ''
@@ -102,6 +104,7 @@
         io
         hyprland
         battery
+        powerprofiles
         wireplumber
         bluetooth
         network

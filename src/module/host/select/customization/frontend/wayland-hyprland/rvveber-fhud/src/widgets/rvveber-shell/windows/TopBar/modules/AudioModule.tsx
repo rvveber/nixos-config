@@ -1,8 +1,8 @@
 // @ts-nocheck
 import Gtk from "gi://Gtk?version=4.0"
-import { For, createBinding } from "gnim"
-import { audioService } from "../../services/audio"
-import { IconBadge, PopoverCard, SliderRow } from "../../common"
+import { For, createBinding, createComputed } from "gnim"
+import { audioService } from "../../../services/audio"
+import { IconBadge, PopoverCard, SliderRow } from "../../../components"
 
 function formatPercent(value: number) {
   return `${Math.round(value * 100)}%`
@@ -72,16 +72,21 @@ export default function AudioModule() {
     ? speakerVolume.as((value) => formatPercent(value))
     : "--"
 
+  const tooltipText = speakerName && speakerVolume
+    ? createComputed([speakerName, speakerVolume], (name, volume) => `${name}: ${formatPercent(volume)}`)
+    : "Audio"
+
   return (
-    <menubutton
-      class="TopBarButton"
-      focusable
-      receivesDefault
-      sensitive={Boolean(audio)}
-      tooltipText={speakerName ? speakerName.as((name) => `${name}: ${speakerVolume?.as((v) => formatPercent(v))}`) : "Audio"}
-    >
-      <IconBadge icon={speakerIcon} text={volumeLabel} />
-      <PopoverCard width={360} className="AudioPopover">
+    <box class="TopBarSection TopBarSection--item">
+      <menubutton
+        class="TopBarButton"
+        focusable
+        receivesDefault
+        sensitive={Boolean(audio)}
+        tooltipText={tooltipText}
+      >
+        <IconBadge icon={speakerIcon} text={volumeLabel} />
+        <PopoverCard width={360} className="AudioPopover">
           <box spacing={10} orientation={Gtk.Orientation.VERTICAL}>
             <SliderRow
               title="Audio"
@@ -106,7 +111,8 @@ export default function AudioModule() {
               </box>
             )}
           </box>
-      </PopoverCard>
-    </menubutton>
+        </PopoverCard>
+      </menubutton>
+    </box>
   )
 }

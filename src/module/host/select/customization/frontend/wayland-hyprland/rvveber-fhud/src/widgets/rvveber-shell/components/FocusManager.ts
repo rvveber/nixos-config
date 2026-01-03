@@ -27,10 +27,9 @@ export default function FocusManager(widget: Gtk.Widget) {
   }
 
   // Connect to notify::has-focus property change
-  widget.connect?.("notify::has-focus", updateFocusStyle)
-  
-  // Initial check
-  updateFocusStyle()
-
-  widget.connect?.("destroy", () => removeFocusStyle(widget))
+  // In GTK4/GJS, connect is available on GObject.Object
+  if (typeof widget.connect === 'function') {
+    widget.connect("notify::has-focus", updateFocusStyle)
+    widget.connect("destroy", () => removeFocusStyle(widget))
+  }
 }

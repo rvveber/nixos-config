@@ -1,7 +1,7 @@
 // @ts-nocheck
 import Gtk from "gi://Gtk?version=4.0"
-import { powerService } from "../../services/power"
-import { PopoverCard, IconButton } from "../../common"
+import { powerService } from "../../../services/power"
+import { PopoverCard, IconButton } from "../../../components"
 
 const POWER_ACTIONS = [
   { label: "Lock", icon: "system-lock-screen-symbolic", command: "lock" },
@@ -24,9 +24,8 @@ function PowerButton({ label, icon, command }: { label: string; icon: string; co
 
 export default function PowerModule() {
   return (
-    
+    <box class="TopBarSection TopBarSection--item">
       <menubutton
-        
         class="TopBarButton"
         focusable
         receivesDefault
@@ -44,6 +43,6 @@ export default function PowerModule() {
           </box>
         </PopoverCard>
       </menubutton>
-    
+    </box>
   )
 }

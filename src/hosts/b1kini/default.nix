@@ -9,6 +9,7 @@
     ../../module/host/add/hardware/gpu_amd.nix
     ../../module/host/add/hardware/bluetooth.nix
     ../../module/host/add/hardware/ssd.nix
+    ../../module/host/add/hardware/battery.nix
 
     ../../module/host/add/application/home-manager.nix
     ../../module/host/add/application/gnupg-agent.nix

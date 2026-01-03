@@ -32,19 +32,19 @@ export default function TopBar(gdkmonitor: Gdk.Monitor) {
       anchor={TOP | LEFT | RIGHT}
       application={app}
     >
-      <centerbox class="TopBarLayout" hexpand>
-        <box $type="start" spacing={8} class="TopBarSection">
-          <WorkspaceGrid />
-        </box>
-        <box
+      <centerbox class="TopBarLayout" halign={Gtk.Align.CENTER}>
+        <WorkspaceGrid 
+          $type="start" 
+          class="TopBarSection" 
+        />
+        
+        <DateTimeDisplay 
           $type="center"
           class="TopBarSection TopBarSection--center"
           halign={Gtk.Align.CENTER}
-          hexpand
-        >
-          <DateTimeDisplay />
-        </box>
-        <box $type="end" spacing={8} class="TopBarSection TopBarSection--end">
+        />
+
+        <box $type="end" spacing={4}>
           <AudioModule />
           <BrightnessModule />
           <BatteryModule />

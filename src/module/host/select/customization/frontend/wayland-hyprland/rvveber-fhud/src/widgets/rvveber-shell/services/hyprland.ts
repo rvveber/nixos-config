@@ -7,12 +7,14 @@ const hyprland = Hyprland.get_default()
 const workspaces = hyprland ? createBinding(hyprland, "workspaces") : undefined
 const clients = hyprland ? createBinding(hyprland, "clients") : undefined
 const focusedWorkspace = hyprland ? createBinding(hyprland, "focusedWorkspace") : undefined
+const focusedMonitor = hyprland ? createBinding(hyprland, "focusedMonitor") : undefined
 
 export const hyprlandService = {
   hyprland,
   workspaces,
   clients,
   focusedWorkspace,
+  focusedMonitor,
   workspaceTileClass(index: number) {
     if (!hyprland || !workspaces || !clients) {
       return "WorkspaceTile WorkspaceTile--inactive"

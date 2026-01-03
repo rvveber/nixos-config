@@ -44,7 +44,7 @@ function tileState(index: number): Accessor<string> | string {
   })
 }
 
-export default function WorkspaceGrid() {
+export default function WorkspaceGrid({ className = "", ...props }: { className?: string } & Astal.BoxProps) {
   const topTiles = WORKSPACE_INDICES.slice(0, 10).map(
     (index) =>
       (
@@ -60,7 +60,12 @@ export default function WorkspaceGrid() {
   )
 
   return (
-    <box class="WorkspaceGrid" orientation={Gtk.Orientation.VERTICAL} spacing={2}>
+    <box 
+      class={`WorkspaceGrid ${className}`} 
+      orientation={Gtk.Orientation.VERTICAL} 
+      spacing={2}
+      {...props}
+    >
       <box spacing={2}>{topTiles as unknown as Gtk.Widget[]}</box>
       <box spacing={2}>{bottomTiles as unknown as Gtk.Widget[]}</box>
     </box>
