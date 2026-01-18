@@ -43,18 +43,14 @@
 3. You may leave my configurations as is and simply append yours (in `src/flake.nix`). You only activate <u>one</u> of the `nixosConfigurations` there for <u>your machine anyways</u>, so it doesn't matter if multiple are defined - when i update my config in the future - (and i will) - you can sync the fork and keep your own host/user configs intact while still seeing the changes i made for reference, you decide if and when you want to apply them to your own config.
 4. Make sure to commit and push your changes to your fork.
 5. Start a live ISO NixOS installer instance [Download ISO](https://nixos.org/download/#nix-more) on the target machine.
-6. Open a terminal and become root `sudo -i`
+6. Open a terminal, become root (`sudo -i`) and set your keymap e.g. (`loadkeys de`) for DE
 7. You should have internet connectivity, make sure you have.
-8. Note down the working internet assignment deployed by the live ISO, in case you later need to fix something or want to statically define network in the nixos configuration. (Google/LLM the commands if you don't know how to do this) 
-9. Generate a basic hardware-configuration.nix file for your machine without filesystem info:
+8. (Optional): Note down the working internet assignment deployed by the live ISO, in case you later need to fix something or want to statically define network in the nixos configuration. (Google/LLM the commands if you don't know how to do this) 
+9. View the autodetected hardware-configuration for your machine without filesystem info:
     ```shell
-    nixos-generate-config --show-hardware-config --no-filesystems > /tmp/hardware-configuration.nix
+    nixos-generate-config --show-hardware-config --no-filesystems
     ```
-    And view it:
-    ```shell
-    less /tmp/hardware-configuration.nix
-    ```
-    In your fork - replace your `src/hosts/yourhostname/hardware.nix` with the content of that file to make sure its tailored to your hardware.
+    In your fork - edit the content of `src/hosts/yourhostname/hardware.nix` to match the output of the command to make sure its tailored to your hardware.
 10. Make sure the user you configure in `src/users/yourusername/customization.nix` has atleast a <u>random</u> [`initialHashedPassword`](https://search.nixos.org/options?channel=unstable&show=users.users.%3Cname%3E.initialHashedPassword&query=users.users.%3Cname%3E) and has `wheel` in [`extraGroups`](https://search.nixos.org/options?channel=unstable&show=users.users.%3Cname%3E.extraGroups&query=users.users.%3Cname%3E), so you can login and administer the system after installation. You can hash a password with 
     ```shell
     openssl passwd -6 long-random-initial-password-that-you-only-need-for-first-login
@@ -67,8 +63,7 @@
     > - <b>Regarding secrets in general:</b> Never store secrets in plain text [Use encryption or secret management tools](https://wiki.nixos.org/wiki/Comparison_of_secret_managing_schemes) instead. 
 
     OK. Commit & push the changes.
-11. Two Options to proceed now: <br>A) Either follow the [NixOS Installation Guide](https://nixos.org/manual/nixos/stable/#sec-installation) to partition your disk, mount partitions, and install NixOS manually.<br>
-OR <br>B) use [disko-install](https://github.com/nix-community/disko) to partition, mount and install nixos in a fully declarative way by creating a disko configuration <br>(see `src/hosts/friday/disko.nix` for an example. [More examples here](https://github.com/nix-community/disko/tree/master/example)).<br> After you created/edited and commited/pushed that disko configuration file, on your target machine run:
+11. Next we'll use [disko-install](https://github.com/nix-community/disko) to partition, mount and install nixos in a fully declarative way by creating a disko configuration <br>(see `src/hosts/friday/disko.nix` for an example. [More examples here](https://github.com/nix-community/disko/tree/master/example)).<br> After you created/edited and commited/pushed that disko configuration file, on your target machine run:
 
     ```shell
     git clone <fork-url>
