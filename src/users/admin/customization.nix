@@ -16,5 +16,6 @@ in {
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIpto9262U8wsnRbcj/p95fhhrlj7bMqiLmoOfOfnhG0"
     ];
+    extraGroups = [ "wheel" "docker" ];
   };
 }
