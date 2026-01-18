@@ -35,9 +35,8 @@ in {
       inherit username;
       inherit homeDirectory;
 
-      # The state version is required and should stay at the version you
-      # originally installed.
-      stateVersion = "25.11";
+      # The state version is required and should stay at the version you originally installed.
+      stateVersion = "26.05";
     };
 
     programs = {
