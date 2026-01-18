@@ -2,7 +2,7 @@
   imports = [
     # concrete
     ./hardware.nix
-    ./disko-config.nix
+    ./disko.nix
     ./customization.nix
 
     # abstract
