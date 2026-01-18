@@ -55,12 +55,12 @@
         ./users/i
       ];
     };
-    nixosConfigurations.mystery = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.friday = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       specialArgs = attrs;
       modules = [
-        ./hosts/mystery
-        ./users/admin
+        ./hosts/friday
+        ./users/rvveber
       ];
     };
   };

@@ -4,7 +4,7 @@
   ...
 }: {
   networking = {
-    hostName = "mystery";
+    hostName = "friday";
   };
 
   system.stateVersion = "25.11";

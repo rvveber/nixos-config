@@ -37,8 +37,8 @@
 ## Fresh install
 1. Fork this repository.
 2. Add a host and user configuration (`src/hosts/yourhostname`, `src/users/yourusername`) - see/copy existing files for reference: 
-    - For <u>Desktops</u> i recommend looking at the user `i` and the host `b1kini`
-    - For <u>Servers</u> i recommend looking at the user `admin` and the host `mystery`
+    - For <u>Desktops</u> i recommend copying the user `i` and the host `b1kini`
+    - For <u>Servers</u> i recommend copying the user `rvveber` and the host `friday`
 
 3. You may leave my configurations as is and simply append yours (in `src/flake.nix`). You only activate <u>one</u> of the `nixosConfigurations` there for <u>your machine anyways</u>, so it doesn't matter if multiple are defined - when i update my config in the future - (and i will) - you can sync the fork and keep your own host/user configs intact while still seeing the changes i made for reference, you decide if and when you want to apply them to your own config.
 4. Make sure to commit and push your changes to your fork.
@@ -68,7 +68,7 @@
 
     OK. Commit & push the changes.
 11. Two Options to proceed now: <br>A) Either follow the [NixOS Installation Guide](https://nixos.org/manual/nixos/stable/#sec-installation) to partition your disk, mount partitions, and install NixOS manually.<br>
-OR <br>B) use [disko-install](https://github.com/nix-community/disko) to partition, mount and install nixos in a fully declarative way by creating a disko configuration <br>(see `src/hosts/mystery/disko.nix` for an example. [More examples here](https://github.com/nix-community/disko/tree/master/example)).<br> After you created/edited and commited/pushed that disko configuration file, on your target machine run:
+OR <br>B) use [disko-install](https://github.com/nix-community/disko) to partition, mount and install nixos in a fully declarative way by creating a disko configuration <br>(see `src/hosts/friday/disko.nix` for an example. [More examples here](https://github.com/nix-community/disko/tree/master/example)).<br> After you created/edited and commited/pushed that disko configuration file, on your target machine run:
 
     ```shell
     git clone <fork-url>
@@ -76,12 +76,12 @@ OR <br>B) use [disko-install](https://github.com/nix-community/disko) to partiti
     ```shell
     cd nixos-config/src 
     ```
-    Then run the disko-install command below, that conveniently also installs NixOS. <br>Example below for the host `mystery` where the disko config `disko.devices.disk.main.device` is set to `/dev/disk/by-path/virtio-pci-0000:00:10.0`. <br>
-    > Change `mystery` to your hostname!<br>
+    Then run the disko-install command below, that conveniently also installs NixOS. <br>Example below for the host `friday` where the disko config `disko.devices.disk.main.device` is set to `/dev/disk/by-path/virtio-pci-0000:00:10.0`. <br>
+    > Change `friday` to your hostname!<br>
     > Change `main /dev/disk/by-path/virtio-pci-0000:00:10.0` to match the disk defined in your disko configuration file!
     > ### 🚨 Obviously this will ERASE ALL DATA on the specified disk!
     ```shell
-    nix --extra-experimental-features 'nix-command flakes' run github:nix-community/disko/latest#disko-install -- --flake .#mystery --disk main /dev/disk/by-path/virtio-pci-0000:00:10.0
+    nix --extra-experimental-features 'nix-command flakes' run github:nix-community/disko/latest#disko-install -- --flake .#friday --disk main /dev/disk/by-path/virtio-pci-0000:00:10.0
     ```
     
 12. OK! You should have NixOS installed now.<br> Remove the live ISO and reboot into your new system. 
