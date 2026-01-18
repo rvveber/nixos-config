@@ -1,0 +1,6 @@
+{...}: {
+  imports = [
+    # concrete
+    ./customization.nix
+  ];
+}

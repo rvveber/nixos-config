@@ -60,6 +60,7 @@
       specialArgs = attrs;
       modules = [
         ./hosts/mystery
+        ./users/admin
       ];
     };
   };

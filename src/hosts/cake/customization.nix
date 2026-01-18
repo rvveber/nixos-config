@@ -5,7 +5,6 @@
 # Or if you want to add something quickly, without thinking about how to encapsulate it in a module.
 {
   config,
-  lib,
   pkgs,
   ...
 }: {

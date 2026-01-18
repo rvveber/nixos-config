@@ -1,26 +1,55 @@
-# host specific configuration that can't be encapsulated in re-usable modules atm.
 {
   config,
   pkgs,
   ...
 }: {
-  nix.settings.experimental-features = ["nix-command" "flakes"];
-
-  networking.hostName = "mystery";
-  networking.hostId = "3610905c";
-
-  boot.loader.systemd-boot.enable = true;
-  services.openssh.enable = true;
-
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 14d";
+  networking = {
+    hostName = "mystery";
   };
 
-  users.users.root.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB+PT0eOseiYhZcs/YgrVAd5l/SLqZTwwEveGR1mGsJR"
-  ];
+  system.stateVersion = "25.11";
 
-  system.stateVersion = "24.11";
+  boot.loader = {
+    systemd-boot.enable = true;
+    efi.canTouchEfiVariables = true;
+    efi.efiSysMountPoint = "/boot";
+  };
+
+  zramSwap = {
+    enable = true;
+    memoryPercent = 40;
+  };
+
+  nix = {
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 14d";
+    };
+    settings.experimental-features = ["nix-command" "flakes"];
+  };
+
+  services.openssh = {
+    enable = true;
+    openFirewall = true;
+
+    hostKeys = [
+      {
+        path = "/etc/ssh/ssh_host_ed25519_key";
+        type = "ed25519";
+      }
+    ];
+
+    settings = {
+      PermitRootLogin = "no";
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+      UsePAM = true;
+
+      # Strict PQ/hybrid KEX algorithm
+      KexAlgorithms = [
+        "mlkem768x25519-sha256"
+      ];
+    };
+  };
 }
