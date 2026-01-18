@@ -14,7 +14,7 @@
 - Prefer Home Manager for user apps & dotfiles (still built by Nix); keep `module/host/*` for truly system-wide things (services, drivers, shells, etc.)
 - Pre-made frontend configuration to kickstart your own
 
-### Pre-made Frontend Config
+### Pre-made Frontend Config (rvveber-fhud)
 - [Hyprland](https://hyprland.org/) (Wayland exclusive)
 - [Hyprlock](https://wiki.hyprland.org/Hypr-Ecosystem/hyprlock/) (Beautiful lockscreen)
 - System-wide theming with [stylix](https://github.com/danth/stylix) (pre-configured with clean FutureHUD colors)
@@ -22,68 +22,89 @@
 - Login via bare TTY with [uwsm](https://github.com/Vladimir-csp/uwsm)
 - Automatic lock and suspend for laptops
 - Keybindings:
-  - `<super>`: Open app launcher (AGS)
-  - `<super> + l`: Lock screen (Hyprlock)
-  - `<super> + s`: Screenshot (wayland-freeze, grim, satty, magick)
+  - `super + a`: App launcher
+  - `super + l`: Lock screen
+  - `super + s`: Screenshot (Instant freeze > Select region > Annotate > Save > Compress to AVIF > Clipboard)
 
 ### Pre-made Neovim Config
 - Based on [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim)
-- Includes [bun](https://bun.sh/) and [zig](https://ziglang.org/)
+- Uses [bun as fast nodejs replacement](https://bun.sh/) and [zig as fast gcc replacement](https://ziglang.org/)
 
 ### Pre-made ZSH Config
 - [powerlevel10k](https://github.com/romkatv/powerlevel10k)
 - Compatible with [direnv](https://direnv.net/)
 
-## Quick Start
-1. Install NixOS from the [ISO](https://nixos.org/download/#nix-more).
-2. Change hostname in `configuration.nix` and switch the system once.
-3. Fork this repository.
-4. Create a directory for managing your system, e.g., `~/nixos`, and cd into it.
-5. Clone your forked repository:
+## Fresh install
+1. Fork this repository.
+2. Add a host and user configuration (`src/hosts/yourhostname`, `src/users/yourusername`) - see/copy existing files for reference: 
+    - For <u>Desktops</u> i recommend looking at the user `i` and the host `b1kini`
+    - For <u>Servers</u> i recommend looking at the user `admin` and the host `mystery`
+
+3. You may leave my configurations as is and simply append yours (in `src/flake.nix`). You only activate <u>one</u> of the `nixosConfigurations` there for <u>your machine anyways</u>, so it doesn't matter if multiple are defined - when i update my config in the future - (and i will) - you can sync the fork and keep your own host/user configs intact while still seeing the changes i made for reference, you decide if and when you want to apply them to your own config.
+4. Make sure to commit and push your changes to your fork.
+5. Start a live ISO NixOS installer instance [Download ISO](https://nixos.org/download/#nix-more) on the target machine.
+6. Open a terminal and become root `sudo -i`
+7. You should have internet connectivity, make sure you have.
+8. Note down the working internet assignment deployed by the live ISO, in case you later need to fix something or want to statically define network in the nixos configuration. (Google/LLM the commands if you don't know how to do this) 
+9. Generate a basic hardware-configuration.nix file for your machine without filesystem info:
+    ```shell
+    nixos-generate-config --show-hardware-config --no-filesystems > /tmp/hardware-configuration.nix
+    ```
+    And view it:
+    ```shell
+    less /tmp/hardware-configuration.nix
+    ```
+    In your fork - replace your `src/hosts/yourhostname/hardware.nix` with the content of that file to make sure its tailored to your hardware.
+10. Make sure the user you configure in `src/users/yourusername/customization.nix` has atleast a <u>random</u> [`initialHashedPassword`](https://search.nixos.org/options?channel=unstable&show=users.users.%3Cname%3E.initialHashedPassword&query=users.users.%3Cname%3E) and has `wheel` in [`extraGroups`](https://search.nixos.org/options?channel=unstable&show=users.users.%3Cname%3E.extraGroups&query=users.users.%3Cname%3E), so you can login and administer the system after installation. You can hash a password with 
+    ```shell
+    openssl passwd -6 long-random-initial-password-that-you-only-need-for-first-login
+    ```
+    > ### 🚨 If your fork is public (bots can read it)
+    > - <b>Don't use your real password.</b> Hashes are guessed/reversed and mapped to passwords in public lists! 
+    > - <b>Don't use an existing password.</b> Lists of common password hashes exist and malicious bots are fast!
+    > - <b>Note the random password down temporarily.</b> You will need it for first login after installation.
+    > - <b>Change your password after first login.</b> I'll remind you in step 14. 
+    > - <b>Regarding secrets in general:</b> Never store secrets in plain text [Use encryption or secret management tools](https://wiki.nixos.org/wiki/Comparison_of_secret_managing_schemes) instead. 
+
+    OK. Commit & push the changes.
+11. Two Options to proceed now: <br>A) Either follow the [NixOS Installation Guide](https://nixos.org/manual/nixos/stable/#sec-installation) to partition your disk, mount partitions, and install NixOS manually.<br>
+OR <br>B) use [disko-install](https://github.com/nix-community/disko) to partition, mount and install nixos in a fully declarative way by creating a disko configuration <br>(see `src/hosts/mystery/disko.nix` for an example. [More examples here](https://github.com/nix-community/disko/tree/master/example)).<br> After you created/edited and commited/pushed that disko configuration file, on your target machine run:
+
+    ```shell
+    git clone <fork-url>
+    ```
+    ```shell
+    cd nixos-config/src 
+    ```
+    Then run the disko-install command below, that conveniently also installs NixOS. <br>Example below for the host `mystery` where the disko config `disko.devices.disk.main.device` is set to `/dev/disk/by-path/virtio-pci-0000:00:10.0`. <br>
+    > Change `mystery` to your hostname!<br>
+    > Change `main /dev/disk/by-path/virtio-pci-0000:00:10.0` to match the disk defined in your disko configuration file!
+    > ### 🚨 Obviously this will ERASE ALL DATA on the specified disk!
+    ```shell
+    nix --extra-experimental-features 'nix-command flakes' run github:nix-community/disko/latest#disko-install -- --flake .#mystery --disk main /dev/disk/by-path/virtio-pci-0000:00:10.0
+    ```
+    
+12. OK! You should have NixOS installed now.<br> Remove the live ISO and reboot into your new system. 
+13. Login with the user you defined in `src/users/yourusername/customization.nix` and the random password you noted down in step 10.
+14. 🚨 <b>Update your password manually</b>
+    ```shell
+    passwd yourusername
+    ```
+    > The hashed password configured in [`initialHashedPassword`](https://search.nixos.org/options?channel=unstable&show=users.users.%3Cname%3E.initialHashedPassword&query=users.users.%3Cname%3E) is only set when the user is first created, and will not overwrite an existing password when you apply your configuration in the future 🙂<br><br>
+    However, it might be wise to remove the line from your user configuration to force yourself to hash a fresh random password next time you re-install from your fork.
+    
+15. Next we want to define <u>the location</u> from where we will update our system from in the future. 
+16. Create a directory for managing your system, e.g., `~/nixos`, and cd into it.
+17. Clone your forked repository:
     ```shell
     git clone <fork-url> .
     ```
-6. Create a directory for your host configuration:
-    ```shell
-    mkdir src/hosts/$(hostname)
-    ```
-7. Copy your host configuration files:
-    ```shell
-    cp /etc/nixos/*configuration.nix src/hosts/$(hostname)
-    ```
-8. Rename the configuration files:
-    ```shell
-    mv src/hosts/$(hostname)/hardware-configuration.nix src/hosts/$(hostname)/hardware.nix
-    mv src/hosts/$(hostname)/configuration.nix src/hosts/$(hostname)/customization.nix
-    ```
-9. Create an entry point for your host:
-    ```shell
-    cp src/hosts/b1kini/default.nix src/hosts/$(hostname)/default.nix
-    ```
-10. Copy and customize the user configuration:
-    ```shell
-    cp -r src/users/i src/users/yourusername
-    ```
-11. Replace occurrences of `i` with your username in the copied files.
-12. Update `src/flake.nix` with your hostname and user combination:
-    ```nix
-    // ...existing code...
-    nixosConfigurations.<HOSTNAME> = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      specialArgs = attrs;
-      modules = [
-        ./hosts/<HOSTNAME>
-        ./users/<USERNAME>
-      ];
-    };
-    // ...existing code...
-    ```
-13. Test the configuration:
+18. Apply the configuration now (and in the future):
     ```shell
     bin/build
     ```
-14. Update your user's password via root.
-15. Explore the configuration to understand further details.
+
+19. Congratulations, you can now boot into your new NixOS system with your custom configuration and update it from within! 
 
 ## Updating
 To update the system (flake), run:
@@ -100,10 +121,10 @@ bin/gc
 > Info:<br>This deletes older boot entries!<br>Make sure that your current config/boot-entry is bootable (by rebooting once)
 
 ## Development
-If you enable the development module (optional), your Nix configuration will automatically be statically checked, formatted, and you will gain Nix LSP.
+If you import the development module (optional), your Nix configuration will automatically be statically checked, formatted, and you will gain Nix LSP.
 
-To enable development features:
-- system-wide (substituters / services): `src/module/host/add/application/development.nix`
+To import development features:
+- system-wide (cache substituters / services): `src/module/host/add/application/development.nix`
 - per-user tools (git/direnv/dev tools): `src/module/user/add/application/development.nix`
 
 The various tools to assist development with Nix will be loaded automatically when you enter the directory where you cloned this repository.
