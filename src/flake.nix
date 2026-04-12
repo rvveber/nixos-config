@@ -22,10 +22,19 @@
       url = "github:danth/stylix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    rvveber-shell = {
+      url = "path:./module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/rvveber-shell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     rvveber-fhud = {
       url = "path:./module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.stylix.follows = "stylix";
+      inputs.rvveber-shell.follows = "rvveber-shell";
     };
   };
 
