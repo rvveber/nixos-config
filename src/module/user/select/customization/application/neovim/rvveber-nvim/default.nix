@@ -9,7 +9,7 @@
   ];
 
   # Entry point for the lua configuration
-  programs.neovim.extraLuaConfig = builtins.readFile ./src/config/init.lua;
+  programs.neovim.initLua = builtins.readFile ./src/config/init.lua;
 
   # Additional packages for the neovim setup
   home.packages = with pkgs; [
@@ -19,9 +19,7 @@
     cargo
     unzip
     zig
-    nodePackages.mermaid-cli
-    nodePackages.markdownlint-cli
-    ueberzugpp
+    markdownlint-cli
   ];
 
   xdg.configFile."nvim/lua" = {
