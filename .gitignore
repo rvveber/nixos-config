@@ -14,3 +14,4 @@ devenv.local.nix
 # local tooling
 .roo/
 .tmp/
+.security-scan/

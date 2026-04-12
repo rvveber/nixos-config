@@ -13,6 +13,70 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 RESET='\033[0m'
 
+SECURITY_SCAN_MODE="${SECURITY_SCAN_MODE:-post-switch}"
+POST_SWITCH_SCAN_TARGET="${POST_SWITCH_SCAN_TARGET:-system}"
+POST_SWITCH_SCAN_ALLOW_FAILURE="${POST_SWITCH_SCAN_ALLOW_FAILURE:-1}"
+
+# Temporarily force Lix-backed nix for this script to avoid parser/compat issues
+# when the host still defaults to classic nix.
+if command -v lix >/dev/null 2>&1; then
+  LIX_BIN_DIR=$(dirname "$(command -v lix)")
+else
+  if ! command -v nix >/dev/null 2>&1; then
+    printf "${RED}${ARROW} ERROR: Neither 'nix' nor 'lix' command found.${RESET}\n"
+    exit 1
+  fi
+
+  printf "${CYAN}${ARROW} INFO: Bootstrapping temporary Lix binary via nixpkgs...${RESET}\n"
+  if ! LIX_OUT_PATHS=$(nix build --no-link --print-out-paths 'nixpkgs#lixPackageSets.latest.lix' 2>/dev/null); then
+    printf "${RED}${ARROW} ERROR: Failed to build temporary Lix package from nixpkgs.${RESET}\n"
+    exit 1
+  fi
+
+  LIX_BIN_DIR=""
+  while IFS= read -r LIX_OUT_PATH; do
+    if [ -z "${LIX_OUT_PATH}" ]; then
+      continue
+    fi
+
+    if [ -x "${LIX_OUT_PATH}/bin/nix" ]; then
+      LIX_BIN_DIR="${LIX_OUT_PATH}/bin"
+      break
+    fi
+  done <<EOF
+${LIX_OUT_PATHS}
+EOF
+
+  if [ -z "${LIX_BIN_DIR}" ]; then
+    printf "${RED}${ARROW} ERROR: Could not find a nix binary in temporary Lix outputs.${RESET}\n"
+    printf "${RED}   Built outputs:${RESET}\n"
+    printf "%s\n" "${LIX_OUT_PATHS}" | sed 's/^/   - /'
+    exit 1
+  fi
+fi
+
+if [ ! -x "${LIX_BIN_DIR}/nix" ]; then
+  printf "${RED}${ARROW} ERROR: Lix nix binary not found at ${LIX_BIN_DIR}/nix.${RESET}\n"
+  exit 1
+fi
+
+export PATH="${LIX_BIN_DIR}:${PATH}"
+printf "${CYAN}${ARROW} INFO: Using nix from %s${RESET}\n" "${LIX_BIN_DIR}"
+if NIX_VERSION=$(nix --version 2>/dev/null); then
+  printf "${CYAN}${ARROW} INFO: %s${RESET}\n" "${NIX_VERSION}"
+fi
+
+# In nix-shell, PATH can resolve sudo to /run/current-system/sw/bin/sudo (non-setuid).
+# Prefer the NixOS wrapper binary that has correct setuid permissions.
+if [ -x /run/wrappers/bin/sudo ]; then
+  SUDO_BIN=/run/wrappers/bin/sudo
+elif SUDO_BIN=$(command -v sudo 2>/dev/null); then
+  :
+else
+  printf "${RED}${ARROW} ERROR: sudo command not found.${RESET}\n"
+  exit 1
+fi
+
 # Check if script is run with sudo
 #if [ "$(id -u)" -ne 0 ]; then
 #    printf "${RED}${ARROW} This script must be ran with sudo!${RESET}\n"
@@ -26,10 +90,68 @@ if command -v direnv >/dev/null && command -v devenv >/dev/null && command -v st
   ${DIR_BIN}/validate
 fi
 
+RUN_PRE_SCAN=0
+RUN_POST_SCAN=0
+
+case "${SECURITY_SCAN_MODE}" in
+  pre-switch)
+    RUN_PRE_SCAN=1
+    ;;
+  post-switch)
+    RUN_POST_SCAN=1
+    ;;
+  both)
+    RUN_PRE_SCAN=1
+    RUN_POST_SCAN=1
+    ;;
+  off)
+    ;;
+  *)
+    printf "${RED}${ARROW} ERROR: Unsupported SECURITY_SCAN_MODE='%s'. Use pre-switch|post-switch|both|off.${RESET}\n" "${SECURITY_SCAN_MODE}"
+    exit 1
+    ;;
+esac
+
+if [ "${SKIP_SECURITY_SCAN:-0}" = "1" ]; then
+  RUN_PRE_SCAN=0
+  RUN_POST_SCAN=0
+  printf "${CYAN}${ARROW} INFO: Skipping security scan (SKIP_SECURITY_SCAN=1).${RESET}\n"
+fi
+
+if [ "${RUN_PRE_SCAN}" = "1" ]; then
+  printf "${CYAN}${ARROW} INFO: Running bin/security-scan before rebuild (SECURITY_SCAN_MODE=%s).${RESET}\n" "${SECURITY_SCAN_MODE}"
+  ${DIR_BIN}/security-scan
+fi
+
 # execute git add src - to have new files tracked and available in the nix store, important for flake mechanism
 git add "${DIR_ROOT}/src"
 
 # Syncing the src directory to /etc/nixos for compatiblity sake and rebuild the system configuration
 #sudo rsync -az --no-p --no-g --chown=root:root --chmod=ugo=rwX --delete "${DIR_ROOT}/src/" /etc/nixos
 
-sudo nixos-rebuild switch --flake "${DIR_ROOT}/src" --verbose --option allow-import-from-derivation false
+"${SUDO_BIN}" env "PATH=${LIX_BIN_DIR}:${PATH}" nixos-rebuild switch --flake "path:${DIR_ROOT}/src" --verbose --option allow-import-from-derivation false
+
+if [ "${RUN_POST_SCAN}" = "1" ]; then
+  RUN_SCAN_NOW=0
+
+  if [ -t 0 ]; then
+    printf "${CYAN}${ARROW} Build finished. Want to scan for security issues now? [y/N] ${RESET}"
+    read -r scan_reply
+    case "${scan_reply}" in
+      y|Y|yes|YES)
+        RUN_SCAN_NOW=1
+        ;;
+      *)
+        ;;
+    esac
+  else
+    printf "${CYAN}${ARROW} INFO: Skipping prompt for post-build security scan (non-interactive shell).${RESET}\n"
+  fi
+
+  if [ "${RUN_SCAN_NOW}" = "1" ]; then
+    printf "${CYAN}${ARROW} INFO: Running bin/security-scan after rebuild (target=%s, allow-failure=%s).${RESET}\n" "${POST_SWITCH_SCAN_TARGET}" "${POST_SWITCH_SCAN_ALLOW_FAILURE}"
+    SECURITY_SCAN_TARGET="${POST_SWITCH_SCAN_TARGET}" SECURITY_SCAN_ALLOW_FAILURE="${POST_SWITCH_SCAN_ALLOW_FAILURE}" ${DIR_BIN}/security-scan
+  else
+    printf "${CYAN}${ARROW} INFO: Skipping post-build security scan.${RESET}\n"
+  fi
+fi
