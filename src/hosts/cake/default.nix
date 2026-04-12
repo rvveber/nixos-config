@@ -12,7 +12,9 @@
     ../../module/host/add/hardware/gpu_nvidia.nix
 
     ../../module/host/add/application/home-manager.nix
+    ../../module/host/add/application/lix.nix
     ../../module/host/add/application/development.nix
+    ../../module/host/add/application/office.nix
     ../../module/host/add/application/gaming.nix
     ../../module/host/add/application/appimage.nix
     ../../module/host/add/application/avahi.nix
