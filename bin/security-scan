@@ -1,0 +1,695 @@
+#!/usr/bin/env sh
+set -eu
+
+# Get the absolute path of the directory containing the script
+DIR_BIN=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+# Navigate up one directory from the script directory to get to the project root
+DIR_ROOT=$(cd "$DIR_BIN"/.. && pwd -P)
+cd "${DIR_ROOT}"
+
+# Fancy up the terminal output
+ARROW="➜"
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+MAGENTA='\033[0;35m'
+RESET='\033[0m'
+
+HOST_ATTR="${HOST_ATTR:-$(hostname)}"
+SECURITY_SCAN_TIMEOUT_SECONDS="${SECURITY_SCAN_TIMEOUT_SECONDS:-900}"
+ALLOW_FAILURE="${SECURITY_SCAN_ALLOW_FAILURE:-0}"
+FLAKE_REF="path:${DIR_ROOT}/src#nixosConfigurations.${HOST_ATTR}.config.system.build.toplevel"
+SECURITY_SCAN_REPORT_DIR="${SECURITY_SCAN_REPORT_DIR:-${DIR_ROOT}/.security-scan/reports}"
+SECURITY_SCAN_MIN_CVSS="${SECURITY_SCAN_MIN_CVSS:-7}"
+SECURITY_SCAN_BACKTRACE_STATUS_INTERVAL_SECONDS="${SECURITY_SCAN_BACKTRACE_STATUS_INTERVAL_SECONDS:-5}"
+SECURITY_SCAN_DESCRIPTION_MAX_LEN="${SECURITY_SCAN_DESCRIPTION_MAX_LEN:-500}"
+SECURITY_SCAN_TARGET="${SECURITY_SCAN_TARGET:-flake}"
+SECURITY_SCAN_EXCLUDE_BUILD_TIME_ONLY="${SECURITY_SCAN_EXCLUDE_BUILD_TIME_ONLY:-1}"
+SECURITY_SCAN_EVIDENCE_MODE="${SECURITY_SCAN_EVIDENCE_MODE:-always}"
+SECURITY_SCAN_SUPPRESSIONS_FILE="${SECURITY_SCAN_SUPPRESSIONS_FILE:-${DIR_ROOT}/.security-scan/suppressions.tsv}"
+SECURITY_SCAN_SUPPRESSIONS_ENFORCE_EXPIRY="${SECURITY_SCAN_SUPPRESSIONS_ENFORCE_EXPIRY:-1}"
+
+run_jq() {
+  if command -v jq >/dev/null 2>&1; then
+    jq "$@"
+  else
+    nix shell nixpkgs#jq -c jq "$@"
+  fi
+}
+
+extract_unique_cves() {
+  report_file="$1"
+
+  if CVE_LINES=$(run_jq -r '[.[] | .affected_by[]?] | unique[]' "${report_file}" 2>/dev/null); then
+    printf "%s\n" "${CVE_LINES}" | sed '/^$/d' | sort -u
+  else
+    grep -oE 'CVE-[0-9]{4}-[0-9]+' "${report_file}" | sort -u || true
+  fi
+}
+
+score_ge() {
+  left="$1"
+  right="$2"
+  awk -v a="${left}" -v b="${right}" 'BEGIN { exit !((a + 0) >= (b + 0)) }'
+}
+
+score_color() {
+  score="$1"
+  if score_ge "${score}" 7; then
+    printf "%s" "${RED}"
+  else
+    printf "%s" "${MAGENTA}"
+  fi
+}
+
+severity_label() {
+  score="$1"
+  if score_ge "${score}" 9; then
+    printf "Critical"
+  elif score_ge "${score}" 7; then
+    printf "High"
+  elif score_ge "${score}" 5; then
+    printf "Medium"
+  elif score_ge "${score}" 0.1; then
+    printf "Low"
+  else
+    printf "Unknown"
+  fi
+}
+
+resolve_why_depends_target() {
+  drv="$1"
+  if [ -z "${drv}" ]; then
+    return 1
+  fi
+
+  first_candidate=""
+  plain_candidate=""
+  lib_candidate=""
+  bin_candidate=""
+  data_candidate=""
+
+  for candidate in $(nix-store -q --outputs "${drv}" 2>/dev/null || true); do
+    if [ -z "${candidate}" ]; then
+      continue
+    fi
+    if ! grep -Fx -q "${candidate}" "${CLOSURE_PATHS_FILE}" 2>/dev/null; then
+      continue
+    fi
+
+    if [ -z "${first_candidate}" ]; then
+      first_candidate="${candidate}"
+    fi
+
+    case "${candidate}" in
+      *-lib)
+        if [ -z "${lib_candidate}" ]; then
+          lib_candidate="${candidate}"
+        fi
+        ;;
+      *-bin)
+        if [ -z "${bin_candidate}" ]; then
+          bin_candidate="${candidate}"
+        fi
+        ;;
+      *-data)
+        if [ -z "${data_candidate}" ]; then
+          data_candidate="${candidate}"
+        fi
+        ;;
+      *)
+        base=$(basename "${candidate}")
+        case "${base}" in
+          *-dev|*-doc|*-man|*-info|*-include|*-static|*-debug|*-devdoc)
+            ;;
+          *)
+            if [ -z "${plain_candidate}" ]; then
+              plain_candidate="${candidate}"
+            fi
+            ;;
+        esac
+        ;;
+    esac
+  done
+
+  if [ -n "${plain_candidate}" ]; then
+    printf "%s" "${plain_candidate}"
+    return 0
+  fi
+  if [ -n "${bin_candidate}" ]; then
+    printf "%s" "${bin_candidate}"
+    return 0
+  fi
+  if [ -n "${lib_candidate}" ]; then
+    printf "%s" "${lib_candidate}"
+    return 0
+  fi
+  if [ -n "${data_candidate}" ]; then
+    printf "%s" "${data_candidate}"
+    return 0
+  fi
+  if [ -n "${first_candidate}" ]; then
+    printf "%s" "${first_candidate}"
+    return 0
+  fi
+
+  return 1
+}
+
+if ! command -v nix >/dev/null 2>&1; then
+  printf "${RED}${ARROW} ERROR: nix command not found.${RESET}\n"
+  exit 1
+fi
+
+case "${SECURITY_SCAN_TARGET}" in
+  flake)
+    printf "${CYAN}${ARROW} INFO: Building system to resolve runtime closure for host '${HOST_ATTR}'...${RESET}\n"
+    if ! OUT_PATH=$(nix build --no-link --print-out-paths "${FLAKE_REF}"); then
+      printf "${RED}${ARROW} ERROR: Could not build flake target (required to find runtime dependencies): ${FLAKE_REF}${RESET}\n"
+      exit 1
+    fi
+    if [ -f "${DIR_ROOT}/src/flake.lock" ]; then
+      PIN_MODE="flake.lock pinned inputs"
+    else
+      PIN_MODE="floating flake inputs (no flake.lock found)"
+    fi
+    TARGET_LABEL="nixosConfigurations.${HOST_ATTR}.config.system.build.toplevel"
+    ;;
+  system)
+    printf "${CYAN}${ARROW} INFO: Resolving runtime closure for current running system profile...${RESET}\n"
+    OUT_PATH=$(readlink -f /run/current-system 2>/dev/null || true)
+    if [ -z "${OUT_PATH}" ] || [ ! -e "${OUT_PATH}" ]; then
+      printf "${RED}${ARROW} ERROR: Could not resolve /run/current-system store path.${RESET}\n"
+      exit 1
+    fi
+    PIN_MODE="running system profile"
+    TARGET_LABEL="/run/current-system"
+    ;;
+  *)
+    printf "${RED}${ARROW} ERROR: Unsupported SECURITY_SCAN_TARGET='%s'. Use flake|system.${RESET}\n" "${SECURITY_SCAN_TARGET}"
+    exit 1
+    ;;
+esac
+
+case "${SECURITY_SCAN_EVIDENCE_MODE}" in
+  auto|always|never)
+    ;;
+  *)
+    printf "${RED}${ARROW} ERROR: Unsupported SECURITY_SCAN_EVIDENCE_MODE='%s'. Use auto|always|never.${RESET}\n" "${SECURITY_SCAN_EVIDENCE_MODE}"
+    exit 1
+    ;;
+esac
+
+case "${SECURITY_SCAN_SUPPRESSIONS_ENFORCE_EXPIRY}" in
+  0|1)
+    ;;
+  *)
+    printf "${RED}${ARROW} ERROR: Unsupported SECURITY_SCAN_SUPPRESSIONS_ENFORCE_EXPIRY='%s'. Use 0|1.${RESET}\n" "${SECURITY_SCAN_SUPPRESSIONS_ENFORCE_EXPIRY}"
+    exit 1
+    ;;
+esac
+
+CLOSURE_PATHS_FILE=$(mktemp)
+if ! nix path-info -r "${OUT_PATH}" >"${CLOSURE_PATHS_FILE}" 2>/dev/null; then
+  printf "${RED}${ARROW} ERROR: Could not resolve runtime closure paths for target: %s${RESET}\n" "${OUT_PATH}"
+  rm -f "${CLOSURE_PATHS_FILE}"
+  exit 1
+fi
+
+SYSTEM_DRV=$(nix path-info --derivation "${OUT_PATH}" 2>/dev/null | head -n 1 || true)
+BUILD_GRAPH_FILE=$(mktemp)
+if [ -n "${SYSTEM_DRV}" ] && [ -e "${SYSTEM_DRV}" ]; then
+  if ! nix-store -q --requisites "${SYSTEM_DRV}" >"${BUILD_GRAPH_FILE}" 2>/dev/null; then
+    : >"${BUILD_GRAPH_FILE}"
+  fi
+else
+  : >"${BUILD_GRAPH_FILE}"
+fi
+
+printf "${CYAN}${ARROW} INFO: Scanning target closure (${PIN_MODE}).${RESET}\n"
+printf "${CYAN}   Target: %s${RESET}\n" "${TARGET_LABEL}"
+printf "${CYAN}   Mode: %s${RESET}\n" "${SECURITY_SCAN_TARGET}"
+printf "${CYAN}   Evidence mode: %s${RESET}\n" "${SECURITY_SCAN_EVIDENCE_MODE}"
+if [ -f "${SECURITY_SCAN_SUPPRESSIONS_FILE}" ]; then
+  printf "${CYAN}   Suppressions: %s${RESET}\n" "${SECURITY_SCAN_SUPPRESSIONS_FILE}"
+fi
+
+printf "${CYAN}${ARROW} INFO: Running vulnerability scan with vulnix (timeout: ${SECURITY_SCAN_TIMEOUT_SECONDS}s)...${RESET}\n"
+mkdir -p "${SECURITY_SCAN_REPORT_DIR}"
+REPORT_TS=$(date +%Y%m%d-%H%M%S)
+SCAN_JSON="${SECURITY_SCAN_REPORT_DIR}/security-scan-${HOST_ATTR}-${SECURITY_SCAN_TARGET}-${REPORT_TS}.json"
+SCAN_ERR=$(mktemp)
+trap 'rm -f "${SCAN_ERR}" "${CLOSURE_PATHS_FILE}" "${BUILD_GRAPH_FILE}"' EXIT INT TERM
+
+SCAN_EXIT=0
+START_TS=$(date +%s)
+NEXT_STATUS_TS=$((START_TS + 30))
+
+if [ "${SECURITY_SCAN_TARGET}" = "system" ]; then
+  nix shell nixpkgs#vulnix -c vulnix --system --json >"${SCAN_JSON}" 2>"${SCAN_ERR}" &
+else
+  nix shell nixpkgs#vulnix -c vulnix -C --json "${OUT_PATH}" >"${SCAN_JSON}" 2>"${SCAN_ERR}" &
+fi
+SCAN_PID=$!
+
+while kill -0 "${SCAN_PID}" 2>/dev/null; do
+  NOW_TS=$(date +%s)
+  ELAPSED=$((NOW_TS - START_TS))
+
+  if [ "${NOW_TS}" -ge "${NEXT_STATUS_TS}" ]; then
+    printf "${CYAN}${ARROW} INFO: Security scan still running (${ELAPSED}s elapsed)...${RESET}\n"
+    NEXT_STATUS_TS=$((NEXT_STATUS_TS + 30))
+  fi
+
+  if [ "${ELAPSED}" -ge "${SECURITY_SCAN_TIMEOUT_SECONDS}" ]; then
+    kill "${SCAN_PID}" 2>/dev/null || true
+    wait "${SCAN_PID}" 2>/dev/null || true
+    SCAN_EXIT=124
+    break
+  fi
+
+  sleep 2
+done
+
+if [ "${SCAN_EXIT}" -ne 124 ]; then
+  if wait "${SCAN_PID}"; then
+    SCAN_EXIT=0
+  else
+    SCAN_EXIT=$?
+  fi
+fi
+
+if CVE_COUNT=$(run_jq -r '[.[] | .affected_by[]?] | unique | length' "${SCAN_JSON}" 2>/dev/null); then
+  :
+else
+  CVE_COUNT=$(grep -oE 'CVE-[0-9]{4}-[0-9]+' "${SCAN_JSON}" | sort -u | wc -l | tr -d ' ')
+fi
+
+PREVIOUS_SCAN_JSON=$(ls -1t "${SECURITY_SCAN_REPORT_DIR}/security-scan-${HOST_ATTR}-${SECURITY_SCAN_TARGET}-"*.json 2>/dev/null | awk -v cur="${SCAN_JSON}" '$0 != cur { print; exit }' || true)
+PREV_CVE_COUNT=""
+ADDED_CVE_COUNT=""
+REMOVED_CVE_COUNT=""
+if [ -n "${PREVIOUS_SCAN_JSON}" ] && [ -f "${PREVIOUS_SCAN_JSON}" ]; then
+  CURRENT_CVES_FILE=$(mktemp)
+  PREVIOUS_CVES_FILE=$(mktemp)
+
+  extract_unique_cves "${SCAN_JSON}" >"${CURRENT_CVES_FILE}"
+  extract_unique_cves "${PREVIOUS_SCAN_JSON}" >"${PREVIOUS_CVES_FILE}"
+
+  PREV_CVE_COUNT=$(wc -l <"${PREVIOUS_CVES_FILE}" | tr -d ' ')
+  ADDED_CVE_COUNT=$(comm -13 "${PREVIOUS_CVES_FILE}" "${CURRENT_CVES_FILE}" | wc -l | tr -d ' ')
+  REMOVED_CVE_COUNT=$(comm -23 "${PREVIOUS_CVES_FILE}" "${CURRENT_CVES_FILE}" | wc -l | tr -d ' ')
+
+  rm -f "${CURRENT_CVES_FILE}" "${PREVIOUS_CVES_FILE}"
+fi
+
+NIXOS_RELEASE=$(nix eval --raw --no-write-lock-file "path:${DIR_ROOT}/src#nixosConfigurations.${HOST_ATTR}.config.system.nixos.release" 2>/dev/null || printf "unknown")
+NIXOS_STATE_VERSION=$(nix eval --raw --no-write-lock-file "path:${DIR_ROOT}/src#nixosConfigurations.${HOST_ATTR}.config.system.stateVersion" 2>/dev/null || printf "unknown")
+if NIXPKGS_REV=$(nix flake metadata --no-write-lock-file --json "path:${DIR_ROOT}/src" 2>/dev/null | run_jq -r '.locks.nodes.nixpkgs.locked.rev // .revision // "unknown"' 2>/dev/null); then
+  :
+else
+  NIXPKGS_REV="unknown"
+fi
+
+if [ "${SCAN_EXIT}" -eq 124 ]; then
+  printf "${RED}${ARROW} ERROR: Security scan timed out after ${SECURITY_SCAN_TIMEOUT_SECONDS}s.${RESET}\n"
+  printf "${RED}   HINT: Increase SECURITY_SCAN_TIMEOUT_SECONDS or rerun later.${RESET}\n"
+  exit 1
+fi
+
+if [ "${CVE_COUNT}" -gt 0 ]; then
+  printf "${YELLOW}${ARROW} WARNING: Found %s CVEs in target closure.${RESET}\n" "${CVE_COUNT}"
+  printf "${CYAN}   Host: %s | NixOS: %s (stateVersion: %s) | nixpkgs: %s${RESET}\n" "${HOST_ATTR}" "${NIXOS_RELEASE}" "${NIXOS_STATE_VERSION}" "${NIXPKGS_REV}"
+  printf "${CYAN}   Raw report: %s${RESET}\n" "${SCAN_JSON}"
+  if [ -n "${PREV_CVE_COUNT}" ]; then
+    printf "${CYAN}   Previous report: %s (CVEs: %s, added: %s, removed: %s)${RESET}\n" "$(basename "${PREVIOUS_SCAN_JSON}")" "${PREV_CVE_COUNT}" "${ADDED_CVE_COUNT}" "${REMOVED_CVE_COUNT}"
+  fi
+
+  CRITICAL_TSV=$(mktemp)
+  FILTERED_CRITICAL_TSV=$(mktemp)
+  SUPPRESSED_CRITICAL_TSV=$(mktemp)
+  GROUP_TSV=$(mktemp)
+  TAB=$(printf '\t')
+  trap 'rm -f "${SCAN_ERR}" "${CRITICAL_TSV}" "${FILTERED_CRITICAL_TSV}" "${SUPPRESSED_CRITICAL_TSV}" "${GROUP_TSV}" "${CLOSURE_PATHS_FILE}" "${BUILD_GRAPH_FILE}"' EXIT INT TERM
+
+  if ! run_jq -r --arg min "${SECURITY_SCAN_MIN_CVSS}" '
+    [ .[] as $pkg
+      | ($pkg.affected_by // [])[] as $cve
+      | (($pkg.cvssv3_basescore[$cve] // 0) | tonumber? // 0) as $score
+      | select($score >= ($min | tonumber))
+      | [
+          $cve,
+          $score,
+          ($pkg.pname // $pkg.name // "unknown"),
+          ($pkg.name // "unknown"),
+          ($pkg.version // "unknown"),
+          ($pkg.derivation // ""),
+          (($pkg.description[$cve] // "") | tostring | gsub("[\\r\\n\\t]+"; " "))
+        ]
+    ]
+    | sort_by([-(.[1]), .[0], .[2]])
+    | .[]
+    | @tsv
+  ' "${SCAN_JSON}" >"${CRITICAL_TSV}" 2>/dev/null; then
+    printf "${RED}${ARROW} ERROR: Could not parse vulnerability report JSON for critical triage.${RESET}\n"
+    exit 1
+  fi
+
+  if [ -f "${SECURITY_SCAN_SUPPRESSIONS_FILE}" ]; then
+    TODAY=$(date +%F)
+    awk -F "${TAB}" -v OFS="${TAB}" \
+      -v suppressionsFile="${SECURITY_SCAN_SUPPRESSIONS_FILE}" \
+      -v today="${TODAY}" \
+      -v enforceExpiry="${SECURITY_SCAN_SUPPRESSIONS_ENFORCE_EXPIRY}" \
+      -v filteredFile="${FILTERED_CRITICAL_TSV}" \
+      -v suppressedFile="${SUPPRESSED_CRITICAL_TSV}" '
+      BEGIN {
+        while ((getline line < suppressionsFile) > 0) {
+          if (line ~ /^[[:space:]]*#/ || line ~ /^[[:space:]]*$/) continue
+
+          n = split(line, f, FS)
+          if (n < 2) continue
+
+          cve = f[1]
+          pname = f[2]
+          until = (n >= 3 ? f[3] : "")
+
+          reason = ""
+          if (n >= 4) {
+            reason = f[4]
+            for (i = 5; i <= n; i++) {
+              reason = reason OFS f[i]
+            }
+          }
+
+          key = cve OFS pname
+          supUntil[key] = until
+          supReason[key] = reason
+        }
+        close(suppressionsFile)
+      }
+
+      function suppression_key(cve, pname, key) {
+        key = cve OFS pname
+        if (key in supUntil) return key
+        key = cve OFS "*"
+        if (key in supUntil) return key
+        key = "*" OFS pname
+        if (key in supUntil) return key
+        key = "*" OFS "*"
+        if (key in supUntil) return key
+        return ""
+      }
+
+      {
+        cve = $1
+        pname = $3
+        key = suppression_key(cve, pname)
+
+        if (key == "") {
+          print $0 >> filteredFile
+          next
+        }
+
+        until = supUntil[key]
+        expired = 0
+        if (enforceExpiry == "1" && until != "" && until != "-") {
+          if (until < today) expired = 1
+        }
+
+        if (expired) {
+          print $0 >> filteredFile
+        } else {
+          print $0 OFS (supReason[key] == "" ? "suppressed" : supReason[key]) OFS (until == "" ? "-" : until) >> suppressedFile
+        }
+      }
+    ' "${CRITICAL_TSV}"
+  else
+    cp "${CRITICAL_TSV}" "${FILTERED_CRITICAL_TSV}"
+    : >"${SUPPRESSED_CRITICAL_TSV}"
+  fi
+
+  CRITICAL_COUNT=$(wc -l <"${FILTERED_CRITICAL_TSV}" | tr -d ' ')
+  SUPPRESSED_COUNT=$(wc -l <"${SUPPRESSED_CRITICAL_TSV}" | tr -d ' ')
+
+  if [ "${SUPPRESSED_COUNT}" -gt 0 ]; then
+    printf "${YELLOW}${ARROW} WARNING: Suppressed %s CVE entries using policy file.${RESET}\n" "${SUPPRESSED_COUNT}"
+  fi
+
+  if [ "${CRITICAL_COUNT}" -eq 0 ]; then
+    printf "${GREEN}${ARROW} SUCCESS: No CVEs with CVSS >= %s (lower scores are ignored by policy).${RESET}\n" "${SECURITY_SCAN_MIN_CVSS}"
+    exit 0
+  fi
+
+  awk -F "${TAB}" -v OFS="${TAB}" '
+    NF >= 6 {
+      key = $3 OFS $4 OFS $5 OFS $6
+      cve = $1
+      score = $2 + 0
+      pname = $3
+      name = $4
+      version = $5
+      drv = $6
+
+      if (!(key in seen)) {
+        seen[key] = 1
+        kpname[key] = pname
+        kname[key] = name
+        kversion[key] = version
+        kdrv[key] = drv
+      }
+
+      count[key]++
+
+      if (!(key in max_score) || score > max_score[key]) {
+        max_score[key] = score
+      }
+
+      if (cves[key] == "") {
+        cves[key] = cve " (" score ")"
+      } else {
+        cves[key] = cves[key] ", " cve " (" score ")"
+      }
+    }
+    END {
+      for (k in seen) {
+        print kpname[k], kname[k], kversion[k], kdrv[k], count[k], max_score[k], cves[k]
+      }
+    }
+  ' "${FILTERED_CRITICAL_TSV}" \
+    | awk -F "${TAB}" -v OFS="${TAB}" '
+      {
+        rows[NR] = $0
+        split($0, f, FS)
+        pname = f[1]
+        score = f[6] + 0
+        if (!(pname in clusterMax) || score > clusterMax[pname]) {
+          clusterMax[pname] = score
+        }
+      }
+      END {
+        for (i = 1; i <= NR; i++) {
+          split(rows[i], f, FS)
+          print rows[i], clusterMax[f[1]]
+        }
+      }
+    ' \
+    | LC_ALL=C sort -t "${TAB}" -k8,8nr -k1,1 -k6,6nr -k5,5nr -k3,3V \
+    | cut -f1-7 >"${GROUP_TSV}"
+
+  GROUP_COUNT=$(wc -l <"${GROUP_TSV}" | tr -d ' ')
+
+  if [ "${SECURITY_SCAN_EXCLUDE_BUILD_TIME_ONLY}" = "1" ]; then
+    printf "${RED}${ARROW} CRITICAL TRIAGE: %s CVE entries with CVSS >= %s grouped into %s package nodes (excluding build-time-only findings)${RESET}\n" "${CRITICAL_COUNT}" "${SECURITY_SCAN_MIN_CVSS}" "${GROUP_COUNT}"
+  else
+    printf "${RED}${ARROW} CRITICAL TRIAGE: %s CVE entries with CVSS >= %s grouped into %s package nodes${RESET}\n" "${CRITICAL_COUNT}" "${SECURITY_SCAN_MIN_CVSS}" "${GROUP_COUNT}"
+  fi
+  printf "${CYAN}   Runtime closure root: %s${RESET}\n" "${OUT_PATH}"
+
+  INDEX=0
+  REPORTED_GROUP_COUNT=0
+  SKIPPED_BUILD_TIME_ONLY_GROUP_COUNT=0
+  SKIPPED_BUILD_TIME_ONLY_CVE_ENTRY_COUNT=0
+  UNKNOWN_REACHABILITY_GROUP_COUNT=0
+  while IFS="${TAB}" read -r PKG_PNAME PKG_NAME PKG_VERSION PKG_DRV GROUP_CVE_COUNT GROUP_MAX_SCORE GROUP_CVES; do
+    if [ -z "${PKG_DRV}" ]; then
+      continue
+    fi
+
+    INDEX=$((INDEX + 1))
+    SCORE_COLOR=$(score_color "${GROUP_MAX_SCORE}")
+
+    DRV_OUTPUTS=$(nix-store -q --outputs "${PKG_DRV}" 2>/dev/null || true)
+    DRV_OUTPUT_TOTAL_COUNT=$(printf "%s\n" "${DRV_OUTPUTS}" | sed '/^$/d' | wc -l | tr -d ' ')
+    DRV_RUNTIME_OUTPUTS=$(printf "%s\n" "${DRV_OUTPUTS}" | grep -Fxf "${CLOSURE_PATHS_FILE}" || true)
+    DRV_RUNTIME_OUTPUT_COUNT=$(printf "%s\n" "${DRV_RUNTIME_OUTPUTS}" | sed '/^$/d' | wc -l | tr -d ' ')
+
+    DRV_IN_BUILD_GRAPH=0
+    if [ -s "${BUILD_GRAPH_FILE}" ] && grep -Fx -q "${PKG_DRV}" "${BUILD_GRAPH_FILE}" 2>/dev/null; then
+      DRV_IN_BUILD_GRAPH=1
+    fi
+
+    PKG_REACHABILITY="unknown"
+    if [ "${DRV_OUTPUT_TOTAL_COUNT}" -gt 0 ] && [ "${DRV_RUNTIME_OUTPUT_COUNT}" -gt 0 ]; then
+      PKG_REACHABILITY="runtime dependency (fact: ${DRV_RUNTIME_OUTPUT_COUNT}/${DRV_OUTPUT_TOTAL_COUNT} derivation outputs are in runtime closure)"
+    elif [ "${DRV_OUTPUT_TOTAL_COUNT}" -gt 0 ] && [ "${DRV_RUNTIME_OUTPUT_COUNT}" -eq 0 ]; then
+      if [ "${DRV_IN_BUILD_GRAPH}" -eq 1 ]; then
+        PKG_REACHABILITY="build-time dependency only for this target (fact: 0/${DRV_OUTPUT_TOTAL_COUNT} derivation outputs in runtime closure, drv in build graph)"
+      else
+        PKG_REACHABILITY="not in runtime closure and not found in top-level build graph (fact: 0/${DRV_OUTPUT_TOTAL_COUNT} derivation outputs in runtime closure)"
+      fi
+    elif [ "${DRV_IN_BUILD_GRAPH}" -eq 1 ]; then
+      PKG_REACHABILITY="build-time dependency only for this target (fact: drv in build graph, outputs unavailable)"
+    else
+      PKG_REACHABILITY="unknown (fact: derivation outputs unavailable and drv not found in top-level build graph)"
+    fi
+
+    if [ "${SECURITY_SCAN_EXCLUDE_BUILD_TIME_ONLY}" = "1" ]; then
+      IS_BUILD_TIME_ONLY=0
+      if [ "${DRV_OUTPUT_TOTAL_COUNT}" -gt 0 ] && [ "${DRV_RUNTIME_OUTPUT_COUNT}" -eq 0 ]; then
+        IS_BUILD_TIME_ONLY=1
+      elif [ "${DRV_OUTPUT_TOTAL_COUNT}" -eq 0 ] && [ "${DRV_IN_BUILD_GRAPH}" -eq 1 ]; then
+        IS_BUILD_TIME_ONLY=1
+      fi
+
+      if [ "${IS_BUILD_TIME_ONLY}" -eq 1 ]; then
+        SKIPPED_BUILD_TIME_ONLY_GROUP_COUNT=$((SKIPPED_BUILD_TIME_ONLY_GROUP_COUNT + 1))
+        SKIPPED_BUILD_TIME_ONLY_CVE_ENTRY_COUNT=$((SKIPPED_BUILD_TIME_ONLY_CVE_ENTRY_COUNT + GROUP_CVE_COUNT))
+        continue
+      fi
+    fi
+
+    REPORTED_GROUP_COUNT=$((REPORTED_GROUP_COUNT + 1))
+
+    case "${PKG_REACHABILITY}" in
+      unknown*)
+        UNKNOWN_REACHABILITY_GROUP_COUNT=$((UNKNOWN_REACHABILITY_GROUP_COUNT + 1))
+        ;;
+    esac
+
+    TARGET_OUT=$(printf "%s\n" "${DRV_RUNTIME_OUTPUTS}" | sed '/^$/d' | head -n 1)
+    RUN_WHY_DEPENDS=0
+    case "${SECURITY_SCAN_EVIDENCE_MODE}" in
+      always)
+        RUN_WHY_DEPENDS=1
+        ;;
+      never)
+        RUN_WHY_DEPENDS=0
+        ;;
+      auto)
+        case "${PKG_REACHABILITY}" in
+          unknown*)
+            RUN_WHY_DEPENDS=1
+            ;;
+        esac
+        ;;
+    esac
+
+    if [ -z "${TARGET_OUT}" ] && [ "${RUN_WHY_DEPENDS}" -eq 1 ]; then
+      TARGET_OUT=$(resolve_why_depends_target "${PKG_DRV}" || true)
+    fi
+
+    CHAIN_PATHS=""
+    CHAIN_TRACE_RAW=""
+
+    if [ "${RUN_WHY_DEPENDS}" -eq 1 ] && [ -n "${TARGET_OUT}" ]; then
+      WHY_TRACE_FILE=$(mktemp)
+      nix why-depends "${OUT_PATH}" "${TARGET_OUT}" >"${WHY_TRACE_FILE}" 2>/dev/null &
+      WHY_PID=$!
+      WHY_START_TS=$(date +%s)
+      WHY_NEXT_STATUS_TS=$((WHY_START_TS + SECURITY_SCAN_BACKTRACE_STATUS_INTERVAL_SECONDS))
+
+      while kill -0 "${WHY_PID}" 2>/dev/null; do
+        NOW_TS=$(date +%s)
+        if [ "${NOW_TS}" -ge "${WHY_NEXT_STATUS_TS}" ]; then
+          WHY_ELAPSED=$((NOW_TS - WHY_START_TS))
+          printf "${CYAN}${ARROW} INFO: [%s/%s] still backtracing %s (%ss elapsed)...${RESET}\n" "${INDEX}" "${GROUP_COUNT}" "${PKG_NAME}" "${WHY_ELAPSED}"
+          WHY_NEXT_STATUS_TS=$((WHY_NEXT_STATUS_TS + SECURITY_SCAN_BACKTRACE_STATUS_INTERVAL_SECONDS))
+        fi
+        sleep 1
+      done
+
+      if wait "${WHY_PID}"; then
+        ESC=$(printf '\033')
+        CHAIN_TRACE_RAW=$(sed "s/${ESC}\\[[0-9;]*[A-Za-z]//g" "${WHY_TRACE_FILE}" | sed 's/[[:space:]]*$//' || true)
+        CHAIN_PATHS=$(printf "%s\n" "${CHAIN_TRACE_RAW}" | grep -oE '/nix/store/[a-z0-9]{32}-[^[:space:]]+' | awk '!seen[$0]++' || true)
+      fi
+
+      rm -f "${WHY_TRACE_FILE}"
+    fi
+
+    printf "${SCORE_COLOR}${ARROW} [%s/%s] %s | %s | %s CVEs | max CVSS %s${RESET}\n" "${INDEX}" "${GROUP_COUNT}" "${PKG_PNAME}" "${PKG_VERSION}" "${GROUP_CVE_COUNT}" "${GROUP_MAX_SCORE}"
+    if [ -n "${CHAIN_TRACE_RAW}" ]; then
+      printf "   trace:\n"
+      printf "%s\n" "${CHAIN_TRACE_RAW}" | sed 's/^/   /'
+    elif [ -n "${TARGET_OUT}" ]; then
+      printf "   trace: unavailable from nix why-depends (target: %s)\n" "${TARGET_OUT}"
+    else
+      printf "   trace: unavailable (no traceable runtime output for %s)\n" "${PKG_NAME}"
+    fi
+
+    printf "   vulnerabilities:\n"
+    awk -F "${TAB}" -v p1="${PKG_PNAME}" -v p2="${PKG_NAME}" -v p3="${PKG_VERSION}" -v p4="${PKG_DRV}" '
+      $3 == p1 && $4 == p2 && $5 == p3 && $6 == p4 {
+        print $1 "\t" $2 "\t" $7
+      }
+    ' "${FILTERED_CRITICAL_TSV}" | LC_ALL=C sort -t "${TAB}" -k2,2nr -k1,1 | while IFS="${TAB}" read -r CVE CVE_SCORE CVE_DESC; do
+      if [ -z "${CVE}" ]; then
+        continue
+      fi
+
+      CVE_LEVEL=$(severity_label "${CVE_SCORE}")
+      CVE_SCORE_DISPLAY=$(printf "%s" "${CVE_SCORE}" | sed 's/\.0$//')
+      CVE_SUMMARY=$(printf "%s" "${CVE_DESC}" | sed 's/[[:space:]]\+/ /g;s/^[[:space:]]*//;s/[[:space:]]*$//' | cut -c 1-"${SECURITY_SCAN_DESCRIPTION_MAX_LEN}")
+      if [ -z "${CVE_SUMMARY}" ]; then
+        CVE_SUMMARY="no short CVE description available"
+      fi
+
+      printf "   └─ %s (CVSS %s, %s):\n" "${CVE}" "${CVE_SCORE_DISPLAY}" "${CVE_LEVEL}"
+      printf "      └─ %s\n" "${CVE_SUMMARY}"
+      printf "      └─ https://nvd.nist.gov/vuln/detail/%s\n" "${CVE}"
+    done
+
+    printf "\n"
+
+  done <"${GROUP_TSV}"
+
+  if [ "${SKIPPED_BUILD_TIME_ONLY_GROUP_COUNT}" -gt 0 ]; then
+    printf "${CYAN}${ARROW} INFO: Skipped %s build-time-only package nodes (%s CVE entries) due to SECURITY_SCAN_EXCLUDE_BUILD_TIME_ONLY=1.${RESET}\n" "${SKIPPED_BUILD_TIME_ONLY_GROUP_COUNT}" "${SKIPPED_BUILD_TIME_ONLY_CVE_ENTRY_COUNT}"
+  fi
+
+  if [ "${REPORTED_GROUP_COUNT}" -eq 0 ]; then
+    printf "${GREEN}${ARROW} SUCCESS: No runtime-reachable CVEs with CVSS >= %s after filtering build-time-only dependencies.${RESET}\n" "${SECURITY_SCAN_MIN_CVSS}"
+    exit 0
+  fi
+
+  if [ "${UNKNOWN_REACHABILITY_GROUP_COUNT}" -gt 0 ]; then
+    printf "${YELLOW}${ARROW} WARNING: %s reported package nodes have unknown reachability classification.${RESET}\n" "${UNKNOWN_REACHABILITY_GROUP_COUNT}"
+  fi
+
+  if [ "${ALLOW_FAILURE}" = "1" ]; then
+    printf "${CYAN}${ARROW} INFO: SECURITY_SCAN_ALLOW_FAILURE=1 is set; continuing despite critical findings.${RESET}\n"
+    exit 0
+  fi
+
+  printf "${RED}${ARROW} ERROR: Failing security check because %s runtime-reachable package nodes contain critical CVEs (CVSS >= %s).${RESET}\n" "${REPORTED_GROUP_COUNT}" "${SECURITY_SCAN_MIN_CVSS}"
+  exit 1
+fi
+
+if [ "${SCAN_EXIT}" -ne 0 ]; then
+  printf "${RED}${ARROW} ERROR: vulnix returned non-zero exit code (${SCAN_EXIT}) without CVE output.${RESET}\n"
+  if [ -s "${SCAN_ERR}" ]; then
+    printf "${RED}   Last scanner output:${RESET}\n"
+    tail -n 20 "${SCAN_ERR}" | sed 's/^/   | /'
+  fi
+  printf "${RED}   HINT: Check network reachability and rerun 'bin/security-scan'.${RESET}\n"
+  exit 1
+fi
+
+printf "${GREEN}${ARROW} SUCCESS: No CVEs detected in the target system derivation closure.${RESET}\n"
+if [ -n "${PREV_CVE_COUNT}" ]; then
+  printf "${CYAN}   Previous report: %s (CVEs: %s, added: %s, removed: %s)${RESET}\n" "$(basename "${PREVIOUS_SCAN_JSON}")" "${PREV_CVE_COUNT}" "${ADDED_CVE_COUNT}" "${REMOVED_CVE_COUNT}"
+fi
+
+rm -f "${BUILD_GRAPH_FILE}"
