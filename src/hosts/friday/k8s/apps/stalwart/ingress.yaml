@@ -1,0 +1,62 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stalwart-http
+  namespace: friday
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - we8.dev
+    - mail.we8.dev
+    - autoconfig.we8.dev
+    - autodiscover.we8.dev
+    secretName: wildcard-we8-dev-tls
+  rules:
+  - host: we8.dev
+    http:
+      paths:
+      - path: /.well-known/jmap
+        pathType: Prefix
+        backend:
+          service:
+            name: stalwart-http
+            port:
+              number: 8080
+      - path: /jmap
+        pathType: Prefix
+        backend:
+          service:
+            name: stalwart-http
+            port:
+              number: 8080
+  - host: mail.we8.dev
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: stalwart-http
+            port:
+              number: 8080
+  - host: autoconfig.we8.dev
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: stalwart-http
+            port:
+              number: 8080
+  - host: autodiscover.we8.dev
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: stalwart-http
+            port:
+              number: 8080

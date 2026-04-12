@@ -115,6 +115,19 @@ bin/gc
 ```
 > Info:<br>This deletes older boot entries!<br>Make sure that your current config/boot-entry is bootable (by rebooting once)
 
+## Secret Management
+Secrets are encrypted using [sops-nix](https://github.com/Mic92/sops-nix). Only authorized machines can decrypt them at boot using their SSH Host Key.
+
+**To edit secrets:**
+Run `./bin/edit-secrets` (Uses your local machine's SSH key).
+
+**First-time setup (Fork):**
+Since you don't have my keys, you must reset the secrets for your machine:
+1.  Get your machine's public age key: `nix shell nixpkgs#ssh-to-age -c ssh-to-age -i /etc/ssh/ssh_host_ed25519_key.pub`
+2.  Replace the keys in `src/secrets/.sops.yaml` with your output.
+3.  Delete `src/secrets/secrets.yaml` and recreate it: `./bin/edit-secrets` (Add content, save).
+4.  Commit and push.
+
 ## Development
 If you import the development module (optional), your Nix configuration will automatically be statically checked, formatted, and you will gain Nix LSP.
 

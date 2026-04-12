@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: stalwart-mail
+  namespace: friday
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  selector:
+    app: stalwart
+  ports:
+  - name: smtp
+    port: 25
+    targetPort: smtp
+  - name: smtps
+    port: 465
+    targetPort: smtps
+  - name: imaps
+    port: 993
+    targetPort: imaps
+  - name: managesieve
+    port: 4190
+    targetPort: managesieve

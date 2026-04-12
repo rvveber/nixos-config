@@ -3,23 +3,12 @@
 # Either if you want to override something a module defines.
 # Or if you want to add something quickly, without thinking about how to encapsulate it in a module.
 # In addition, you need to define a user specific bare minimum for Home-Manager here.
-{
-  config,
-  pkgs,
-  lib,
-  ...
-}: let
+{pkgs, ...}: let
   username = "i";
   homeDirectory = "/home/i";
 in {
   ############################
   # nixos config - global
-
-  # TODO: Remove once unnecessary
-  nixpkgs.config.permittedInsecurePackages = [
-    "dotnet-sdk-6.0.428" # Needed for godot mono...
-  ];
-
   nixpkgs.config.allowUnfree = true;
 
   ############################
@@ -32,8 +21,51 @@ in {
     extraGroups = ["networkmanager" "wheel" "docker"];
   };
 
-  services.mullvad-vpn = {
-    enable = true;
+  systemd.services.nas-smb-mount = {
+    description = "Mount SMB NAS shares";
+    wants = ["network-online.target"];
+    after = ["network-online.target" "sops-nix.service"];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "nas-smb-mount-start" ''
+        set -eu
+
+        host="$(${pkgs.coreutils}/bin/cat /run/secrets/user_i_nas_smb_server_host)"
+        credentials_file="/run/secrets/rendered/user_i_nas_smb_mount_credentials"
+        shares_file="/run/secrets/user_i_nas_smb_shares"
+        mount_cifs="${pkgs.lib.getExe' pkgs.cifs-utils "mount.cifs"}"
+
+        while IFS= read -r share || [ -n "$share" ]; do
+          # Ignore empty lines and comments in the shares secret.
+          case "$share" in
+            "" | "#"*)
+              continue
+              ;;
+          esac
+
+            target="/mnt/nas/$share"
+            ${pkgs.coreutils}/bin/install -d -m 0700 -o root -g root "$target"
+
+            if ! ${pkgs.util-linux}/bin/mountpoint -q "$target"; then
+              "$mount_cifs" "//$host/$share" "$target" \
+                -o "credentials=$credentials_file,uid=0,gid=0,file_mode=0600,dir_mode=0700,vers=3.1.1,iocharset=utf8,_netdev,nofail"
+            fi
+        done < "$shares_file"
+      '';
+      ExecStop = pkgs.writeShellScript "nas-smb-mount-stop" ''
+        ${pkgs.util-linux}/bin/findmnt -rn -t cifs -o TARGET | while IFS= read -r target; do
+          case "$target" in
+            /mnt/nas/*)
+              if ${pkgs.util-linux}/bin/mountpoint -q "$target"; then
+                ${pkgs.util-linux}/bin/umount "$target" || true
+              fi
+              ;;
+          esac
+        done
+      '';
+    };
   };
 
   ############################
@@ -49,20 +81,29 @@ in {
   in {
     imports = [
       ../../module/user/select/customization/application/neovim/rvveber-nvim
-      ../../module/user/add/hack/codex-to-api.nix
+      #../../module/user/add/hack/codex-to-api.nix
       ../../module/user/add/application/development.nix
       ../../module/user/add/application/devops.nix
     ];
 
     xdg.enable = true;
+
+    # Temporary warning-silencer for HM default change; removable after home.stateVersion >= 26.05.
+    gtk.gtk4.theme = null;
+
+    # Temporary warning-silencer for HM default change; removable after home.stateVersion >= 25.05
+    # if you also want to adopt the new default (null).
+    programs.git.signing.format = null;
+
     home = {
       inherit username;
       inherit homeDirectory;
       stateVersion = "24.05";
     };
+
     home.packages = with pkgs; [
       # essentials
-      thunderbird
+      thunderbird-bin
       (chromium.override {enableWideVine = true;})
       yazi
       ausweisapp
@@ -105,10 +146,10 @@ in {
             name = pkgs.zsh-z.pname;
             inherit (pkgs.zsh-z) src;
           }
-          {
-            name = pkgs.zsh-autopair.pname;
-            inherit (pkgs.zsh-autopair) src;
-          }
+          # {
+          #   name = pkgs.zsh-autopair.pname;
+          #   inherit (pkgs.zsh-autopair) src;
+          # }
           {
             name = pkgs.zsh-powerlevel10k.pname;
             inherit (pkgs.zsh-powerlevel10k) src;
@@ -193,7 +234,18 @@ in {
       yazi = {
         enable = true;
         enableZshIntegration = true;
+        # Temporary warning-silencer for HM default change; removable after home.stateVersion >= 26.05
+        # if you also want to adopt the new default ("y").
+        shellWrapperName = "y";
       };
+
+      neovim = {
+        # Temporary warning-silencers for HM default change; removable after home.stateVersion >= 26.05
+        # if you also want to adopt the new defaults (false/false).
+        withRuby = false;
+        withPython3 = false;
+      };
+
       direnv = {
         enable = true;
         enableZshIntegration = true;

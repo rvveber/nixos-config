@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lldap
+  namespace: friday
+spec:
+  selector:
+    app: lldap
+  ports:
+  - name: http
+    port: 17170
+    targetPort: 17170
+  - name: ldap
+    port: 3890
+    targetPort: 3890

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lldap-config
+  namespace: friday
+data:
+  lldap_config.toml: |
+    ldap_host = "0.0.0.0"
+    ldap_port = 3890
+    http_host = "0.0.0.0"
+    http_port = 17170
+    http_url = "https://ldap.we8.dev"
+    ldap_base_dn = "dc=we8,dc=dev"
+    ldap_user_email = "admin@we8.dev"
+    force_ldap_user_pass_reset = "always"
+    database_url = "sqlite:///data/users.db?mode=rwc"
+    key_file = "/data/server_key"
+    ldap_user_pass_file = "/run/secrets/host_friday_k8s_lldap_admin_password"
+    jwt_secret_file = "/run/secrets/host_friday_k8s_lldap_jwt_secret"
