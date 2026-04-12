@@ -127,6 +127,9 @@ Since you don't have my keys, you must reset the secrets for your machine:
 2.  Replace the keys in `src/secrets/.sops.yaml` with your output.
 3.  Delete `src/secrets/secrets.yaml` and recreate it: `./bin/edit-secrets` (Add content, save).
 4.  Commit and push.
+> Info:<br>Be careful to not allow your secret files to be overwritten with mines when you sync your fork. 
+It's probably best to remove the fork relationship altogether and only manually do a merge from time to time, <br>
+then you should get a merge conflict and can avoid getting your changes overwritten
 
 ## Development
 If you import the development module (optional), your Nix configuration will automatically be statically checked, formatted, and you will gain Nix LSP.
