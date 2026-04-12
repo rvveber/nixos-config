@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lldap
+  namespace: friday
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lldap
+  template:
+    metadata:
+      labels:
+        app: lldap
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      initContainers:
+      - name: init-postgres
+        image: postgres:17-alpine
+        command: ["sh", "-ceu"]
+        args:
+        - |
+          until PGPASSWORD="$POSTGRES_PASSWORD" pg_isready -h postgres.friday.svc.cluster.local -p 5432 -U postgres -d postgres; do
+            sleep 2
+          done
+
+          PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 \
+            -h postgres.friday.svc.cluster.local -p 5432 -U postgres -d postgres \
+            --set=app_password="$APP_PASSWORD" <<'SQL'
+          SELECT format('CREATE ROLE lldap LOGIN PASSWORD %L', :'app_password')
+          WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'lldap')\gexec
+
+          SELECT format('ALTER ROLE lldap WITH PASSWORD %L', :'app_password')
+          WHERE EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'lldap')\gexec
+
+          SELECT 'CREATE DATABASE lldap OWNER lldap'
+          WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'lldap')\gexec
+          SQL
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nix-secrets
+              key: host_friday_k8s_postgres_admin_password
+        - name: APP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nix-secrets
+              key: host_friday_k8s_postgres_lldap_password
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: lldap
+        image: lldap/lldap:v0.6.2-alpine-rootless@sha256:35df821899ec54c11eaab395e9c68e191e2582592cba343b0a904f6821aadcd2
+        env:
+        - name: LLDAP_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: nix-secrets
+              key: host_friday_k8s_lldap_database_url
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: lldap-data
+          mountPath: /data
+        - name: lldap-config
+          mountPath: /data/lldap_config.toml
+          subPath: lldap_config.toml
+        - name: lldap-secrets
+          mountPath: /run/secrets
+          readOnly: true
+      volumes:
+      - name: lldap-data
+        persistentVolumeClaim:
+          claimName: lldap-data
+      - name: lldap-config
+        configMap:
+          name: lldap-config
+      - name: lldap-secrets
+        secret:
+          secretName: nix-secrets

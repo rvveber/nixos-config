@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-we8-dev
+  namespace: friday
+spec:
+  secretName: wildcard-we8-dev-tls
+  issuerRef:
+    name: letsencrypt-prod-dns01
+    kind: Issuer
+  dnsNames:
+  - we8.dev
+  - "*.we8.dev"

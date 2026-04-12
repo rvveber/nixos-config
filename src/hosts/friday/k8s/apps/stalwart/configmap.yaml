@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stalwart-config
+  namespace: friday
+data:
+  config.toml: |
+    [server]
+    hostname = "mail.we8.dev"
+
+    [server.tls]
+    enable = true
+    implicit = false
+    certificate = "default"
+
+    [certificate.default]
+    cert = "%{file:/etc/stalwart/tls/tls.crt}%"
+    private-key = "%{file:/etc/stalwart/tls/tls.key}%"
+    default = true
+
+    [server.listener.smtp]
+    bind = ["[::]:25"]
+    protocol = "smtp"
+
+    [server.listener.smtps]
+    bind = ["[::]:465"]
+    protocol = "smtp"
+    [server.listener.smtps.tls]
+    implicit = true
+
+    [server.listener.imaps]
+    bind = ["[::]:993"]
+    protocol = "imap"
+    [server.listener.imaps.tls]
+    implicit = true
+
+    [server.listener.managesieve]
+    bind = ["[::]:4190"]
+    protocol = "managesieve"
+
+    [server.listener.http]
+    bind = ["[::]:8080"]
+    protocol = "http"
+
+    [http]
+    url = "'https://mail.we8.dev'"
+    use-x-forwarded = true
+
+    [store.db]
+    type = "postgresql"
+    host = "postgres.friday.svc.cluster.local"
+    port = 5432
+    database = "stalwart"
+    user = "stalwart"
+    password = "%{file:/run/secrets/host_friday_k8s_postgres_stalwart_password}%"
+
+    [storage]
+    data = "db"
+    fts = "db"
+    lookup = "db"
+    blob = "db"
+    directory = "lldap"
+
+    [directory.lldap]
+    type = "ldap"
+    url = "ldap://lldap.friday.svc.cluster.local:3890"
+    base-dn = "dc=we8,dc=dev"
+
+    [directory.lldap.bind]
+    dn = "uid=admin,ou=people,dc=we8,dc=dev"
+    secret = "%{file:/run/secrets/host_friday_k8s_lldap_admin_password}%"
+
+    [directory.lldap.bind.auth]
+    method = "lookup"
+
+    [directory.lldap.filter]
+    name = "(|(uid=?)(mail=?))"
+    email = "(mail=?)"
+
+    [directory.lldap.attributes]
+    name = "uid"
+    email = "mail"
+    secret = "uuid"
+    secret-changed = "modifyTimestamp"
+    class = "mailrole"
+    groups = "memberOf"
+
+    [signature."dkim-rsa-we8-dev"]
+    algorithm = "rsa-sha256"
+    private-key = "%{file:/run/secrets/host_friday_k8s_stalwart_dkim_private_key}%"
+    domain = "we8.dev"
+    selector = "mail"
+    canonicalization = "relaxed/relaxed"
+    headers = ["From", "To", "Date", "Subject", "Message-ID"]
+
+    [auth.dkim]
+    sign = [
+      {if = "is_local_domain('', sender_domain)", then = "'dkim-rsa-we8-dev'"},
+      {else = false},
+    ]

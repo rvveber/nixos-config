@@ -2,13 +2,15 @@
   imports = [
     # abstract
     ../../module/host/add/hardware/ssd.nix
+    ../../module/host/add/application/lix.nix
 
     ../../module/host/select/locale/de_DE
-    ../../module/host/select/application/containerization/docker
 
     # concrete
+    ../../secrets/secrets.nix
     ./hardware.nix
     ./disko.nix
     ./customization.nix
+    ./services
   ];
 }

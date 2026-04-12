@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stalwart
+  namespace: friday
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: stalwart
+  template:
+    metadata:
+      labels:
+        app: stalwart
+    spec:
+      automountServiceAccountToken: false
+      initContainers:
+      - name: init-postgres
+        image: postgres:17-alpine
+        command: ["sh", "-ceu"]
+        args:
+        - |
+          until PGPASSWORD="$POSTGRES_PASSWORD" pg_isready -h postgres.friday.svc.cluster.local -p 5432 -U postgres -d postgres; do
+            sleep 2
+          done
+
+          PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 \
+            -h postgres.friday.svc.cluster.local -p 5432 -U postgres -d postgres \
+            --set=app_password="$APP_PASSWORD" <<'SQL'
+          SELECT format('CREATE ROLE stalwart LOGIN PASSWORD %L', :'app_password')
+          WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'stalwart')\gexec
+
+          SELECT format('ALTER ROLE stalwart WITH PASSWORD %L', :'app_password')
+          WHERE EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'stalwart')\gexec
+
+          SELECT 'CREATE DATABASE stalwart OWNER stalwart'
+          WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'stalwart')\gexec
+          SQL
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nix-secrets
+              key: host_friday_k8s_postgres_admin_password
+        - name: APP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nix-secrets
+              key: host_friday_k8s_postgres_stalwart_password
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: stalwart
+        image: stalwartlabs/stalwart:v0.15.5@sha256:dcf575db2d53d9ef86d6ced8abe4ba491984659a0f8862cc6079ee7b41c3c568
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+        ports:
+        - name: smtp
+          containerPort: 25
+        - name: smtps
+          containerPort: 465
+        - name: imaps
+          containerPort: 993
+        - name: managesieve
+          containerPort: 4190
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: stalwart-data
+          mountPath: /opt/stalwart
+        - name: stalwart-config
+          mountPath: /opt/stalwart/etc/config.toml
+          subPath: config.toml
+        - name: stalwart-tls
+          mountPath: /etc/stalwart/tls
+          readOnly: true
+        - name: lldap-secrets
+          mountPath: /run/secrets
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        - name: var-tmp
+          mountPath: /var/tmp
+      volumes:
+      - name: stalwart-data
+        persistentVolumeClaim:
+          claimName: stalwart-data
+      - name: stalwart-config
+        configMap:
+          name: stalwart-config
+      - name: stalwart-tls
+        secret:
+          secretName: wildcard-we8-dev-tls
+      - name: lldap-secrets
+        secret:
+          secretName: nix-secrets
+      - name: tmp
+        emptyDir: {}
+      - name: var-tmp
+        emptyDir: {}

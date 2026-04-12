@@ -1,13 +1,9 @@
-{
-  config,
-  pkgs,
-  ...
-}: {
+{config, ...}: {
   networking = {
     hostName = "friday";
   };
 
-  system.stateVersion = "25.11";
+  system.stateVersion = "26.05";
 
   boot.loader = {
     systemd-boot.enable = true;
@@ -31,7 +27,6 @@
 
   services.openssh = {
     enable = true;
-    openFirewall = true;
 
     hostKeys = [
       {
