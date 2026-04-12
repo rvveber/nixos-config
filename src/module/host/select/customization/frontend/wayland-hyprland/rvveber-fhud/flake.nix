@@ -212,7 +212,7 @@
 
       # Shell aliases
       # environment.shellAliases = {
-      #   ssh = "kitty +kitten ssh"; # copies kitty terminfo to server you ssh into
+      #   ssh = "kitty +kitten ssh"; # copies kitty terminfo to server you ssh into (one time run per server is enough)
       # };
 
       # FHUD Theme Configuration
@@ -238,11 +238,127 @@
         };
       };
 
-      # Hyprland UI Configuration
+      # Frontend Tools Configuration
       home-manager.sharedModules = [
-        {
+        (let
+          hyprshadeShaderName = "blue-light-filter-550";
+          hyprshadeStartTime = "20:00:00";
+          hyprshadeEndTime = "05:00:00";
+        in {
           # Enable stylix for home-manager
           stylix.enable = true;
+
+          # Hyprshade configuration must live in $XDG_CONFIG_HOME. Hyprshade
+          # does not search /etc/xdg.
+          #
+          # Note: hyprshade expects TOML "time" values (unquoted).
+          xdg.configFile."hypr/hyprshade.toml".text = ''
+            [[shades]]
+            name = "${hyprshadeShaderName}"
+            start_time = ${hyprshadeStartTime}
+            end_time = ${hyprshadeEndTime}
+          '';
+
+          # More aggressive blue-light filter approximation.
+          # Note: displays are RGB; a true spectral cutoff (e.g. <550nm) isn't
+          # physically achievable, but we can heavily suppress blue and most
+          # green to approximate an amber-only output.
+          xdg.configFile."hypr/shaders/blue-light-filter-550.glsl".text = ''
+                        // Aggressive "blue light" suppression shader (approximate).
+                        // Based on hyprshade's built-in blue-light-filter.glsl.
+                        #version 300 es
+                        precision highp float;
+
+                        in vec2 v_texcoord;
+                        uniform sampler2D tex;
+                        out vec4 fragColor;
+
+                        // Warmer than the built-in (2600K), but not as red as 1800K.
+                        const float temperature = 2200.0;
+                        const float temperatureStrength = 1.0;
+
+                        // Extra channel suppression for non-cool pixels (approximate ">=550nm only").
+                        const vec3 channelScale = vec3(1.0, 0.25, 0.0);
+
+                        // Make "clipped" (cool/blue-ish) areas readable instead of going dark:
+                        // map them to slightly-dark grayscale (not too bright).
+                        const float clippedGrayBoost = 0.90; // brightness multiplier
+                        const float clippedGrayLift = 0.00;  // additive lift
+
+                        // Reduce warm tint saturation a bit (less "pure red").
+                        const float tintSaturation = 0.80;
+
+                        #define WithQuickAndDirtyLuminancePreservation
+                        const float LuminancePreservationFactor = 1.0;
+
+                        // function from https://www.shadertoy.com/view/4sc3D7
+                        // valid from 1000 to 40000 K (and additionally 0 for pure full white)
+                        vec3 colorTemperatureToRGB(const in float temperature) {
+                            // values from: http://blenderartists.org/forum/showthread.php?270332-OSL-Goodness&p=2268693&viewfull=1#post2268693
+                            mat3 m = (temperature <= 6500.0)
+                                ? mat3(vec3(0.0, -2902.1955373783176, -8257.7997278925690),
+                                       vec3(0.0, 1669.5803561666639, 2575.2827530017594),
+                                       vec3(1.0, 1.3302673723350029, 1.8993753891711275))
+                                : mat3(vec3(1745.0425298314172, 1216.6168361476490, -8257.7997278925690),
+                                       vec3(-2666.3474220535695, -2173.1012343082230, 2575.2827530017594),
+                                       vec3(0.55995389139931482, 0.70381203140554553, 1.8993753891711275));
+
+                            return mix(
+                                clamp(m[0] / (vec3(clamp(temperature, 1000.0, 40000.0)) + m[1]) + m[2], 0.0, 1.0),
+                                vec3(1.0),
+                                smoothstep(1000.0, 0.0, temperature)
+                            );
+                        }
+
+                        void main() {
+                            vec4 pixColor = texture(tex, v_texcoord);
+                            vec3 color = pixColor.rgb;
+
+            #ifdef WithQuickAndDirtyLuminancePreservation
+                            float lum = dot(color, vec3(0.2126, 0.7152, 0.0722));
+                            color *= mix(1.0, lum / max(lum, 1e-5), LuminancePreservationFactor);
+            #endif
+
+                             // Detect "cool" pixels (approximation for <~550nm-dominant areas).
+                             float cool = max(color.b - max(color.r, color.g), 0.0);
+                             float clippedMask = smoothstep(0.02, 0.20, cool);
+
+                             float lumC = dot(color, vec3(0.2126, 0.7152, 0.0722));
+
+                             // Important: grayscale the "cool" parts BEFORE applying the warm filter.
+                             // This avoids weird hue/contrast artifacts in UI highlights (e.g. text selection).
+                             vec3 pre = mix(color, vec3(lumC), clippedMask);
+                             pre = mix(pre, vec3(lumC), clippedMask); // slightly softer transition
+                             pre = mix(pre, vec3(lumC) * clippedGrayBoost + clippedGrayLift, clippedMask);
+
+                             vec3 warmMul = mix(vec3(1.0), colorTemperatureToRGB(temperature), tintSaturation);
+                             vec3 outColor = mix(pre, pre * warmMul, temperatureStrength);
+                             outColor *= channelScale;
+
+                             fragColor = vec4(clamp(outColor, 0.0, 1.0), pixColor.a);
+                         }
+          '';
+
+          # Run hyprshade on a schedule via systemd user units.
+          # Use `uwsm app -- ...` so the command runs with compositor/session env.
+          systemd.user.services.hyprshade = {
+            Unit.Description = "Apply screen shader";
+            Service = {
+              Type = "oneshot";
+              ExecStart = "${pkgs.uwsm}/bin/uwsm app -- ${pkgs.hyprshade}/bin/hyprshade auto";
+            };
+          };
+          systemd.user.timers.hyprshade = {
+            Unit.Description = "Apply screen shader on schedule";
+            Timer = {
+              OnCalendar = [
+                "*-*-* ${hyprshadeStartTime}"
+                "*-*-* ${hyprshadeEndTime}"
+              ];
+              Persistent = true;
+            };
+            Install.WantedBy = ["timers.target"];
+          };
 
           # Install icon themes in user profile for complete coverage
           home.packages = with pkgs; [
@@ -327,7 +443,7 @@
               # Start FHUD components
               exec-once = [
                 "uwsm app -- /usr/bin/env rvveber-fhud-ui"
-                # "uwsm app -- hyprshade auto"
+                "uwsm app -- hyprshade auto"
                 "$handle_monitor_change"
               ];
 
@@ -429,27 +545,13 @@
               bindl = [
                 ", switch:on:Lid Switch, exec, $lock_and_suspend"
               ];
-
-              windowrulev2 = [
-                "suppressevent maximize, class:.*"
-                "float, class:^(nm-connection-editor)$"
-                "float, class:^(blueman-manager)$"
-                "float, class:^(satty)$"
-                "size 900 700, class:^(satty)$"
-                "center, class:^(satty)$"
-              ];
             };
           };
-        }
+        })
       ];
 
-      # Shader Configuration TODO: not yet working
-      environment.etc."xdg/hypr/hyprshade.toml".text = ''
-        [[shades]]
-        name = "blue-light-filter"
-        start_time = 15:45:00
-        end_time = 06:00:00
-      '';
+      # Note: hyprshade does not read config from /etc/xdg; it only checks
+      # $XDG_CONFIG_HOME. See the home-manager config above.
 
       # Lockscreen Configuration
       programs.hyprlock.enable = true;

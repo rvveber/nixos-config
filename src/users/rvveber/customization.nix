@@ -7,7 +7,6 @@
   username = "rvveber";
   homeDirectory = "/home/rvveber";
 in {
-
   users.users.${username} = {
     isNormalUser = true;
     useDefaultShell = true;
@@ -18,7 +17,6 @@ in {
     ];
     extraGroups = [
       "wheel"
-      "docker"
     ];
   };
 
@@ -144,8 +142,6 @@ in {
 
             # Makes esc delay for vim mode shorter
             export KEYTIMEOUT=5
-
-
           '')
         ];
       };
