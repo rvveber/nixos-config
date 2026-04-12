@@ -8,13 +8,12 @@
   environment.systemPackages = [
     pkgs.protonplus
     pkgs.mangohud
-    pkgs.gamescope # TODO: remove after future update
   ];
   programs.steam = {
     enable = true;
-    remotePlay.openFirewall = false; # Open ports in the firewall for Steam Remote Play
-    dedicatedServer.openFirewall = false; # Open ports in the firewall for Source Dedicated Server
-    localNetworkGameTransfers.openFirewall = false; # Open ports in the firewall for Steam Local Network Game Transfers
+    remotePlay.openFirewall = false; # Optional: Open ports in the firewall for Steam Remote Play
+    localNetworkGameTransfers.openFirewall = false; # Optional: Open ports in the firewall for Steam Local Network Game Transfers
+    dedicatedServer.openFirewall = false; # Optional: Open ports in the firewall for Source Dedicated Server
   };
   programs.gamescope.enable = true;
   programs.gamemode.enable = true;

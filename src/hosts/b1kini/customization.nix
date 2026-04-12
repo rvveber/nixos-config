@@ -1,9 +1,5 @@
 # host specific configuration that can't be encapsulated in re-usable modules atm.
-{
-  config,
-  pkgs,
-  ...
-}: {
+_: {
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
   networking.hostName = "b1kini";
