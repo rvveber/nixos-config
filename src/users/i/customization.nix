@@ -17,7 +17,7 @@ in {
     isNormalUser = true;
     useDefaultShell = true;
     home = homeDirectory;
-    description = "Robin Weber";
+    description = "Robin";
     extraGroups = ["networkmanager" "wheel" "docker"];
   };
 
@@ -102,6 +102,9 @@ in {
     };
 
     home.packages = with pkgs; [
+      # study
+      pureref
+
       # essentials
       thunderbird-bin
       (chromium.override {enableWideVine = true;})
@@ -109,8 +112,8 @@ in {
       ausweisapp
 
       # editing
-      gimp # Raster
-      inkscape # Vector
+      gimp
+      inkscape
 
       # testing
       vscode

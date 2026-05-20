@@ -3,6 +3,7 @@
     # abstract
     ../../module/host/add/hardware/ssd.nix
     ../../module/host/add/application/lix.nix
+    ../../module/host/add/application/security-hardening.nix
 
     ../../module/host/select/locale/de_DE
 

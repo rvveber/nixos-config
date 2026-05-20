@@ -18,5 +18,5 @@
   # https://devenv.sh/languages/
   languages.nix.enable = true;
 
-  cachix.enable = false;
+  cachix.enable = true;
 }

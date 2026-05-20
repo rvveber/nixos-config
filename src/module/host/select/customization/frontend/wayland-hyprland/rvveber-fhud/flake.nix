@@ -469,7 +469,6 @@
                 "$mainMod, F, fullscreen, 1"
                 "$mainMod SHIFT, F, fullscreen, 0"
                 "$mainMod, P, pseudo"
-                "$mainMod, J, togglesplit"
                 "$mainMod SHIFT, M, exit"
                 "$mainMod, M, exit"
 

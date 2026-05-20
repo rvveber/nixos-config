@@ -18,10 +18,12 @@
     ../../module/host/add/application/development.nix
     ../../module/host/add/application/office.nix
     ../../module/host/add/application/virtualization.nix
+    ../../module/host/add/application/security-hardening.nix
     ../../module/host/add/application/avahi.nix
     ../../module/host/add/application/printing.nix
     ../../module/host/select/application/containerization/docker
     ../../module/host/add/application/gaming.nix
+    ../../module/host/add/application/appimage.nix
 
     ../../module/host/select/locale/de_DE
 
