@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: stalwart
   namespace: friday
+  annotations:
+    secret.reloader.stakater.com/reload: wildcard-we8-dev-tls
 spec:
   replicas: 1
   strategy:
