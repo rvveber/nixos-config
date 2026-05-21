@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "docker:pinDigests"
+  ],
+  "dependencyDashboard": true,
+  "labels": [
+    "dependencies"
+  ],
+  "kubernetes": {
+    "managerFilePatterns": [
+      "/(^|/)src/hosts/.+/k8s/.+\\.ya?ml$/"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Keep server container image updates reviewed.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "Group NixOS host Kubernetes image updates.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchFileNames": [
+        "src/hosts/*/k8s/**"
+      ],
+      "groupName": "NixOS host Kubernetes container images"
+    }
+  ]
+}
