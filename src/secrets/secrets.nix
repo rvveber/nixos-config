@@ -23,6 +23,8 @@
   sops.secrets.host_friday_k8s_postgres_stalwart_password = {};
   sops.secrets.host_friday_k8s_stalwart_dkim_private_key = {};
   sops.secrets.host_friday_k8s_cloudflare_api_token = {};
+  sops.secrets.host_friday_urbackup_server_idents = {};
+  sops.secrets.host_friday_wireguard_offsitevpn_config = {};
 
   sops.secrets.user_i_nas_smb_server_host = {};
   sops.secrets.user_i_nas_smb_shares = {};

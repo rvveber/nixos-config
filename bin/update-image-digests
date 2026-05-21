@@ -1,0 +1,50 @@
+#!/usr/bin/env sh
+set -eu
+
+# Get the absolute path of the directory containing the script
+DIR_BIN=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+# Navigate up one directory from the script directory to get to the project root
+DIR_ROOT=$(cd "$DIR_BIN"/.. && pwd -P)
+cd "${DIR_ROOT}"
+
+# Fancy up the terminal output
+ARROW="➜"
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+RESET='\033[0m'
+
+image_refs=$(
+  rg --no-heading --line-number --glob '*.yaml' --glob '*.yml' \
+    'image: [^[:space:]]+:[^@[:space:]]+@sha256:[0-9a-f]{64}' src/hosts |
+    sed -E 's/^([^:]+):([0-9]+):(.*image: )([^[:space:]]+)$/\1\t\2\t\4/'
+)
+
+if [ -z "${image_refs}" ]; then
+  printf "${CYAN}${ARROW} INFO: No tag-plus-digest image references found.${RESET}\n"
+  exit 0
+fi
+
+printf "%s\n" "${image_refs}" | while IFS="$(printf '\t')" read -r file line image; do
+  image_without_digest=${image%@sha256:*}
+  old_digest=sha256:${image##*@sha256:}
+
+  new_digest=$(
+    nix shell nixpkgs#skopeo nixpkgs#jq -c sh -c \
+      'skopeo inspect "docker://$1" | jq -r .Digest' \
+      sh "${image_without_digest}"
+  )
+
+  if [ "${old_digest}" = "${new_digest}" ]; then
+    printf "${CYAN}${ARROW} INFO: %s is current in %s:%s${RESET}\n" "${image_without_digest}" "${file}" "${line}"
+    continue
+  fi
+
+  old_image=${image_without_digest}@${old_digest}
+  new_image=${image_without_digest}@${new_digest}
+
+  tmp_file=$(mktemp)
+  sed "s|${old_image}|${new_image}|g" "${file}" >"${tmp_file}"
+  mv "${tmp_file}" "${file}"
+
+  printf "${GREEN}${ARROW} UPDATED: %s -> %s in %s:%s${RESET}\n" "${old_digest}" "${new_digest}" "${file}" "${line}"
+done

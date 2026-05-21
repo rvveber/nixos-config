@@ -8,4 +8,11 @@ _: {
     993 # IMAPS
     4190 # ManageSieve
   ];
+
+  networking.firewall.interfaces.offsitevpn = {
+    allowedTCPPorts = [
+      35621 # UrBackup file backup data
+      35623 # UrBackup commands and image backups
+    ];
+  };
 }
