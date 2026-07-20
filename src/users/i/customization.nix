@@ -77,6 +77,7 @@ in {
     pkgs,
     ...
   }: let
+    purerefFixed = pkgs.callPackage ../../packages/pureref.nix {};
     zshDir = "${config.xdg.configHome}/zsh";
   in {
     imports = [
@@ -87,9 +88,6 @@ in {
     ];
 
     xdg.enable = true;
-
-    # Temporary warning-silencer for HM default change; removable after home.stateVersion >= 26.05.
-    gtk.gtk4.theme = null;
 
     # Temporary warning-silencer for HM default change; removable after home.stateVersion >= 25.05
     # if you also want to adopt the new default (null).
@@ -103,7 +101,7 @@ in {
 
     home.packages = with pkgs; [
       # study
-      pureref
+      purerefFixed
 
       # essentials
       thunderbird-bin
