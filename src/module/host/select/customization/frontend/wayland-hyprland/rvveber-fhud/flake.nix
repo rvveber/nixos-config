@@ -80,6 +80,17 @@
         rvveber-shell.packages.${system}.default
       ];
 
+      nightshift-tuner = pkgs.writeShellApplication {
+        name = "rvveber-fhud-nightshift-tuner";
+        runtimeInputs = [
+          pkgs.hyprshade
+          (pkgs.python3.withPackages (ps: [ps.tkinter]))
+        ];
+        text = ''
+          exec python3 ${self}/src/scripts/nightshift-tuner.py "$@"
+        '';
+      };
+
       # UI package comes from the inner flake
       ui = rvveber-shell.packages.${system}.default;
 
@@ -191,6 +202,7 @@
         self.packages.${pkgs.stdenv.hostPlatform.system}.switch-workspace-group
         self.packages.${pkgs.stdenv.hostPlatform.system}.move-to-workspace-group
         self.packages.${pkgs.stdenv.hostPlatform.system}.app-launcher
+        self.packages.${pkgs.stdenv.hostPlatform.system}.nightshift-tuner
 
         # Additional FHUD-specific packages
         pkgs.hyprshade
@@ -345,7 +357,7 @@
             Unit.Description = "Apply screen shader";
             Service = {
               Type = "oneshot";
-              ExecStart = "${pkgs.uwsm}/bin/uwsm app -- ${pkgs.hyprshade}/bin/hyprshade auto";
+              ExecStart = "${pkgs.uwsm}/bin/uwsm app -- ${self.packages.${pkgs.stdenv.hostPlatform.system}.nightshift-tuner}/bin/rvveber-fhud-nightshift-tuner --auto ${hyprshadeStartTime} ${hyprshadeEndTime}";
             };
           };
           systemd.user.timers.hyprshade = {
@@ -366,6 +378,7 @@
             adwaita-icon-theme
             adwaita-icon-theme-legacy # Additional icon coverage for older apps
             hicolor-icon-theme
+            self.packages.${pkgs.stdenv.hostPlatform.system}.nightshift-tuner
           ];
 
           # kitty configuration
@@ -384,6 +397,7 @@
 
           wayland.windowManager.hyprland = {
             enable = true;
+            configType = "hyprlang";
             settings = {
               # Variables from original config
               "$mainMod" = ["SUPER"];
@@ -443,7 +457,7 @@
               # Start FHUD components
               exec-once = [
                 "uwsm app -- /usr/bin/env rvveber-fhud-ui"
-                "uwsm app -- hyprshade auto"
+                "uwsm app -- rvveber-fhud-nightshift-tuner --auto ${hyprshadeStartTime} ${hyprshadeEndTime}"
                 "$handle_monitor_change"
               ];
 

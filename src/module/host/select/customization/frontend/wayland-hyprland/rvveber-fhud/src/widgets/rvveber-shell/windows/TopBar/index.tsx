@@ -2,15 +2,9 @@
 import app from "ags/gtk4/app"
 import { Astal, Gtk, Gdk } from "ags/gtk4"
 import { onCleanup } from "gnim"
-import WorkspaceGrid from "./WorkspaceGrid.tsx"
-import DateTimeDisplay from "./DateTimeDisplay.tsx"
-import AudioModule from "./modules/AudioModule.tsx"
-import BrightnessModule from "./modules/BrightnessModule.tsx"
-import BatteryModule from "./modules/BatteryModule.tsx"
-import BluetoothModule from "./modules/BluetoothModule.tsx"
-import NetworkModule from "./modules/NetworkModule.tsx"
-import NotificationModule from "./modules/NotificationModule.tsx"
-import PowerModule from "./modules/PowerModule.tsx"
+import WorkspaceGrid from "./WorkspaceGrid"
+import DateTimeDisplay from "./DateTimeDisplay"
+import { TOP_BAR_MODULES } from "./modules/index"
 
 export default function TopBar(gdkmonitor: Gdk.Monitor) {
   let win: Astal.Window
@@ -45,13 +39,9 @@ export default function TopBar(gdkmonitor: Gdk.Monitor) {
         />
 
         <box $type="end" spacing={4}>
-          <AudioModule />
-          <BrightnessModule />
-          <BatteryModule />
-          <BluetoothModule />
-          <NetworkModule />
-          <NotificationModule />
-          <PowerModule />
+          {TOP_BAR_MODULES.map((Module) => (
+            <Module />
+          ))}
         </box>
       </centerbox>
     </window>

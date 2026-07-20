@@ -1,8 +1,7 @@
-// @ts-nocheck
 import Gtk from "gi://Gtk?version=4.0"
 
 type PopoverCardProps = {
-  children?: Gtk.Widget[] | Gtk.Widget | null
+  children?: JSX.Element[] | JSX.Element | Gtk.Widget[] | Gtk.Widget | null
   className?: string
   width?: number
   height?: number
@@ -19,6 +18,7 @@ export default function PopoverCard({
 }: PopoverCardProps) {
   const classes = ["PopoverCard", className].filter(Boolean).join(" ")
 
+  // One popover frame for TopBar dropdowns, so modules only own their content.
   return (
     <popover
       class={classes}

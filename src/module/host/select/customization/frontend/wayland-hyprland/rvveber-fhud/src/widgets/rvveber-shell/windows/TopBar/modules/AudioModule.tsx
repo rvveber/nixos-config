@@ -10,7 +10,6 @@ function formatPercent(value: number) {
 
 function EndpointButton({ endpoint }: { endpoint: any }) {
   const description = createBinding(endpoint, "description")
-  const icon = createBinding(endpoint, "icon")
   const isDefault = createBinding(endpoint, "isDefault")
 
   return (
@@ -58,7 +57,6 @@ export default function AudioModule() {
     microphones,
     defaultSpeaker,
     speakerVolume,
-    speakerMuted,
     speakerIcon,
     speakerName,
     setSpeakerVolume,

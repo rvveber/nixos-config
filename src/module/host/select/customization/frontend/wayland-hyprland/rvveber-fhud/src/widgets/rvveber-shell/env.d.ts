@@ -1,19 +1,13 @@
-declare module "gi://AstalHyprland" {
-  const AstalHyprland: any
-  export default AstalHyprland
+// Project-wide GJS/AGS declarations that are not provided by generated GIR files.
+declare namespace JSX {
+  type Element = unknown
+
+  interface IntrinsicElements {
+    [elementName: string]: any
+  }
 }
 
-declare module "gi://AstalBattery" {
-  const AstalBattery: any
-  export default AstalBattery
-}
-
-declare module "gi://AstalWp" {
-  const AstalWp: any
-  export default AstalWp
-}
-
-declare module "gi://AstalBluetooth" {
-  const AstalBluetooth: any
-  export default AstalBluetooth
+declare module "*.scss" {
+  const css: string
+  export default css
 }

@@ -43,5 +43,4 @@ export const bluetoothService = {
   adapterPowered,
   adapterDiscovering,
   summary,
-  toArray,
 }

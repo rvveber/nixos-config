@@ -10,10 +10,6 @@ const focusedWorkspace = hyprland ? createBinding(hyprland, "focusedWorkspace") 
 const focusedMonitor = hyprland ? createBinding(hyprland, "focusedMonitor") : undefined
 
 export const hyprlandService = {
-  hyprland,
-  workspaces,
-  clients,
-  focusedWorkspace,
   focusedMonitor,
   workspaceTileClass(index: number) {
     if (!hyprland || !workspaces || !clients) {

@@ -82,7 +82,10 @@
 
           mkdir -p $out/bin
           mkdir -p $out/share
-          cp -r * $out/share
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name result \
+            ! -name node_modules \
+            -exec cp -R {} $out/share/ \;
           ags bundle ${entry} $out/bin/${pname} -d "SRC='$out/share'"
 
           runHook postInstall
@@ -97,6 +100,9 @@
 
     devShells = forAllSystems (system: let
       pkgs = nixpkgs.legacyPackages.${system};
+      agsPackage = ags.packages.${system}.default.override {
+        inherit extraPackages;
+      };
 
       # All astal packages needed for the widgets
       astalPackages = with astal.packages.${system}; [
@@ -122,9 +128,7 @@
       default = pkgs.mkShell {
         buildInputs =
           [
-            (ags.packages.${system}.default.override {
-              inherit extraPackages;
-            })
+            agsPackage
             pkgs.brightnessctl
             pkgs.nodejs
             pkgs.typescript
@@ -134,9 +138,15 @@
           ++ astalPackages;
 
         shellHook = ''
+          mkdir -p node_modules
+          # Keep editor and tsc module resolution pointed at the current Nix AGS JS package.
+          ln -sfn ${agsPackage}/share/ags/js node_modules/ags
+          ln -sfn ${agsPackage}/share/ags/js/node_modules/gnim node_modules/gnim
+
           echo "🎨 rvveber-shell development environment"
           echo "Run: ags types -d . -u  (to generate/update TypeScript types)"
           echo "Run: ags run app.ts     (to test the widgets)"
+          echo "Run: tsc --noEmit       (to type-check local shell code)"
           echo ""
         '';
       };

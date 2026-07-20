@@ -199,8 +199,6 @@ const activeName = createComputed((track) => {
   return "Offline"
 })
 
-const wiredLabel = wired ? wired.as((iface) => iface?.active_connection?.id ?? "Wired") : "Wired"
-
 const activeIcon = createComputed((track) => {
   const mode = primaryMode ? track(primaryMode) : "unknown"
   const wifiIface = wifi ? track(wifi) : null
@@ -240,17 +238,12 @@ const activeStatus = createComputed((track) => {
 })
 
 export const networkService = {
-  network,
   wifi,
   wired,
-  primary,
-  state,
-  connectivity,
   tooltip,
   signalStrength,
   wifiIcon,
   wiredSpeed,
-  primaryMode,
   primaryLabel,
   wifiSsid,
   wifiConnected,
@@ -265,6 +258,5 @@ export const networkService = {
   activeIcon,
   activeStatus,
   activeName,
-  wiredLabel,
   vpnInfo,
 }

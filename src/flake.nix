@@ -26,15 +26,14 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    rvveber-shell = {
-      url = "path:./module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/rvveber-shell";
+    astal = {
+      url = "github:aylur/astal";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    rvveber-fhud = {
-      url = "path:./module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud";
+    ags = {
+      url = "github:aylur/ags";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.stylix.follows = "stylix";
-      inputs.rvveber-shell.follows = "rvveber-shell";
+      inputs.astal.follows = "astal";
     };
   };
 
@@ -46,11 +45,27 @@
   outputs = {
     self,
     nixpkgs,
+    ags,
+    astal,
+    stylix,
     ...
-  } @ attrs: {
+  } @ attrs: let
+    rvveberShellPath = ./module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/rvveber-shell;
+    rvveberFhudPath = ./module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud;
+    rvveber-shell = (import "${rvveberShellPath}/flake.nix").outputs {
+      inherit nixpkgs ags astal;
+    };
+    rvveber-fhud = (import "${rvveberFhudPath}/flake.nix").outputs {
+      self = rvveber-fhud // {outPath = rvveberFhudPath;};
+      inherit nixpkgs rvveber-shell stylix;
+    };
+    specialArgs = attrs // {
+      inherit rvveber-fhud rvveber-shell;
+    };
+  in {
     nixosConfigurations.cake = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      specialArgs = attrs;
+      inherit specialArgs;
       modules = [
         ./hosts/cake
         ./users/i
@@ -58,7 +73,7 @@
     };
     nixosConfigurations.b1kini = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      specialArgs = attrs;
+      inherit specialArgs;
       modules = [
         ./hosts/b1kini
         ./users/i
@@ -66,7 +81,7 @@
     };
     nixosConfigurations.friday = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      specialArgs = attrs;
+      inherit specialArgs;
       modules = [
         ./hosts/friday
         ./users/rvveber

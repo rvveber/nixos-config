@@ -1,6 +1,7 @@
-// @ts-nocheck
 import Gtk from "gi://Gtk?version=4.0"
-import { Accessor } from "gnim"
+import type { Accessor } from "gnim"
+
+type SliderValue = number | Accessor<number>
 
 export default function SliderRow({
   title,
@@ -13,7 +14,7 @@ export default function SliderRow({
   className = "",
 }: {
   title: string
-  value: any
+  value: SliderValue
   onChange: (value: number) => void
   min?: number
   max?: number
@@ -23,6 +24,7 @@ export default function SliderRow({
 }) {
   const classes = ["SliderRow", className].filter(Boolean).join(" ")
 
+  // Labelled control row for continuous settings with optional preset jumps.
   return (
     <box class={classes} orientation={Gtk.Orientation.VERTICAL} spacing={6}>
       <label class="SectionTitle" label={title} />
@@ -35,8 +37,7 @@ export default function SliderRow({
           step={step}
           // IMPORTANT: Use "value: newValue" to avoid shadowing the outer "value" prop.
           // Shadowing causes the JSX transformer to break Accessor reactive bindings!
-          onChangeValue={({ value: newValue }) => {
-            // Use a different variable name to avoid shadowing
+          onChangeValue={({ value: newValue }: { value: number }) => {
             onChange(newValue)
           }}
           drawValue={false}

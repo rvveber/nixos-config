@@ -29,7 +29,6 @@ function formatDuration(seconds: number) {
 export const batteryService = {
   battery,
   isPresent,
-  percentRaw,
   percentLabel,
   icon,
   state,

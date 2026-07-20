@@ -84,8 +84,7 @@ window.TopBarWindow {
   }
 }
 
-.IconButton,
-.IconToggleButton {
+.IconButton {
   border-radius: $radius-1;
   padding: $space-1 $space-2;
   background: transparent;

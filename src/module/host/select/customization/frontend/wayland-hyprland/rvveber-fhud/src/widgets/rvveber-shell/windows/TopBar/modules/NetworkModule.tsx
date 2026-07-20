@@ -35,7 +35,6 @@ export default function NetworkModule() {
     activeStatus,
     vpnInfo,
     activeName,
-    wiredLabel,
   } = networkService
 
   const vpnName = vpnInfo.as((info) => info?.name ?? "")

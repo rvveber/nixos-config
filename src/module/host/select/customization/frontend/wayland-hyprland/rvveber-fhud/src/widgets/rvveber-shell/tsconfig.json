@@ -8,7 +8,44 @@
     ],
     "module": "ES2022",
     "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "ags/gtk4": [
+        "types/ags/gtk4/index.d.ts"
+      ],
+      "ags/gtk4/app": [
+        "types/ags/gtk4/app.d.ts"
+      ],
+      "ags/gtk4/jsx-runtime": [
+        "types/ags/gtk4/jsx-runtime.d.ts"
+      ],
+      "ags/process": [
+        "types/ags/process.d.ts"
+      ],
+      "ags/time": [
+        "types/ags/time.d.ts"
+      ],
+      "gnim": [
+        "types/gnim.d.ts"
+      ]
+    },
+    "skipLibCheck": true,
     "strict": true,
     "target": "ES2020"
-  }
+  },
+  "include": [
+    "@girs/**/*.d.ts",
+    "app.ts",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "env.d.ts",
+    "services/**/*.ts",
+    "types/**/*.d.ts",
+    "windows/**/*.ts",
+    "windows/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "result"
+  ]
 }

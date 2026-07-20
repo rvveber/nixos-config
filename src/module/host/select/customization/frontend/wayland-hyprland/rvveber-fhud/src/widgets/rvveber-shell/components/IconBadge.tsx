@@ -1,13 +1,16 @@
-// @ts-nocheck
 import Gtk from "gi://Gtk?version=4.0"
+import type { Accessor } from "gnim"
+
+type Reactive<T> = T | Accessor<T>
 
 type IconBadgeProps = {
-  icon: string
-  text?: string
+  icon: Reactive<string>
+  text?: Reactive<string>
   className?: string
-  children?: Gtk.Widget[] | Gtk.Widget | null
+  children?: JSX.Element[] | JSX.Element | Gtk.Widget[] | Gtk.Widget | null
 } & Partial<Gtk.Box.ConstructorProps>
 
+// Shared status pill for TopBar modules: icon, optional text, then optional extra detail.
 export default function IconBadge({
   icon,
   text,
