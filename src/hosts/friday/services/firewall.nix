@@ -14,6 +14,9 @@ _: {
       35621 # UrBackup file backup data
       35623 # UrBackup commands and image backups
     ];
+    allowedUDPPorts = [
+      35622 # UrBackup client discovery
+    ];
   };
 
   networking.firewall.interfaces.cni0 = {

@@ -17,7 +17,9 @@
   });
   prepareState = pkgs.writeShellScript "urbackup-client-prepare-state" ''
     set -eu
-    install -d -m 0700 /var/lib/urbackup-client/urbackup
+    install -d -m 0700 \
+      /var/lib/urbackup-client/urbackup \
+      /var/lib/urbackup-client/urbackup/data
     install -m 0444 \
       ${urbackupClient}/var/lib/urbackup-client/urbackup/version.txt \
       /var/lib/urbackup-client/urbackup/version.txt
@@ -82,6 +84,6 @@ in {
     # Common UrBackup client ports:
     # - TCP 35621: file backup data
     # - TCP 35623: commands and image backups
-    # - UDP 35622/35623: local discovery
+    # - UDP 35622: local discovery
   };
 }
