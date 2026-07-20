@@ -23,4 +23,11 @@
       "steam-original"
       "steam-run"
     ];
+
+  # Grant users in the "wheel" group the ability to maximize process priority
+  security.pam.loginLimits = [
+    { domain = "@wheel"; type = "-"; item = "nice"; value = "-20"; }
+  ];
+  # use a renice command in steam launch options to maximize the priority of gamescope
+  # %command% && sleep 3 && renice -n -20 -p $(pgrep gamescope)
 }
