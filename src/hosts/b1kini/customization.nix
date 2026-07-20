@@ -1,9 +1,36 @@
 # host specific configuration that can't be encapsulated in re-usable modules atm.
-_: {
+_: let
+  inotifyLimit = 1048576;
+  openFileLimit = 524288;
+in {
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
   networking.hostName = "b1kini";
   networking.networkmanager.enable = true;
+
+  boot.kernel.sysctl = {
+    "fs.inotify.max_queued_events" = inotifyLimit;
+    "fs.inotify.max_user_instances" = inotifyLimit;
+    "fs.inotify.max_user_watches" = inotifyLimit;
+  };
+
+  security.pam.loginLimits = [
+    {
+      domain = "*";
+      type = "soft";
+      item = "nofile";
+      value = toString openFileLimit;
+    }
+    {
+      domain = "*";
+      type = "hard";
+      item = "nofile";
+      value = toString openFileLimit;
+    }
+  ];
+
+  systemd.settings.Manager.DefaultLimitNOFILE = openFileLimit;
+  systemd.user.settings.Manager.DefaultLimitNOFILE = openFileLimit;
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
