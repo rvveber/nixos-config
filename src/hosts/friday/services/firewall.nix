@@ -15,4 +15,11 @@ _: {
       35623 # UrBackup commands and image backups
     ];
   };
+
+  networking.firewall.interfaces.cni0 = {
+    allowedTCPPorts = [
+      6443 # Kubernetes API access from pods
+      10250 # Kubelet API access from pods (for example metrics-server)
+    ];
+  };
 }
