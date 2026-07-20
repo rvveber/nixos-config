@@ -5,6 +5,28 @@
   ...
 }: let
   cfg = config.services.urbackup-client;
+  urbackupClient = pkgs.urbackup-client.overrideAttrs (oldAttrs: {
+    configureFlags =
+      (oldAttrs.configureFlags or [])
+      ++ ["--localstatedir=/var/lib/urbackup-client"];
+    # Keep install-time seed files in the package output; only the compiled
+    # runtime path should point at the host's mutable StateDirectory.
+    installFlags =
+      (oldAttrs.installFlags or [])
+      ++ ["localstatedir=$(out)/var/lib/urbackup-client"];
+  });
+  prepareState = pkgs.writeShellScript "urbackup-client-prepare-state" ''
+    set -eu
+    install -d -m 0700 /var/lib/urbackup-client/urbackup
+    install -m 0444 \
+      ${urbackupClient}/var/lib/urbackup-client/urbackup/version.txt \
+      /var/lib/urbackup-client/urbackup/version.txt
+    ${lib.optionalString (cfg.serverIdentsFile != null) ''
+      install -m 0400 \
+        ${cfg.serverIdentsFile} \
+        /var/lib/urbackup-client/urbackup/server_idents.txt
+    ''}
+  '';
 in {
   options.services.urbackup-client = {
     serverIdentsFile = lib.mkOption {
@@ -33,7 +55,7 @@ in {
     # You can configure trusted server identities per host with `services.urbackup-client.serverIdentsFile`.
 
     environment.systemPackages = [
-      pkgs.urbackup-client
+      urbackupClient
     ];
 
     systemd.services.urbackup-client = {
@@ -47,12 +69,8 @@ in {
       wantedBy = ["multi-user.target"];
 
       serviceConfig = {
-        ExecStart = "${lib.getExe' pkgs.urbackup-client "urbackupclientbackend"} -t -v info -r server-confirms -l /var/log/urbackupclient.log";
-        ExecStartPre = lib.optional (cfg.serverIdentsFile != null) (pkgs.writeShellScript "urbackup-client-install-server-idents" ''
-          set -eu
-          install -d -m 0700 /var/lib/urbackup-client/urbackup
-          install -m 0400 ${cfg.serverIdentsFile} /var/lib/urbackup-client/urbackup/server_idents.txt
-        '');
+        ExecStart = "${lib.getExe' urbackupClient "urbackupclientbackend"} -t -v info -r server-confirms -l /var/log/urbackupclient.log";
+        ExecStartPre = [prepareState];
         Restart = "always";
         RestartSec = "10s";
         StateDirectory = "urbackup-client";

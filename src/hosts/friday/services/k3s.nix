@@ -39,6 +39,17 @@ in {
     manifests = baseManifests // appsManifests;
   };
 
+  # NixOS links declarative manifests into mutable k3s state. A generation
+  # rollback does not remove links introduced by another generation, and their
+  # store targets may later disappear. Ignore neither the error nor all mutable
+  # state: remove only links whose targets no longer exist before k3s starts.
+  systemd.services.k3s.preStart = ''
+    if [[ -d /var/lib/rancher/k3s/server/manifests ]]; then
+      ${pkgs.findutils}/bin/find /var/lib/rancher/k3s/server/manifests \
+        -maxdepth 1 -xtype l -delete
+    fi
+  '';
+
   environment.systemPackages = [
     pkgs.kubectl
   ];
