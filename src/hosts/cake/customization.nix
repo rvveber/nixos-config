@@ -19,8 +19,6 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   environment.systemPackages = with pkgs; [
-    atlauncher
-
     # gamedev
     godot_4-mono
   ];
