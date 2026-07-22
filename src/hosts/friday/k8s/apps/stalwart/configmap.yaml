@@ -64,7 +64,7 @@ data:
     [directory.lldap]
     type = "ldap"
     url = "ldap://lldap.friday.svc.cluster.local:3890"
-    base-dn = "dc=we8,dc=dev"
+    base-dn = "ou=people,dc=we8,dc=dev"
 
     [directory.lldap.bind]
     dn = "uid=admin,ou=people,dc=we8,dc=dev"
