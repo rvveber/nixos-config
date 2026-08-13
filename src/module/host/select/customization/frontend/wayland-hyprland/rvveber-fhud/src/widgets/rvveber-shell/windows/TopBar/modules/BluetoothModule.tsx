@@ -12,35 +12,38 @@ function DeviceRow({ device }: { device: any }) {
 
   const name = alias?.((value) => value || "Unknown device")
 
-  function toggleConnection() {
-    if (!device) return
-    bluetoothService.adapter?.set_powered(true)
-    if (device.connecting || device.connected) {
-      device.disconnect_device?.(null)
-    } else {
-      device.connect_device?.(null)
-    }
-  }
-
   return (
-    <button class="DeviceButton" focusable onClicked={toggleConnection}>
-      <box spacing={6} valign={Gtk.Align.CENTER}>
-        <image iconName={icon} pixelSize={18} />
-        <label xalign={0} hexpand label={name} />
-        <Gtk.Revealer
-          transitionType={Gtk.RevealerTransitionType.SLIDE_LEFT}
-          revealChild={connected}
-        >
-          <label class="StatusLabel" label="Connected" />
-        </Gtk.Revealer>
-        <Gtk.Revealer
-          revealChild={connecting}
-          transitionType={Gtk.RevealerTransitionType.CROSSFADE}
-        >
-          <Gtk.Spinner spinning />
-        </Gtk.Revealer>
-      </box>
-    </button>
+    <box spacing={4} hexpand>
+      <button
+        class="DeviceButton"
+        focusable
+        hexpand
+        onClicked={() => bluetoothService.toggleDeviceConnection(device)}
+      >
+        <box spacing={6} valign={Gtk.Align.CENTER}>
+          <image iconName={icon} pixelSize={18} />
+          <label xalign={0} hexpand label={name} />
+          <Gtk.Revealer
+            transitionType={Gtk.RevealerTransitionType.SLIDE_LEFT}
+            revealChild={connected}
+          >
+            <label class="StatusLabel" label="Connected" />
+          </Gtk.Revealer>
+          <Gtk.Revealer
+            revealChild={connecting}
+            transitionType={Gtk.RevealerTransitionType.CROSSFADE}
+          >
+            <Gtk.Spinner spinning />
+          </Gtk.Revealer>
+        </box>
+      </button>
+      <IconButton
+        className="IconAction DeviceForget"
+        icon="user-trash-symbolic"
+        tooltip="Forget device"
+        onClicked={() => bluetoothService.forgetDevice(device)}
+      />
+    </box>
   )
 }
 

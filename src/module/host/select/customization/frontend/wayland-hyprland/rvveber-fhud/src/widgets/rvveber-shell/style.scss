@@ -395,8 +395,17 @@ window.HudWindow {
   }
 
   &:focus-visible {
-    border-color: gtk-alpha($hud_accent, 0.8);
+    border-color: gtk-alpha($hud_accent, 0.9);
     transform: translateY(-1px);
+  }
+}
+
+.DeviceForget {
+  min-width: 34px;
+  padding: $space-1;
+
+  &:hover {
+    border-color: gtk-alpha(#ff6b6b, 0.7);
   }
 }
 
