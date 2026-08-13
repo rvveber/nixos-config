@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forgejo-config
+  namespace: friday
+data:
+  app.ini: |
+    APP_NAME = Friday Lab
+    RUN_MODE = prod
+    RUN_USER = git
+
+    [database]
+    DB_TYPE = postgres
+    HOST = postgres.friday.svc.cluster.local:5432
+    NAME = forgejo
+    USER = forgejo
+    PASSWD_URI = file:/run/secrets/postgres-password
+    SSL_MODE = disable
+
+    [repository]
+    FORCE_PRIVATE = true
+    DEFAULT_PRIVATE = private
+
+    [server]
+    DOMAIN = lab.we8.dev
+    ROOT_URL = https://lab.we8.dev/
+    HTTP_ADDR = 0.0.0.0
+    HTTP_PORT = 3000
+    START_SSH_SERVER = true
+    SSH_DOMAIN = lab.we8.dev
+    SSH_PORT = 2222
+    SSH_LISTEN_HOST = 0.0.0.0
+    SSH_LISTEN_PORT = 2222
+    OFFLINE_MODE = true
+    LFS_START_SERVER = true
+
+    [security]
+    INSTALL_LOCK = true
+    SECRET_KEY_URI = file:/run/secrets/secret-key
+    INTERNAL_TOKEN_URI = file:/run/secrets/internal-token
+    REVERSE_PROXY_LIMIT = 1
+    REVERSE_PROXY_TRUSTED_PROXIES = 10.42.0.0/16
+
+    [service]
+    DISABLE_REGISTRATION = true
+    REQUIRE_SIGNIN_VIEW = true
+
+    [packages]
+    ENABLED = true
+
+    [session]
+    PROVIDER = db
+
+    [log]
+    MODE = console
+    LEVEL = Info

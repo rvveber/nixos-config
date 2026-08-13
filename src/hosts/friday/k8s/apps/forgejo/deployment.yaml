@@ -1,0 +1,179 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forgejo
+  namespace: friday
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: forgejo
+  template:
+    metadata:
+      labels:
+        app: forgejo
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      initContainers:
+      - name: init-postgres
+        image: postgres:17-alpine@sha256:979c4379dd698aba0b890599a6104e082035f98ef31d9b9291ec22f2b13059ca
+        command: ["sh", "-ceu"]
+        args:
+        - |
+          until PGPASSWORD="$POSTGRES_PASSWORD" pg_isready -h postgres.friday.svc.cluster.local -p 5432 -U postgres -d postgres; do
+            sleep 2
+          done
+
+          PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 \
+            -h postgres.friday.svc.cluster.local -p 5432 -U postgres -d postgres \
+            --set=app_password="$APP_PASSWORD" <<'SQL'
+          SELECT format('CREATE ROLE forgejo LOGIN PASSWORD %L', :'app_password')
+          WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'forgejo')\gexec
+
+          SELECT format('ALTER ROLE forgejo WITH PASSWORD %L', :'app_password')
+          WHERE EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'forgejo')\gexec
+
+          SELECT 'CREATE DATABASE forgejo OWNER forgejo'
+          WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'forgejo')\gexec
+          SQL
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nix-secrets
+              key: host_friday_k8s_postgres_admin_password
+        - name: APP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nix-secrets
+              key: host_friday_k8s_postgres_forgejo_password
+      - name: bootstrap-forgejo
+        image: codeberg.org/forgejo/forgejo:16.0.2-rootless@sha256:23ccc146e6dc2cd1f5c5435909baae64db873201717f1726490dae649283e6cd
+        command: ["/bin/sh", "-ceu"]
+        args:
+        - |
+          /app/gitea/gitea --work-path /var/lib/gitea --config /etc/forgejo/app.ini migrate
+
+          if /app/gitea/gitea --work-path /var/lib/gitea --config /etc/forgejo/app.ini \
+            admin user list | awk 'NR > 1 { print $2 }' | grep --fixed-strings --line-regexp rvveber >/dev/null; then
+            exit 0
+          fi
+
+          admin_password="$(cat /run/bootstrap-secrets/admin-password)"
+          /app/gitea/gitea --work-path /var/lib/gitea --config /etc/forgejo/app.ini \
+            admin user create \
+            --username rvveber \
+            --password "$admin_password" \
+            --email admin@we8.dev \
+            --admin \
+            --must-change-password
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: forgejo-data
+          mountPath: /var/lib/gitea
+        - name: forgejo-config
+          mountPath: /etc/forgejo
+          readOnly: true
+        - name: forgejo-secrets
+          mountPath: /run/secrets
+          readOnly: true
+        - name: forgejo-admin-secret
+          mountPath: /run/bootstrap-secrets
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: forgejo
+        image: codeberg.org/forgejo/forgejo:16.0.2-rootless@sha256:23ccc146e6dc2cd1f5c5435909baae64db873201717f1726490dae649283e6cd
+        command: ["/usr/bin/dumb-init", "--"]
+        args:
+        - /app/gitea/gitea
+        - --work-path
+        - /var/lib/gitea
+        - --config
+        - /etc/forgejo/app.ini
+        - web
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - name: http
+          containerPort: 3000
+        - name: ssh
+          containerPort: 2222
+        startupProbe:
+          httpGet:
+            path: /api/healthz
+            port: http
+          failureThreshold: 30
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /api/healthz
+            port: http
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/healthz
+            port: http
+          periodSeconds: 20
+        volumeMounts:
+        - name: forgejo-data
+          mountPath: /var/lib/gitea
+        - name: forgejo-config
+          mountPath: /etc/forgejo
+          readOnly: true
+        - name: forgejo-secrets
+          mountPath: /run/secrets
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: forgejo-data
+        persistentVolumeClaim:
+          claimName: forgejo-data
+      - name: forgejo-config
+        configMap:
+          name: forgejo-config
+          defaultMode: 0440
+      - name: forgejo-secrets
+        secret:
+          secretName: nix-secrets
+          defaultMode: 0440
+          items:
+          - key: host_friday_k8s_postgres_forgejo_password
+            path: postgres-password
+          - key: host_friday_k8s_forgejo_internal_token
+            path: internal-token
+          - key: host_friday_k8s_forgejo_secret_key
+            path: secret-key
+      - name: forgejo-admin-secret
+        secret:
+          secretName: nix-secrets
+          defaultMode: 0440
+          items:
+          - key: host_friday_k8s_forgejo_admin_password
+            path: admin-password
+      - name: tmp
+        emptyDir: {}

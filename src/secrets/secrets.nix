@@ -19,8 +19,12 @@
   sops.secrets.host_friday_k8s_lldap_jwt_secret = {};
   sops.secrets.host_friday_k8s_lldap_database_url = {};
   sops.secrets.host_friday_k8s_postgres_admin_password = {};
+  sops.secrets.host_friday_k8s_postgres_forgejo_password = {};
   sops.secrets.host_friday_k8s_postgres_lldap_password = {};
   sops.secrets.host_friday_k8s_postgres_stalwart_password = {};
+  sops.secrets.host_friday_k8s_forgejo_admin_password = {};
+  sops.secrets.host_friday_k8s_forgejo_internal_token = {};
+  sops.secrets.host_friday_k8s_forgejo_secret_key = {};
   sops.secrets.host_friday_k8s_stalwart_dkim_private_key = {};
   sops.secrets.host_friday_k8s_cloudflare_api_token = {};
   sops.secrets.host_friday_urbackup_server_idents = {};
