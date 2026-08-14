@@ -166,6 +166,8 @@ spec:
             path: postgres-password
           - key: host_friday_k8s_forgejo_internal_token
             path: internal-token
+          - key: host_friday_k8s_forgejo_lfs_jwt_secret
+            path: lfs-jwt-secret
           - key: host_friday_k8s_forgejo_oauth2_jwt_secret
             path: oauth2-jwt-secret
           - key: host_friday_k8s_forgejo_secret_key

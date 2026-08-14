@@ -17,6 +17,7 @@
     "postgres_stalwart_password"
     "forgejo_admin_password"
     "forgejo_internal_token"
+    "forgejo_lfs_jwt_secret"
     "forgejo_oauth2_jwt_secret"
     "forgejo_secret_key"
     "stalwart_dkim_private_key"

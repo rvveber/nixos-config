@@ -33,6 +33,7 @@ data:
     SSH_LISTEN_PORT = 2222
     OFFLINE_MODE = true
     LFS_START_SERVER = true
+    LFS_JWT_SECRET_URI = file:/run/secrets/lfs-jwt-secret
 
     [security]
     INSTALL_LOCK = true
