@@ -23,3 +23,6 @@ spec:
         proxyProtocol:
           trustedIPs:
           - 10.42.0.0/16
+        transport:
+          respondingTimeouts:
+            readTimeout: 0s
