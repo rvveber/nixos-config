@@ -48,6 +48,9 @@ data:
     [packages]
     ENABLED = true
 
+    [oauth2]
+    JWT_SECRET_URI = file:/run/secrets/oauth2-jwt-secret
+
     [session]
     PROVIDER = db
 

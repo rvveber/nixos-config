@@ -59,8 +59,7 @@
     > - <b>Don't use your real password.</b> Hashes are guessed/reversed and mapped to passwords in public lists! 
     > - <b>Don't use an existing password.</b> Lists of common password hashes exist and malicious bots are fast!
     > - <b>Note the random password down temporarily.</b> You will need it for first login after installation.
-    > - <b>Change your password after first login.</b> I'll remind you in step 14. 
-    > - <b>Regarding secrets in general:</b> Never store secrets in plain text [Use encryption or secret management tools](https://wiki.nixos.org/wiki/Comparison_of_secret_managing_schemes) instead. 
+    > - <b>Change your password after first login.</b> I'll remind you in step 14.
 
     OK. Commit & push the changes.
 11. Next we'll use [disko-install](https://github.com/nix-community/disko) to partition, mount and install nixos in a fully declarative way by creating a disko configuration <br>(see `src/hosts/friday/disko.nix` for an example. [More examples here](https://github.com/nix-community/disko/tree/master/example)).<br> After you created/edited and commited/pushed that disko configuration file, on your target machine run:
@@ -69,7 +68,7 @@
     git clone <fork-url>
     ```
     ```shell
-    cd nixos-config/src 
+    cd <cloned-folder>/src 
     ```
     Then run the disko-install command below, that conveniently also installs NixOS. <br>Example below for the host `friday` where the disko config `disko.devices.disk.main.device` is set to `/dev/disk/by-path/virtio-pci-0000:00:10.0`. <br>
     > Change `friday` to your hostname!<br>
@@ -85,8 +84,7 @@
     ```shell
     passwd yourusername
     ```
-    > The hashed password configured in [`initialHashedPassword`](https://search.nixos.org/options?channel=unstable&show=users.users.%3Cname%3E.initialHashedPassword&query=users.users.%3Cname%3E) is only set when the user is first created, and will not overwrite an existing password when you apply your configuration in the future 🙂<br><br>
-    However, it might be wise to remove the line from your user configuration to force yourself to hash a fresh random password next time you re-install from your fork.
+    > The hashed password configured in [`initialHashedPassword`](https://search.nixos.org/options?channel=unstable&show=users.users.%3Cname%3E.initialHashedPassword&query=users.users.%3Cname%3E) is only set when the user is first created, since it has no use anymore, this line can now be deleted.
     
 15. Next we want to define <u>the location</u> from where we will update our system from in the future. 
 16. Create a directory for managing your system, e.g., `~/nixos`, and cd into it.
@@ -118,18 +116,28 @@ bin/gc
 ## Secret Management
 Secrets are encrypted using [sops-nix](https://github.com/Mic92/sops-nix). Only authorized machines can decrypt them at boot using their SSH Host Key.
 
-**To edit secrets:**
-Run `./bin/edit-secrets` (Uses your local machine's SSH key).
+Secret files are stored next to their owner:
 
-**First-time setup (Fork):**
-Since you don't have my keys, you must reset the secrets for your machine:
-1.  Get your machine's public age key: `nix shell nixpkgs#ssh-to-age -c ssh-to-age -i /etc/ssh/ssh_host_ed25519_key.pub`
-2.  Replace the keys in `src/secrets/.sops.yaml` with your output.
-3.  Delete `src/secrets/secrets.yaml` and recreate it: `./bin/edit-secrets` (Add content, save).
-4.  Commit and push.
-> Info:<br>Be careful to not allow your secret files to be overwritten with mines when you sync your fork. 
-It's probably best to remove the fork relationship altogether and only manually do a merge from time to time, <br>
-then you should get a merge conflict and can avoid getting your changes overwritten
+- `src/hosts/<host>/secrets.yaml` contains secrets for one host.
+- `src/users/<user>/secrets.yaml` contains secrets used on every host that
+  imports this user.
+- The `.sops.yaml` file in the same directory lists the machines that may open
+  the secret file.
+
+**To edit secrets:**
+Run `./bin/edit-secrets` and select a host or user. The script uses the expected
+`secrets.yaml` path in that directory and creates the file if it is missing.
+If `.sops.yaml` is also missing, the script creates it with the public SSH host
+key of your current machine. You can add other machines later.
+
+**Adding another machine:**
+1. On the new machine, get its public age key:
+   `nix shell nixpkgs#ssh-to-age -c ssh-to-age -i /etc/ssh/ssh_host_ed25519_key.pub`
+2. Add it to the required `.sops.yaml` files.
+3. Run `./bin/edit-secrets` for each changed secret file on a machine that can
+   already open it. The script updates the allowed keys before opening the
+   editor.
+4. Commit and push.
 
 ## Development
 If you import the development module (optional), your Nix configuration will automatically be statically checked, formatted, and you will gain Nix LSP.

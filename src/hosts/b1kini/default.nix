@@ -1,7 +1,6 @@
 {...}: {
   imports = [
     # concrete
-    ../../secrets/secrets.nix
     ./hardware.nix
     ./customization.nix
 
