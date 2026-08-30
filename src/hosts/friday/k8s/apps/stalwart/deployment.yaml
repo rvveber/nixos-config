@@ -20,7 +20,7 @@ spec:
       automountServiceAccountToken: false
       initContainers:
       - name: init-postgres
-        image: postgres:17-alpine@sha256:979c4379dd698aba0b890599a6104e082035f98ef31d9b9291ec22f2b13059ca
+        image: postgres:18-alpine@sha256:d3e1620b530c944afa6e887d22eb899824da68e19c52024bf98f5220c88a65b2
         command: ["sh", "-ceu"]
         args:
         - |
