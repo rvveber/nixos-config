@@ -4,5 +4,5 @@
 # Copy the current Unix epoch timestamp
 date +%s | wl-copy
 
-# Paste via hyprctl dispatch sendshortcut
-hyprctl dispatch sendshortcut CTRL+SHIFT,V,
+# Paste into the focused window through Hyprland's Lua dispatcher API.
+hyprctl dispatch 'hl.dsp.send_shortcut({ mods = "CTRL+SHIFT", key = "V" })'

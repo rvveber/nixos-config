@@ -7,6 +7,7 @@ type HudMode = "apps" | "clipboard"
 const [launcherVisible, setLauncherVisible] = createState(false)
 const [hudMode, setHudMode] = createState<HudMode>("apps")
 const [activeMonitorName, setActiveMonitorName] = createState<string | null>(null)
+const [returnTargetAddress, setReturnTargetAddress] = createState<string | null>(null)
 
 function syncActiveMonitor() {
   const focused = hyprlandService.focusedMonitor?.get?.()
@@ -14,6 +15,15 @@ function syncActiveMonitor() {
   if (name) {
     setActiveMonitorName(name)
   }
+}
+
+function syncReturnTarget() {
+  const focused = hyprlandService.focusedClient?.get?.()
+  const address = focused?.address ?? focused?.get_address?.()
+  const normalized = typeof address === "string" && address.length > 0
+    ? address.startsWith("0x") ? address : `0x${address}`
+    : null
+  setReturnTargetAddress(normalized)
 }
 
 function setDefaultMonitorName(name: string) {
@@ -25,6 +35,7 @@ function setDefaultMonitorName(name: string) {
 function openLauncher(mode: HudMode = "apps") {
   console.log(`Opening launcher in mode: ${mode}`)
   syncActiveMonitor()
+  syncReturnTarget()
   setHudMode(mode)
   setLauncherVisible(true)
 }
@@ -37,6 +48,7 @@ function closeLauncher() {
 function toggleLauncher(mode: HudMode = "apps") {
   const current = launcherVisible.get()
   syncActiveMonitor()
+  if (!current) syncReturnTarget()
 
   if (mode !== hudMode.get()) {
     setHudMode(mode)
@@ -49,6 +61,7 @@ export const hudService = {
   launcherVisible,
   hudMode,
   activeMonitorName,
+  returnTargetAddress,
   openLauncher,
   closeLauncher,
   toggleLauncher,

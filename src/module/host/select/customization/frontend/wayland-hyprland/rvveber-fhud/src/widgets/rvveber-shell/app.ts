@@ -5,6 +5,7 @@ import Hud from "./windows/Hud"
 import { hudService } from "./services/hud"
 
 app.start({
+  instanceName: "rvveber-fhud",
   css: style,
   main() {
     console.log("Starting rvveber-fhud-ui...")
@@ -31,7 +32,10 @@ app.start({
     cmd = cmd.replace(/,/g, " ").trim()
 
     if (cmd === "toggle launcher") {
-      hudService.toggleLauncher()
+      hudService.toggleLauncher("apps")
+      res("ok")
+    } else if (cmd === "toggle clipboard") {
+      hudService.toggleLauncher("clipboard")
       res("ok")
     } else if (cmd === "open launcher") {
       hudService.openLauncher()
