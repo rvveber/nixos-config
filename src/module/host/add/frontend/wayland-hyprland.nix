@@ -1,9 +1,10 @@
-{
-  config,
-  pkgs,
-  home-manager,
-  ...
-}: {
+{pkgs, ...}: let
+  luaCall = args: {_args = args;};
+in {
+  # Ask GTK applications, including Steam's GTK helper dialogs, to use the
+  # desktop portal selected by the active Wayland customization.
+  environment.sessionVariables.GTK_USE_PORTAL = "1";
+
   # dependencies
   environment = {
     systemPackages = with pkgs; [
@@ -19,6 +20,9 @@
       hyprland-workspaces
       hyprpicker
       hyprcursor
+
+      # common tooling for xwayland apps
+      xrandr
     ];
   };
 
@@ -36,20 +40,28 @@
         enable = true;
         systemd.enable = false; # Conflicts with uwsm
         settings = {
-          debug.disable_logs = true;
+          config = {
+            general.allow_tearing = true;
+            render = {
+              direct_scanout = 1;
+              new_render_scheduling = false;
+            };
+            debug.disable_logs = true;
+            misc = {
+              force_default_wallpaper = 0;
+              disable_hyprland_logo = true;
+            };
+            xwayland = {
+              force_zero_scaling = false;
+              use_nearest_neighbor = true;
+            };
+          };
           env = [
-            "NIXOS_OZONE_WL,1" # Suggest applications to use native wayland instead of xorg (xwayland)
-            "QT_AUTO_SCREEN_SCALE_FACTOR,1"
-            "QT_QPA_PLATFORM,wayland"
-            "QT_WAYLAND_DISABLE_WINDOWDECORATION,1"
+            (luaCall ["NIXOS_OZONE_WL" "1"])
+            (luaCall ["QT_AUTO_SCREEN_SCALE_FACTOR" "1"])
+            (luaCall ["QT_QPA_PLATFORM" "wayland"])
+            (luaCall ["QT_WAYLAND_DISABLE_WINDOWDECORATION" "1"])
           ];
-          misc = {
-            force_default_wallpaper = 0;
-            disable_hyprland_logo = true;
-          };
-          xwayland = {
-            force_zero_scaling = true;
-          };
         };
       };
     }

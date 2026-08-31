@@ -42,30 +42,10 @@
   # load up their flake.nix files,
   # and it will call your outputs function
   # with all of their outputs as arguments.
-  outputs = {
-    self,
-    nixpkgs,
-    ags,
-    astal,
-    stylix,
-    ...
-  } @ attrs: let
-    rvveberShellPath = ./module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/rvveber-shell;
-    rvveberFhudPath = ./module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud;
-    rvveber-shell = (import "${rvveberShellPath}/flake.nix").outputs {
-      inherit nixpkgs ags astal;
-    };
-    rvveber-fhud = (import "${rvveberFhudPath}/flake.nix").outputs {
-      self = rvveber-fhud // {outPath = rvveberFhudPath;};
-      inherit nixpkgs rvveber-shell stylix;
-    };
-    specialArgs = attrs // {
-      inherit rvveber-fhud rvveber-shell;
-    };
-  in {
+  outputs = inputs @ {nixpkgs, ...}: {
     nixosConfigurations.cake = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      inherit specialArgs;
+      specialArgs = inputs;
       modules = [
         ./hosts/cake
         ./users/i
@@ -73,7 +53,7 @@
     };
     nixosConfigurations.b1kini = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      inherit specialArgs;
+      specialArgs = inputs;
       modules = [
         ./hosts/b1kini
         ./users/i
@@ -81,11 +61,17 @@
     };
     nixosConfigurations.friday = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      inherit specialArgs;
+      specialArgs = inputs;
       modules = [
         ./hosts/friday
         ./users/rvveber
       ];
     };
+
+    devShells.x86_64-linux.default = import ./shell.nix {
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    };
+
+    formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
   };
 }

@@ -1,4 +1,18 @@
-{rvveber-fhud, ...}: {
+{
+  ags,
+  astal,
+  stylix,
+  ...
+}: let
+  source = ./.;
+  makePackages = pkgs:
+    import ./src/packages.nix {
+      inherit pkgs source;
+      ui = import ./src/widgets/rvveber-shell/package.nix {
+        inherit ags astal pkgs;
+      };
+    };
+in {
   # dependencies - foundational modules needed for FHUD
   imports = [
     # Compatibility shim: newer nixpkgs variants can drop this option while
@@ -16,7 +30,8 @@
     ../../../../../add/application/home-manager.nix
     ../../../../../add/frontend/wayland-hyprland.nix
 
-    # FHUD UI from flake
-    rvveber-fhud.nixosModules.default
+    (import ./src/nixos-module.nix {
+      inherit makePackages source stylix;
+    })
   ];
 }

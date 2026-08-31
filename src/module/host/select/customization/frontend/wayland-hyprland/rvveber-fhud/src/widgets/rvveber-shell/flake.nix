@@ -24,77 +24,10 @@
   }: let
     forAllSystems = nixpkgs.lib.genAttrs ["x86_64-linux" "aarch64-linux"];
   in {
-    packages = forAllSystems (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
-      pname = "rvveber-fhud-ui";
-      entry = "app.ts";
-
-      # All astal packages needed for the widgets
-      astalPackages = with astal.packages.${system}; [
-        astal4
-        io
-        hyprland
-        battery
-        powerprofiles
-        wireplumber
-        bluetooth
-        network
-        notifd
-        apps
-      ];
-
-      extraPackages =
-        astalPackages
-        ++ [
-          pkgs.libadwaita
-          pkgs.libsoup_3
-        ];
-    in {
-      default = pkgs.stdenv.mkDerivation {
-        inherit pname;
-        version = "0.1.0";
-        src = ./.;
-
-        nativeBuildInputs = with pkgs; [
-          wrapGAppsHook4 # Use GTK4 version for astal4
-          gobject-introspection
-          ags.packages.${system}.default
-        ];
-
-        buildInputs =
-          extraPackages
-          ++ (with pkgs; [
-            glib
-            gjs
-            pango
-          ]);
-
-        preFixup = ''
-          gappsWrapperArgs+=(
-            --prefix PATH : ${pkgs.lib.makeBinPath [
-            pkgs.brightnessctl
-          ]}
-          )
-        '';
-
-        installPhase = ''
-          runHook preInstall
-
-          mkdir -p $out/bin
-          mkdir -p $out/share
-          find . -mindepth 1 -maxdepth 1 \
-            ! -name result \
-            ! -name node_modules \
-            -exec cp -R {} $out/share/ \;
-          ags bundle ${entry} $out/bin/${pname} -d "SRC='$out/share'"
-
-          runHook postInstall
-        '';
-
-        meta = with pkgs.lib; {
-          description = "FHUD UI Components for Hyprland";
-          platforms = platforms.linux;
-        };
+    packages = forAllSystems (system: {
+      default = import ./package.nix {
+        pkgs = nixpkgs.legacyPackages.${system};
+        inherit ags astal;
       };
     });
 
