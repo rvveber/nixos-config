@@ -140,10 +140,27 @@ key of your current machine. You can add other machines later.
 4. Commit and push.
 
 ## Development
-If you import the development module (optional), your Nix configuration will automatically be statically checked, formatted, and you will gain Nix LSP.
+The project exposes its tools through the standard flake development shell.
+With direnv installed, entering the repository loads it automatically through
+`.envrc`. You can also enter it directly:
 
-To import development features:
-- system-wide (cache substituters / services): `src/module/host/add/application/development.nix`
-- per-user tools (git/direnv/dev tools): `src/module/user/add/application/development.nix`
+```shell
+nix develop ./src
+```
 
-The various tools to assist development with Nix will be loaded automatically when you enter the directory where you cloned this repository.
+Run all formatting, static analysis, and flake evaluation checks with:
+
+```shell
+bin/validate
+```
+
+The optional development modules remain available for machine-wide cache
+settings and personal tools:
+
+- `src/module/host/add/application/development.nix`
+- `src/module/user/add/application/development.nix`
+
+## License
+
+This project is available under the [MIT License](LICENSE). You may fork,
+modify, and redistribute it while preserving the copyright and license notice.

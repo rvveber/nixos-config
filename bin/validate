@@ -1,46 +1,35 @@
 #!/usr/bin/env sh
 
-# Get the absolute path of the directory containing the script
+set -eu
+
 DIR_BIN=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
-# Navigate up one directory from the script directory to get to the project root
 DIR_ROOT=$(cd "$DIR_BIN"/.. && pwd -P)
-cd "${DIR_ROOT}"
+cd "$DIR_ROOT"
 
-# Fancy up the terminal output
-ARROW="➜"
-CYAN='\033[0;36m'
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-RESET='\033[0m'
-
-
-# check that "direnv, devenv, alejandra and statix" are installed
-for cmd in direnv devenv alejandra statix; do
-  if ! command -v $cmd &> /dev/null; then
-    printf "${RED}${ARROW} ERROR: This script requires the development module to be added to this host($(hostname)) first.${RESET}\n"
-    printf "${RED}   HINT: If you already added it, restart your terminal.${RESET}\n"
-    exit 1
-  fi
-done
-
-# Run the statix check
-if statix check "${DIR_ROOT}"; then
-  printf "${GREEN}${ARROW} SUCCESS: The statix check passed successfully.${RESET}\n"
-else
-  printf "${RED}${ARROW} ERROR: The statix check failed. Do you want to try to fix it?${RESET}\n"
-  read -p "Do you want to try to fix it? [y/N]: " response
-  if [ "$response" = "y" ]; then
-    statix fix
-  else
-    printf "${RED}${ARROW} ERROR: The statix check failed. Please fix the issues and try again.${RESET}\n"
-    exit 1
-  fi
-fi
-
-# Run alejandra
-if alejandra "${DIR_ROOT}" --quiet; then
-  printf "${GREEN}${ARROW} SUCCESS: The alejandra formatting finished successfully.${RESET}\n"
-else
-  printf "${RED}${ARROW} ERROR: The alejandra formatting was unsuccessful.${RESET}\n"
+if ! command -v nix >/dev/null 2>&1; then
+  printf 'ERROR: nix is required to validate this project.\n' >&2
   exit 1
 fi
+
+if [ -z "${IN_NIX_SHELL:-}" ]; then
+  exec nix develop "path:${DIR_ROOT}/src" --command "${DIR_BIN}/validate"
+fi
+
+printf 'Checking Nix structure...\n'
+statix check "$DIR_ROOT"
+deadnix --fail \
+  --exclude src/module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/vendor \
+  "$DIR_ROOT"
+
+printf 'Checking formatting...\n'
+find "$DIR_ROOT/src" \
+  -path "$DIR_ROOT/src/module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/vendor" -prune \
+  -o -name '*.nix' -exec alejandra --check {} +
+stylua --check \
+  "$DIR_ROOT/src/module/user/select/customization/application/neovim/rvveber-nvim/src/config/init.lua" \
+  "$DIR_ROOT/src/module/user/select/customization/application/neovim/rvveber-nvim/src/config/lua"
+
+printf 'Checking flake outputs...\n'
+nix flake check "path:${DIR_ROOT}/src"
+
+printf 'Validation passed.\n'
