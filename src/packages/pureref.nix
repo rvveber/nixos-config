@@ -30,7 +30,7 @@
       chmod 755 $out
     '';
 in
-  appimageTools.wrapType1 {
+  appimageTools.wrapType2 {
     pname = "pureref";
     inherit version;
 

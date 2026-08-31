@@ -52,15 +52,46 @@ in {
       wayland.windowManager.hyprland.settings = {
         monitor = [
           # "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, 4000x-1200, 1, transform, 1"
-          "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, 0x0, 1, transform, 3"
-          "desc:MNR A32, 2560x1440@165.00Hz, 1440x1028, 1"
-          "desc:Tianma Microelectronics Ltd, 2880x1800@120.00Hz, 4000x820, 2"
+          {
+            output = "desc:Ancor Communications Inc ASUS PB258";
+            mode = "2560x1440@59.95Hz";
+            position = "0x0";
+            scale = 1;
+            transform = 3;
+          }
+          {
+            output = "desc:MNR A32";
+            mode = "2560x1440@165.00Hz";
+            position = "1440x1028";
+            scale = 1;
+          }
+          {
+            output = "desc:Tianma Microelectronics Ltd";
+            mode = "2880x1800@120.00Hz";
+            position = "4000x820";
+            scale = 2;
+          }
         ];
-        workspace = [
+        workspace_rule = [
           # See frontend/wayland-hyprland/rvveber/src/scripts/switch-workspace-group.sh for details.
-          "11, monitor:desc:Tianma Microelectronics Ltd, persistent:true, default:true"
-          "21, monitor:desc:MNR A32, persistent:true, default:true"
-          "31, monitor:desc:Ancor Communications Inc ASUS PB258, persistent:true, default:true"
+          {
+            workspace = "11";
+            monitor = "desc:Tianma Microelectronics Ltd";
+            persistent = true;
+            default = true;
+          }
+          {
+            workspace = "21";
+            monitor = "desc:MNR A32";
+            persistent = true;
+            default = true;
+          }
+          {
+            workspace = "31";
+            monitor = "desc:Ancor Communications Inc ASUS PB258";
+            persistent = true;
+            default = true;
+          }
         ];
       };
     }

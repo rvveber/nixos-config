@@ -1,10 +1,10 @@
 {...}: {
   imports = [
-    # concrete
+    # host-specific
     ./hardware.nix
     ./customization.nix
 
-    #abstract
+    # module-composition
     ../../module/host/add/hardware/media.nix
     ../../module/host/add/hardware/gpu_amd.nix
     ../../module/host/add/hardware/bluetooth.nix
@@ -23,9 +23,8 @@
     ../../module/host/select/application/containerization/docker
     ../../module/host/add/application/gaming.nix
     ../../module/host/add/application/appimage.nix
-
     ../../module/host/select/locale/de_DE
-
+    ../../module/host/select/customization/application/file-management/rvveber-yazi
     ../../module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud
   ];
 }

@@ -40,8 +40,18 @@
     {
       wayland.windowManager.hyprland.settings = {
         monitor = [
-          "desc:Ancor Communications Inc ASUS PB258, 2560x1440@59.95Hz, -1600x0, 1.6"
-          "desc:MNR A32, 2560x1440@120.00Hz, 0x-71, 1"
+          {
+            output = "desc:Ancor Communications Inc ASUS PB258";
+            mode = "2560x1440@59.95Hz";
+            position = "-1600x0";
+            scale = 1.6;
+          }
+          {
+            output = "desc:MNR A32";
+            mode = "2560x1440@120.00Hz";
+            position = "0x-71";
+            scale = 1;
+          }
         ];
       };
     }

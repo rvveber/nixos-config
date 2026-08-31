@@ -1,10 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  modulesPath,
-  ...
-}: {
+_: {
   hardware.bluetooth.enable = true;
   services.pipewire = {
     wireplumber.extraConfig = {

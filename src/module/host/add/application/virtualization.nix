@@ -1,9 +1,4 @@
-{
-  libs,
-  pkgs,
-  config,
-  ...
-}: {
+{pkgs, ...}: {
   /*
   * libvirtd is a daemon that provides
   * centralized management and control

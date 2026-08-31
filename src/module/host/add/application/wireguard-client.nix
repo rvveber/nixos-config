@@ -51,12 +51,11 @@ in {
       })
       enabledInterfaces;
 
-    systemd.services =
-      lib.mapAttrs' (name: interface:
-        lib.nameValuePair "wg-quick-${name}" {
-          after = interface.configFileDependencies;
-          wants = interface.configFileDependencies;
-        })
-      enabledInterfaces;
+    systemd.services = lib.mapAttrs' (name: interface:
+      lib.nameValuePair "wg-quick-${name}" {
+        after = interface.configFileDependencies;
+        wants = interface.configFileDependencies;
+      })
+    enabledInterfaces;
   };
 }

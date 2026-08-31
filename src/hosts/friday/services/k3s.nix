@@ -18,7 +18,7 @@
 
   appsManifests = let
     appsDir = k8sDir + "/apps";
-    apps = lib.attrNames (lib.filterAttrs (name: type: type == "directory") (builtins.readDir appsDir));
+    apps = lib.attrNames (lib.filterAttrs (_: type: type == "directory") (builtins.readDir appsDir));
 
     getAppManifests = app: let
       appPath = appsDir + "/${app}";

@@ -1,9 +1,4 @@
-{
-  libs,
-  pkgs,
-  config,
-  ...
-}: {
+{pkgs, ...}: {
   programs.zsh.enable = true;
 
   environment.shells = [pkgs.zsh];

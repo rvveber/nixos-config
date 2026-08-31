@@ -1,11 +1,8 @@
-{
-  pkgs,
-  config,
-  ...
-}: {
+{pkgs, ...}: {
   # dependencies
   imports = [
     ../../../../add/application/containerization.nix
+    ../../../../add/application/credential-store.nix
   ];
 
   virtualisation = {
@@ -22,6 +19,7 @@
 
   # Useful other development tools
   environment.systemPackages = with pkgs; [
+    docker-credential-helpers
     #dive # look into docker image layers
     #podman-tui # status of containers in the terminal
     podman-compose
@@ -33,4 +31,6 @@
   environment.sessionVariables = {
     PODMAN_COMPOSE_WARNING_LOGS = "false";
   };
+
+  virtualisation.containers.containersConf.settings.engine.credential_helpers = ["pass"];
 }

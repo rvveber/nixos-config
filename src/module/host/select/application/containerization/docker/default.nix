@@ -1,13 +1,11 @@
-{
-  pkgs,
-  config,
-  lib,
-  ...
-}: {
+{pkgs, ...}: {
   # dependencies
   imports = [
     ../../../../add/application/containerization.nix
+    ../../../../add/application/credential-store.nix
   ];
+
+  environment.systemPackages = [pkgs.docker-credential-helpers];
 
   virtualisation.docker.enable = true;
   virtualisation.docker.rootless = {

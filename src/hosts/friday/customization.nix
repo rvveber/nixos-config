@@ -1,4 +1,4 @@
-{config, ...}: {
+_: {
   networking = {
     hostName = "friday";
   };

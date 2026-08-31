@@ -1,8 +1,4 @@
-{
-  config,
-  pkgs,
-  ...
-}: {
+_: {
   # Set time zone.
   time.timeZone = "Europe/Berlin";
 

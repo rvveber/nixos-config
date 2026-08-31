@@ -10,8 +10,6 @@
 
       # Modern and practical open-source PDF tooling.
       kdePackages.okular
-      pdfarranger
-      xournalpp
     ])
     ++ lib.optionals (pkgs ? onlyoffice-desktopeditors) [
       # Modern UI office suite with strong document compatibility.

@@ -1,7 +1,6 @@
 {
   lib,
   pkgs,
-  config,
   ...
 }: {
   # boot.kernelPackages = pkgs.linuxPackages_xanmod_latest;
@@ -15,19 +14,42 @@
     localNetworkGameTransfers.openFirewall = false; # Optional: Open ports in the firewall for Steam Local Network Game Transfers
     dedicatedServer.openFirewall = false; # Optional: Open ports in the firewall for Source Dedicated Server
   };
-  programs.gamescope.enable = true;
-  programs.gamemode.enable = true;
+
+  programs.gamescope = {
+    enable = true;
+    enableWsi = true;
+    capSysNice = false;
+
+    package = pkgs.gamescope.overrideAttrs (old: {
+      postPatch =
+        (old.postPatch or "")
+        + ''
+          substituteInPlace src/Utils/Process.cpp \
+            --replace-fail \
+              'RestoreFdLimit();' \
+              'prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_LOWER, 23, 0, 0); RestoreFdLimit();'
+        '';
+    });
+  };
+
+  programs.gamemode = {
+    enable = true;
+    enableRenice = true;
+
+    settings = {
+      general = {
+        desiredgov = "performance";
+        desiredprof = "performance";
+        renice = 10;
+        ioprio = 0;
+      };
+    };
+  };
+
   nixpkgs.config.allowUnfreePredicate = pkg:
     builtins.elem (lib.getName pkg) [
       "steam"
       "steam-original"
       "steam-run"
     ];
-
-  # Grant users in the "wheel" group the ability to maximize process priority
-  security.pam.loginLimits = [
-    { domain = "@wheel"; type = "-"; item = "nice"; value = "-20"; }
-  ];
-  # use a renice command in steam launch options to maximize the priority of gamescope
-  # %command% && sleep 3 && renice -n -20 -p $(pgrep gamescope)
 }
