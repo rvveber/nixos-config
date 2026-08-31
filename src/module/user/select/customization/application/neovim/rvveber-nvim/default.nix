@@ -1,9 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}: {
+{pkgs, ...}: {
   imports = [
     ../../../../../add/application/neovim.nix
   ];
@@ -16,19 +11,12 @@
     git
     gnumake
     ripgrep
-    cargo
     unzip
     zig
-    markdownlint-cli
   ];
 
   xdg.configFile."nvim/lua" = {
     source = ./src/config/lua;
-    recursive = true;
-  };
-
-  xdg.configFile."nvim/doc" = {
-    source = ./src/config/doc;
     recursive = true;
   };
 }
