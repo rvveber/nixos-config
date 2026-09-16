@@ -1,3 +1,5 @@
+# Packages Docker MCP Gateway as a standalone Docker CLI plugin for Docker
+# Engine installations without Docker Desktop.
 {
   lib,
   buildGoModule,
