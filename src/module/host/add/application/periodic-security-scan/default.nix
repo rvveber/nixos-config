@@ -8,7 +8,7 @@
 }: let
   name = "periodic-security-scan";
   state = "/var/lib/${name}";
-  script = ./periodic-security-scan/scan.py;
+  script = ./scan.py;
   scanner = pkgs.writeShellApplication {
     inherit name;
     runtimeInputs = [config.nix.package pkgs.bubblewrap pkgs.syft pkgs.grype pkgs.python3];
