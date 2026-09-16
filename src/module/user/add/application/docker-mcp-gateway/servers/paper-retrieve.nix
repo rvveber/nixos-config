@@ -8,7 +8,7 @@
   server = pkgs.writeText "paper-retrieve.yaml" ''
     name: paper-retrieve
     title: Paper Retrieve
-    description: Access paper and book contents; use `paper-search` for fast initial paper discovery
+    description: Retrieve paper and book contents by DOI or MD5; use `paper-search` for broad multi-source academic discovery
     type: server
     image: ghcr.io/jmrplens/libgen-mcp:1.7.2@sha256:fd41aaa926f3ce996e0e65042d2b55a8843b41f99898b96157d3e9ad88815426
     env:

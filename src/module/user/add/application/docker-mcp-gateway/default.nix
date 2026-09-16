@@ -40,6 +40,7 @@
       chmod 0600 "$auth_token_file"
 
       ${lib.getExe dockerMcp} feature enable profiles >/dev/null
+      ${lib.getExe dockerMcp} feature enable tool-name-prefix >/dev/null
 
       ${
         lib.concatMapStringsSep "\n" (catalog: ''
