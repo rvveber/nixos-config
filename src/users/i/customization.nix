@@ -86,10 +86,13 @@ in {
       ../../module/user/add/application/development.nix
       ../../module/user/add/application/devops.nix
       ../../module/user/add/application/credential-store.nix
+      ../../module/user/add/application/mcp-gateway.nix
       ../../module/user/add/application/windows-environment.nix
     ];
 
     xdg.enable = true;
+
+    services.mcpGateway.enable = osConfig.virtualisation.docker.enable;
 
     # Temporary warning-silencer for HM default change; removable after home.stateVersion >= 25.05
     # if you also want to adopt the new default (null).
