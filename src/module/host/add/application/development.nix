@@ -1,3 +1,4 @@
+# Provides system-level caches and services used by development environments.
 _: {
   nix.extraOptions = ''
     extra-substituters = https://devenv.cachix.org

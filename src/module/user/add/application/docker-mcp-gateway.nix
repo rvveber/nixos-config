@@ -1,47 +1,6 @@
-# Runs Docker MCP Gateway as one authenticated, per-user HTTP endpoint shared
-# by local AI harnesses. It requires Docker Engine; compatibility layers that
-# expose a Docker-like CLI, including Podman, are outside this module's scope.
-#
-# Data flow:
-#   harness -> http://127.0.0.1:8811/mcp -> gateway -> MCP server containers
-#
-# The module owns the service and its safe runtime boundary. Docker's mutable
-# state under ~/.docker/mcp/ owns catalogs, enabled servers, tools and server
-# configuration. Harness configuration remains manual and belongs to each
-# harness. The gateway watches Docker's configuration and reloads changes.
-#
-# The endpoint is loopback-only and still uses a bearer token because any
-# client holding it may invoke every exposed tool. The token is an opaque random
-# value: its contents have no meaning, it only needs to remain private and match
-# the client header. It is generated once with mode 0600. Delete the file and
-# restart the service to rotate it.
-#
-# Runtime endpoints and operations:
-#   MCP:      http://127.0.0.1:8811/mcp
-#   Health:   http://127.0.0.1:8811/health
-#   Token:    ~/.local/state/docker-mcp-gateway/auth-token
-#   Status:   systemctl --user status docker-mcp-gateway
-#   Logs:     journalctl --user --unit docker-mcp-gateway --follow
-#
-# Docker selects its default profile when profiles are enabled and otherwise
-# reads its legacy catalog/config files. This module deliberately leaves that
-# selection to Docker. Local server definitions belong below
-# ~/.docker/mcp/catalogs/ and should pin images, declare allowHosts and expose
-# only required tools.
-#
-# Harnesses send `Authorization: Bearer <token>`. Load the token into shells:
-#   export MCP_GATEWAY_AUTH_TOKEN="$(cat \
-#     "$HOME/.local/state/docker-mcp-gateway/auth-token")"
-#
-# Codex (~/.codex/config.toml):
-#   [mcp_servers.docker_mcp_gateway]
-#   url = "http://127.0.0.1:8811/mcp"
-#   bearer_token_env_var = "MCP_GATEWAY_AUTH_TOKEN"
-#
-# Claude Code (.mcp.json) and Cursor use mcpServers.<name>.url plus an
-# Authorization header. VS Code uses servers.<name>; Gemini CLI uses
-# mcpServers.<name>.httpUrl. OpenCode uses a remote MCP entry whose header is
-# `Bearer {env:MCP_GATEWAY_AUTH_TOKEN}`.
+# Runs Docker MCP Gateway as an authenticated per-user HTTP bridge between local
+# AI harnesses and Docker-managed MCP server containers. Docker Engine is
+# required; compatibility layers such as Podman are outside this module's scope.
 {
   config,
   lib,
@@ -51,10 +10,18 @@
 }: let
   cfg = config.services.dockerMcpGateway;
   dockerMcp = pkgs.callPackage ../../../../packages/docker-mcp.nix {};
+
+  # The token has no embedded meaning. Its secrecy is what prevents unrelated
+  # local clients from invoking every tool exposed by the gateway. Removing it
+  # and restarting the service creates a new token.
   authTokenFile = "${config.xdg.stateHome}/docker-mcp-gateway/auth-token";
   absolutePath =
     lib.types.addCheck lib.types.nonEmptyStr (path:
       lib.hasPrefix "/" path && !lib.hasInfix ":" path);
+
+  # Keep only this module's runtime boundary explicit. Docker owns mutable
+  # catalog, profile and tool state below ~/.docker/mcp/ and supplies its own
+  # resource, logging, signature-verification and reload defaults.
   gatewayArguments =
     [
       "gateway"
@@ -125,8 +92,29 @@ in {
       }
     ];
 
+    # The plugin manages catalogs and servers; the service consumes Docker's
+    # default profile or legacy configuration without depending on a working
+    # directory. Local definitions belong below ~/.docker/mcp/catalogs/.
     home.file.".docker/cli-plugins/docker-mcp".source = lib.getExe dockerMcp;
 
+    # Runtime contract:
+    #   MCP:    http://127.0.0.1:8811/mcp
+    #   Health: http://127.0.0.1:8811/health
+    #   Token:  ~/.local/state/docker-mcp-gateway/auth-token
+    #
+    # Harnesses send `Authorization: Bearer <token>`. Shell-based clients can
+    # load it with:
+    #   export MCP_GATEWAY_AUTH_TOKEN="$(cat \
+    #     "$HOME/.local/state/docker-mcp-gateway/auth-token")"
+    #
+    # Codex (~/.codex/config.toml):
+    #   [mcp_servers.docker_mcp_gateway]
+    #   url = "http://127.0.0.1:8811/mcp"
+    #   bearer_token_env_var = "MCP_GATEWAY_AUTH_TOKEN"
+    #
+    # Claude Code and Cursor use mcpServers.<name>.url, VS Code uses
+    # servers.<name>, Gemini CLI uses mcpServers.<name>.httpUrl and OpenCode
+    # uses a remote MCP entry. Each sends the same Authorization header.
     systemd.user.services.docker-mcp-gateway = {
       Unit.Description = "Docker MCP Gateway";
 

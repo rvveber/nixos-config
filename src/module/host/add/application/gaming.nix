@@ -1,3 +1,4 @@
+# Provides the system-wide Steam, Gamescope and GameMode gaming stack.
 {
   lib,
   pkgs,

@@ -1,3 +1,4 @@
+# Defines the Home Manager layer of the FHUD desktop experience.
 {
   appearance,
   config,

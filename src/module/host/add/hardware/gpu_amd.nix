@@ -1,3 +1,4 @@
+# Adds AMD ROCm OpenCL support to the graphics stack.
 {pkgs, ...}: {
   # OpenCL support for AMD iGPU/dGPU (ROCm CLR runtime + ICD).
   hardware.graphics.extraPackages = [

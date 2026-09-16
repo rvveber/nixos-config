@@ -1,5 +1,5 @@
+# Enables CUPS printing with mDNS printer discovery.
 {pkgs, ...}: {
-  # dependencies
   imports = [
     ./avahi.nix
   ];

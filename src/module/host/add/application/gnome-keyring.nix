@@ -1,3 +1,4 @@
+# Enables GNOME Keyring login integration and graphical secret-management tools.
 {pkgs, ...}: {
   services.gnome.gnome-keyring.enable = true;
   security.pam.services.login.enableGnomeKeyring = true;

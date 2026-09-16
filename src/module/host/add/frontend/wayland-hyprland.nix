@@ -1,3 +1,4 @@
+# Provides the shared NixOS and Home Manager foundation for a Hyprland desktop.
 {pkgs, ...}: let
   luaCall = args: {_args = args;};
 in {

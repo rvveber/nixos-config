@@ -1,3 +1,5 @@
+# Builds the FHUD NixOS module from its theme, packages, wallpaper and Home
+# Manager layer.
 {
   makePackages,
   source,

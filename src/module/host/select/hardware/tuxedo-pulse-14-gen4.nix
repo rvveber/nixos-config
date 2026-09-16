@@ -1,3 +1,5 @@
+# Configures TUXEDO Pulse 14 Gen4 hardware and synchronizes firmware power
+# profiles with power-profiles-daemon.
 {pkgs, ...}: let
   syncPlatformProfile = pkgs.writeShellApplication {
     name = "tuxedo-platform-profile-sync";

@@ -1,3 +1,4 @@
+# Installs the rvveber Neovim configuration and its supporting CLI tools.
 {pkgs, ...}: {
   imports = [
     ../../../../../add/application/neovim.nix

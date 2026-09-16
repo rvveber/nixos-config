@@ -1,5 +1,5 @@
-# Stores Docker registry credentials through pass instead of writing them into
-# ~/.docker/config.json. Docker MCP server secrets use a separate resolver.
+# Configures Docker registry logins to use pass instead of plaintext auth in
+# ~/.docker/config.json; Docker MCP server secrets remain a separate concern.
 {
   config,
   lib,

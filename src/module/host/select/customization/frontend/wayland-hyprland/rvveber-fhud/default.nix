@@ -1,3 +1,4 @@
+# Composes the FHUD Hyprland desktop customization and its package set.
 {stylix, ...}: let
   source = ./.;
   makePackages = pkgs:

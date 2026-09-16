@@ -1,4 +1,4 @@
-# Provides pass as the credential backend shared by container CLI helpers.
+# Installs pass as the credential backend used by container CLI helpers.
 {pkgs, ...}: {
   environment.systemPackages = [pkgs.pass];
 }

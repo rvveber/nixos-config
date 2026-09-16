@@ -1,3 +1,5 @@
+# Runs ChatMock as a per-user HTTP compatibility layer backed by Codex
+# authentication state.
 {
   pkgs,
   lib,

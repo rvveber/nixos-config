@@ -1,5 +1,5 @@
+# Configures Hyprlock and delegates lid-switch behavior to Hyprland.
 {config, ...}: {
-  # Lockscreen Configuration
   programs.hyprlock.enable = true;
   environment.etc."xdg/hypr/hyprlock.conf".text = ''
     background {

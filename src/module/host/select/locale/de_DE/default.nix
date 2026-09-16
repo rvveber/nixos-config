@@ -1,3 +1,4 @@
+# Selects the German locale, Berlin timezone and German keyboard layouts.
 _: {
   # Set time zone.
   time.timeZone = "Europe/Berlin";

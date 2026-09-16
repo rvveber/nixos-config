@@ -1,3 +1,4 @@
+# Installs desktop office and PDF applications with optional OnlyOffice support.
 {
   lib,
   pkgs,

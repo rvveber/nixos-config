@@ -1,5 +1,5 @@
+# Selects Docker Engine with pass-backed registry credential support.
 {pkgs, ...}: {
-  # dependencies
   imports = [
     ../../../../add/application/containerization.nix
     ../../../../add/application/credential-store.nix

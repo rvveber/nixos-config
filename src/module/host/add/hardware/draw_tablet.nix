@@ -1,3 +1,4 @@
+# Enables OpenTabletDriver and uinput support for drawing tablets.
 _: {
   # Enable better support using the OpenTabletDriver
   hardware.opentabletdriver.enable = true;

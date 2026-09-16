@@ -1,3 +1,4 @@
+# Enables Bluetooth with PipeWire and WirePlumber headset codec support.
 _: {
   hardware.bluetooth.enable = true;
   services.pipewire = {

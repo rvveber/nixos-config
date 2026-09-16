@@ -1,3 +1,4 @@
+# Installs per-user source-control and reproducible development tooling.
 {pkgs, ...}: {
   programs.direnv.enable = true;
 

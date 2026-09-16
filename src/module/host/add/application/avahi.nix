@@ -1,3 +1,4 @@
+# Enables mDNS service discovery and opens its required firewall ports.
 {
   services.avahi = {
     enable = true;

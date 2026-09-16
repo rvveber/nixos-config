@@ -1,3 +1,5 @@
+# Defines reusable WireGuard client interfaces backed by external configuration
+# files supplied by their consuming hosts.
 {
   config,
   lib,

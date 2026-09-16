@@ -1,6 +1,5 @@
-# This module only provides the shared SOPS runtime configuration.
-# Scoped secret files, declarations, templates, and consumer behavior belong
-# to the host or user that owns them.
+# Integrates sops-nix with host-key decryption while leaving secret declarations
+# and consumer behavior with the host or user that owns them.
 {sops-nix, ...}: {
   imports = [
     sops-nix.nixosModules.sops

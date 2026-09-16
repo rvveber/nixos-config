@@ -1,4 +1,5 @@
-# system-wide npm/node replacement hack - if strange node issues arise, this is probably the cause
+# Replaces Node.js package-manager commands with Bun-compatible wrappers across
+# the host; disable this module first when diagnosing Node.js tooling failures.
 {pkgs, ...}: {
   environment.systemPackages = with pkgs; [
     bun

@@ -1,4 +1,4 @@
+# Enables the shared /etc/containers configuration used by container runtimes.
 _: {
-  # Enable common container config files in /etc/containers
   virtualisation.containers.enable = true;
 }

@@ -1,3 +1,5 @@
+# Provides the UrBackup client backend with mutable state and optional trusted
+# server identities supplied by the consuming host.
 {
   config,
   lib,

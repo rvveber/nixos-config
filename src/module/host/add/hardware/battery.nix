@@ -1,3 +1,4 @@
+# Enables the generic laptop power-management and battery service baseline.
 {lib, ...}: {
   # Essential power/battery services for laptops.
   powerManagement.enable = lib.mkDefault true;

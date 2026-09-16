@@ -1,5 +1,5 @@
-# A convenient, mutable Windows environment backed by one shared UMU/Proton
-# prefix, independent from Steam library shortcuts and compatdata IDs.
+# Provides one shared, mutable Windows application environment through UMU and
+# Proton, independent from Steam shortcuts and compatdata identifiers.
 {
   lib,
   pkgs,

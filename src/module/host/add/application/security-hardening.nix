@@ -1,3 +1,4 @@
+# Applies workstation-safe kernel, network, DNS and credential hardening.
 {
   lib,
   pkgs,

@@ -1,3 +1,4 @@
+# Configures the proprietary NVIDIA driver and its Hyprland environment.
 {config, ...}: let
   luaCall = args: {_args = args;};
 in {

@@ -1,5 +1,5 @@
+# Selects Podman with Docker CLI compatibility and pass-backed credentials.
 {pkgs, ...}: {
-  # dependencies
   imports = [
     ../../../../add/application/containerization.nix
     ../../../../add/application/credential-store.nix

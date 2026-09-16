@@ -1,3 +1,4 @@
+# Enables Neovim as the default editor with conventional command aliases.
 _: {
   programs.neovim = {
     enable = true;

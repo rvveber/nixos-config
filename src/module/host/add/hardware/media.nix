@@ -1,3 +1,5 @@
+# Enables PipeWire audio and 32-bit graphics acceleration with low-latency
+# defaults suitable for desktop media workloads.
 _: {
   security.rtkit.enable = true;
   services.pipewire = {

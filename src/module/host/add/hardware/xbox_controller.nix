@@ -1,3 +1,4 @@
+# Enables xpadneo and Bluetooth settings for modern Xbox controllers.
 _: {
   # Enable xpadneo for better controller support
   hardware.xpadneo.enable = true;
