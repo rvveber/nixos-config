@@ -48,7 +48,8 @@
       fi
 
       chmod 0600 "$auth_token_file"
-      export MCP_GATEWAY_AUTH_TOKEN="$(cat "$auth_token_file")"
+      MCP_GATEWAY_AUTH_TOKEN="$(cat "$auth_token_file")"
+      export MCP_GATEWAY_AUTH_TOKEN
 
       exec ${lib.getExe dockerMcp} ${lib.escapeShellArgs gatewayArguments}
     '';
