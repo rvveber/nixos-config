@@ -13,6 +13,7 @@
   boot.initrd.luks.devices."luks-71cfbe03-2af1-4e86-b2f9-9e4ca147568b".device = "/dev/disk/by-uuid/71cfbe03-2af1-4e86-b2f9-9e4ca147568b";
   networking.hostName = "cake";
   networking.networkmanager.enable = true;
+  rvveber.fhud.mainMonitor = "desc:MNR A32";
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;

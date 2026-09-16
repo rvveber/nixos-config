@@ -18,7 +18,7 @@
 - [Hyprland](https://hyprland.org/) (Wayland exclusive)
 - [Hyprlock](https://wiki.hyprland.org/Hypr-Ecosystem/hyprlock/) (Beautiful lockscreen)
 - System-wide theming with [stylix](https://github.com/danth/stylix) (pre-configured with clean FutureHUD colors)
-- UI scripting with [AGS](https://github.com/Aylur/ags)
+- GPU-accelerated desktop shell with [Quickshell](https://quickshell.outfoxxed.me/)
 - Login via bare TTY with [uwsm](https://github.com/Vladimir-csp/uwsm)
 - Automatic lock and suspend for laptops
 - Keybindings:

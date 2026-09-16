@@ -17,12 +17,12 @@ set -euo pipefail
 # size of each range. The default 10 maps keys 1..9,0 to offsets 0..9.
 #
 # This file implements both public operations so their topology cannot drift:
-#   switch <key>  changes the selected desktop on every monitor in the group
-#   move <key>    sends the focused window within its monitor's workspace range
+#   switch <key> [base]  changes the selected desktop on every group member
+#   move <key>           sends the focused window within its workspace range
 WORKSPACES_PER_MONITOR=${RVVEBER_FHUD_WORKSPACES_PER_MONITOR:-10}
 WORKSPACE_GROUPS=${RVVEBER_FHUD_WORKSPACE_GROUPS:-}
 
-operation=${1:-switch}
+operation=${1:-}
 if [[ "$operation" == switch || "$operation" == move ]]; then
   shift
 else
@@ -30,13 +30,19 @@ else
 fi
 
 target=${1:-}
-if [[ ! "$target" =~ ^[0-9]$ ]]; then
-  printf 'Usage: %s [switch|move] <workspace 0-9>\n' "$0" >&2
+requested_base=${2:-}
+if [[ $# -gt 2 || ! "$target" =~ ^(0|[1-9][0-9]*)$ || ( -n "$requested_base" && ! "$requested_base" =~ ^[1-9][0-9]*$ ) ]]; then
+  printf 'Usage: %s [switch|move] <workspace key> [group base]\n' "$0" >&2
   exit 2
 fi
 
 if [[ ! "$WORKSPACES_PER_MONITOR" =~ ^[1-9][0-9]*$ || "$WORKSPACES_PER_MONITOR" -lt 10 ]]; then
   printf 'RVVEBER_FHUD_WORKSPACES_PER_MONITOR must be an integer of at least 10\n' >&2
+  exit 2
+fi
+
+if ((target > WORKSPACES_PER_MONITOR)); then
+  printf 'Workspace key exceeds the configured range\n' >&2
   exit 2
 fi
 
@@ -71,6 +77,10 @@ dispatch_move_window() {
 }
 
 if [[ "$operation" == move ]]; then
+  if [[ -n "$requested_base" ]]; then
+    printf 'Moving uses the active window workspace range\n' >&2
+    exit 2
+  fi
   workspace_id=$(hyprctl activewindow -j | jq -r '.workspace.id // empty')
   if [[ ! "$workspace_id" =~ ^[0-9]+$ ]]; then
     printf 'Hyprland reported no active window workspace\n' >&2
@@ -98,10 +108,12 @@ fi
 focused_monitor=
 focused_base=
 minimum_base=
+requested_base_available=false
 
 for row in "${monitor_rows[@]}"; do
   IFS=$'\t' read -r monitor_name workspace_id focused <<<"$row"
   base=$(workspace_base "$workspace_id")
+  [[ "$base" == "$requested_base" ]] && requested_base_available=true
 
   if [[ "$focused" == true ]]; then
     focused_monitor=$monitor_name
@@ -118,37 +130,42 @@ if [[ -z "$focused_monitor" || -z "$focused_base" ]]; then
   exit 1
 fi
 
+if [[ -n "$requested_base" && "$requested_base_available" != true ]]; then
+  printf 'Workspace group base %s has no connected monitor\n' "$requested_base" >&2
+  exit 2
+fi
+selected_base=${requested_base:-$focused_base}
+
 selected_bases=()
 if [[ -n "$WORKSPACE_GROUPS" ]]; then
   IFS=';' read -r -a group_definitions <<<"$WORKSPACE_GROUPS"
   for definition in "${group_definitions[@]}"; do
     [[ -n "$definition" ]] || continue
     IFS=',' read -r -a group_bases <<<"$definition"
-    contains_focused=false
+    contains_selected=false
     for base in "${group_bases[@]}"; do
       if [[ ! "$base" =~ ^[1-9][0-9]*$ ]]; then
         printf 'RVVEBER_FHUD_WORKSPACE_GROUPS must contain positive numeric bases\n' >&2
         exit 2
       fi
-      [[ "$base" == "$focused_base" ]] && contains_focused=true
+      [[ "$base" == "$selected_base" ]] && contains_selected=true
     done
-    if [[ "$contains_focused" == true ]]; then
+    if [[ "$contains_selected" == true ]]; then
       selected_bases=("${group_bases[@]}")
       break
     fi
   done
 
   if ((${#selected_bases[@]} == 0)); then
-    printf 'Focused workspace base %s is absent from RVVEBER_FHUD_WORKSPACE_GROUPS\n' "$focused_base" >&2
-    exit 2
+    selected_bases=("$selected_base")
   fi
 else
   for row in "${monitor_rows[@]}"; do
     IFS=$'\t' read -r _ workspace_id _ <<<"$row"
     base=$(workspace_base "$workspace_id")
-    if [[ "$focused_base" == "$minimum_base" && "$base" == "$minimum_base" ]]; then
+    if [[ "$selected_base" == "$minimum_base" && "$base" == "$minimum_base" ]]; then
       selected_bases+=("$base")
-    elif [[ "$focused_base" != "$minimum_base" && "$base" != "$minimum_base" ]]; then
+    elif [[ "$selected_base" != "$minimum_base" && "$base" != "$minimum_base" ]]; then
       selected_bases+=("$base")
     fi
   done

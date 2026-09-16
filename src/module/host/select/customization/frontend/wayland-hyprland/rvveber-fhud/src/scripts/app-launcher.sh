@@ -1,11 +1,9 @@
 case "${1:-apps}" in
   apps)
-    rvveber-fhud-ui request "toggle launcher"
-    rvveber-fhud-focus-window hud
+    rvveber-fhud-ui ipc call hud toggle apps
     ;;
   clipboard)
-    rvveber-fhud-ui request "toggle clipboard"
-    rvveber-fhud-focus-window hud
+    rvveber-fhud-ui ipc call hud toggle clipboard
     ;;
   *)
     printf 'Usage: %s [apps|clipboard]\n' "$0" >&2

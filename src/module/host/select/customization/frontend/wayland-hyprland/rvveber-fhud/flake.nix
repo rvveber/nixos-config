@@ -1,19 +1,8 @@
 {
-  description = "rvveber-fhud: A modern Hyprland shell with AGS widgets";
+  description = "rvveber-fhud: A GPU-accelerated Hyprland shell with Quickshell";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-    astal = {
-      url = "github:aylur/astal";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    ags = {
-      url = "github:aylur/ags";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.astal.follows = "astal";
-    };
 
     stylix = {
       url = "github:danth/stylix";
@@ -24,28 +13,35 @@
   outputs = {
     self,
     nixpkgs,
-    ags,
-    astal,
     stylix,
     ...
   }: let
     forAllSystems = nixpkgs.lib.genAttrs ["x86_64-linux" "aarch64-linux"];
-  in {
-    packages = forAllSystems (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
-    in
+    makePackages = pkgs:
       import ./src/packages.nix {
         inherit pkgs;
         source = self;
-        ui = import ./src/widgets/rvveber-shell/package.nix {
-          inherit ags astal pkgs;
-        };
-      });
+        ui = import ./src/widgets/rvveber-shell/package.nix {inherit pkgs;};
+      };
+  in {
+    packages = forAllSystems (system: makePackages nixpkgs.legacyPackages.${system});
+
+    checks = forAllSystems (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+    in {
+      inherit (self.packages.${system}) ui holographic-shader;
+      workspace-groups =
+        pkgs.runCommand "fhud-workspace-group-checks" {
+          nativeBuildInputs = [pkgs.bash pkgs.jq pkgs.python3];
+        } ''
+          python3 ${./src/scripts}/tests/test_workspace_groups.py -v
+          touch $out
+        '';
+    });
 
     nixosModules.default = import ./src/nixos-module.nix {
       source = self;
-      inherit stylix;
-      makePackages = pkgs: self.packages.${pkgs.stdenv.hostPlatform.system};
+      inherit stylix makePackages;
     };
   };
 }

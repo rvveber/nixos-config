@@ -1,16 +1,9 @@
-{
-  ags,
-  astal,
-  stylix,
-  ...
-}: let
+{stylix, ...}: let
   source = ./.;
   makePackages = pkgs:
     import ./src/packages.nix {
       inherit pkgs source;
-      ui = import ./src/widgets/rvveber-shell/package.nix {
-        inherit ags astal pkgs;
-      };
+      ui = import ./src/widgets/rvveber-shell/package.nix {inherit pkgs;};
     };
 in {
   # dependencies - foundational modules needed for FHUD

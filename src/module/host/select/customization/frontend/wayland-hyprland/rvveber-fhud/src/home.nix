@@ -2,6 +2,8 @@
   appearance,
   config,
   lib,
+  holographicWindows,
+  mainMonitor,
   packages,
   pkgs,
   theme,
@@ -163,6 +165,8 @@ in {
     hicolor-icon-theme
   ];
 
+  home.sessionVariables.RVVEBER_FHUD_MAIN_MONITOR = mainMonitor;
+
   # kitty configuration
   programs.kitty = {
     enable = true;
@@ -213,6 +217,19 @@ in {
   wayland.windowManager.hyprland = {
     enable = true;
     configType = "lua";
+    plugins = lib.optionals holographicWindows [packages.holographic-plugin];
+    extraConfig = lib.optionalString holographicWindows ''
+      if hl.plugin.darkwindow ~= nil then
+        local reduced = os.getenv("RVVEBER_FHUD_REDUCED_MOTION") == "1"
+        hl.plugin.darkwindow.load_shader("fhud", {
+          path = "${packages.holographic-shader}/holographic.glsl",
+          introduces_transparency = true,
+          fade_in_speed = reduced and 0 or ${toString (appearance.motion.scene / 100.0)},
+          fade_out_speed = 0,
+        })
+        hl.window_rule({ match = { fullscreen = false }, ["darkwindow:shade"] = "fhud" })
+      end
+    '';
     settings = {
       mainMod._var = "SUPER";
       terminal._var = "kitty";
@@ -240,7 +257,14 @@ in {
           layout = "dwindle";
           border_size = appearance.borderWidth;
           gaps_in = appearance.gap;
-          gaps_out = appearance.gap;
+          gaps_out = appearance.window.outerGap;
+          col = {
+            active_border = lib.mkForce {
+              colors = [(rgba theme.base0C "ee") (rgba theme.base07 "b0") (rgba theme.base0C "66")];
+              angle = 135;
+            };
+            inactive_border = lib.mkForce (rgba theme.base04 "44");
+          };
         };
         binds.window_direction_monitor_fallback = true;
         dwindle = {
@@ -252,8 +276,9 @@ in {
         };
         decoration = {
           rounding = appearance.radius;
-          active_opacity = 1;
-          inactive_opacity = 1;
+          active_opacity = appearance.window.activeOpacity;
+          inactive_opacity = appearance.window.inactiveOpacity;
+          fullscreen_opacity = 1;
           glow = {
             enabled = true;
             range = appearance.glow.inner.range;
@@ -263,14 +288,22 @@ in {
           };
           shadow = {
             enabled = true;
-            range = appearance.glow.outer.range;
-            render_power = appearance.glow.outer.power;
+            range = appearance.window.shadowRange;
+            render_power = 3;
+            offset = "0 ${toString appearance.window.shadowOffset}";
             sharp = false;
-            color = lib.mkForce (rgba theme.base0C appearance.glow.outer.activeAlpha);
-            color_inactive = lib.mkForce (rgba theme.base03 appearance.glow.outer.inactiveAlpha);
+            color = lib.mkForce (rgba theme.base00 "c0");
+            color_inactive = lib.mkForce (rgba theme.base00 "80");
           };
-          blur.enabled = true;
+          blur = {
+            enabled = true;
+            size = appearance.window.blurSize;
+            passes = appearance.window.blurPasses;
+            new_optimizations = true;
+            ignore_opacity = true;
+          };
         };
+        animations.enabled = lua ''os.getenv("RVVEBER_FHUD_REDUCED_MOTION") ~= "1"'';
       };
 
       curve = [
@@ -299,21 +332,30 @@ in {
         {
           leaf = "global";
           enabled = true;
-          speed = 5;
+          speed = appearance.motion.move / 100.0;
           bezier = "easeOutExpo";
         }
-      ];
-
-      window_rule = [
-        (luaCall [
-          {
-            name = "fhud-managed-window";
-            match.title = "^FHUD$";
-            float = true;
-            center = true;
-            size = [600 600];
-          }
-        ])
+        {
+          leaf = "windowsIn";
+          enabled = true;
+          speed = appearance.motion.scene / 100.0;
+          bezier = "easeOutExpo";
+          style = "popin 96%";
+        }
+        {
+          leaf = "windowsOut";
+          enabled = true;
+          speed = appearance.motion.quick / 100.0;
+          bezier = "easeOutExpo";
+          style = "popin 98%";
+        }
+        {
+          leaf = "workspaces";
+          enabled = true;
+          speed = appearance.motion.scene / 100.0;
+          bezier = "easeInOutQuint";
+          style = "slidefade 8%";
+        }
       ];
 
       on = luaCall [
@@ -329,8 +371,7 @@ in {
 
       bind =
         [
-          (plainBind "Escape" ''hl.dsp.exec_cmd("ags request closeAll")'' {non_consuming = true;})
-          (plainBind "CAPS + Caps_Lock" ''hl.dsp.exec_cmd("ags request fetchCapsState")'' {release = true;})
+          (plainBind "Escape" ''hl.dsp.exec_cmd("${packages.ui}/bin/rvveber-fhud-ui ipc call hud close")'' {non_consuming = true;})
           (plainBind "XF86MonBrightnessDown" ''hl.dsp.exec_cmd("${pkgs.brightnessctl}/bin/brightnessctl set 5%-")'' {
             locked = true;
             repeating = true;

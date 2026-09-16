@@ -3,7 +3,15 @@ _: let
   inotifyLimit = 1048576;
   openFileLimit = 524288;
 in {
+  system.stateVersion = "24.11";
+
   nix.settings.experimental-features = ["nix-command" "flakes"];
+
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
+  };
 
   networking.hostName = "b1kini";
   networking.networkmanager.enable = true;
@@ -36,13 +44,8 @@ in {
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 14d";
-  };
-
-  system.stateVersion = "24.11";
+  # Screens
+  rvveber.fhud.mainMonitor = "desc:Tianma Microelectronics Ltd";
   home-manager.sharedModules = [
     {
       #    0x0---------> X

@@ -12,6 +12,16 @@
       '';
     };
 in rec {
+  holographic-plugin = pkgs.hyprlandPlugins.hypr-darkwindow.overrideAttrs (old: {
+    postPatch =
+      (old.postPatch or "")
+      + ''
+        substituteInPlace src/CustomShader.cpp \
+          --replace-fail 'replaceIdentifier(pixelGetter, "v_TexCoord", "texCoord");' \
+            'replaceIdentifier(pixelGetter, "v_texcoord", "texCoord");'
+      '';
+  });
+  holographic-shader = import ./shaders {inherit pkgs;};
   inherit ui;
   default = ui;
 

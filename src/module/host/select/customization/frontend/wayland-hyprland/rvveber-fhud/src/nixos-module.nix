@@ -17,6 +17,18 @@
 in {
   # Import stylix first
   imports = [
+    ({lib, ...}: {
+      options.rvveber.fhud.holographicWindows = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Apply etched highlights, fixed optical depth and a brief entry reveal to non-fullscreen windows.";
+      };
+      options.rvveber.fhud.mainMonitor = lib.mkOption {
+        type = lib.types.str;
+        default = "";
+        description = "Hyprland monitor selector receiving the FHUD top bar, such as eDP-1 or desc:Tianma Microelectronics Ltd. The first screen is used while the selector is empty or unavailable.";
+      };
+    })
     stylix.nixosModules.stylix
     ./lockscreen.nix
   ];
@@ -51,7 +63,7 @@ in {
     enable = true;
     autoEnable = true;
     base16Scheme = theme;
-    opacity.terminal = 0.9;
+    opacity.terminal = appearance.window.terminalOpacity;
     cursor.package = pkgs.bibata-cursors;
     cursor.size = 24;
     fonts.serif = config.stylix.fonts.sansSerif;
@@ -72,6 +84,8 @@ in {
   home-manager.sharedModules = [
     (import ./home.nix {
       inherit appearance config lib packages pkgs theme;
+      mainMonitor = config.rvveber.fhud.mainMonitor;
+      holographicWindows = config.rvveber.fhud.holographicWindows;
     })
   ];
 }
