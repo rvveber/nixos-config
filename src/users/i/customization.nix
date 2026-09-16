@@ -117,6 +117,7 @@ in {
 
       # testing
       vscode
+      opencode
       spotify
       jujutsu
     ];
