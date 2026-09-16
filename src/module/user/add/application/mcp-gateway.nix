@@ -27,7 +27,9 @@
       (toString cfg.cpus)
       "--memory"
       cfg.memory
+      "--block-network=true"
       "--block-secrets=true"
+      "--log-calls=true"
       "--verify-signatures=true"
       "--watch=true"
     ]
