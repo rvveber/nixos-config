@@ -130,6 +130,15 @@ in {
       '';
     };
 
+    allowedWritablePaths = lib.mkOption {
+      type = lib.types.listOf absolutePath;
+      default = [];
+      description = ''
+        Exact absolute host directories that servers may mount read-write. An
+        empty list grants no writable host filesystem access.
+      '';
+    };
+
     serverReferences = lib.mkOption {
       type = lib.types.listOf lib.types.nonEmptyStr;
       default = [];
@@ -174,6 +183,9 @@ in {
           ]
           ++ lib.optionals (gateway.allowedReadOnlyPaths != []) [
             "MCP_GATEWAY_DOCKER_BIND_ALLOWED_PATHS=${lib.concatStringsSep ":" gateway.allowedReadOnlyPaths}"
+          ]
+          ++ lib.optionals (gateway.allowedWritablePaths != []) [
+            "MCP_GATEWAY_DOCKER_BIND_ALLOW_WRITABLE_PATHS=${lib.concatStringsSep ":" gateway.allowedWritablePaths}"
           ];
         ExecStartPre = lib.getExe profileReconciler;
         ExecStart = lib.getExe gatewayLauncher;
