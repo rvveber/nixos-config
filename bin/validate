@@ -31,9 +31,9 @@ stylua --check \
 
 printf 'Checking the security scanner...\n'
 shellcheck "$DIR_ROOT/bin/security-scan"
-ruff check "$DIR_ROOT/lib/security_scan.py" "$DIR_ROOT/tests/test_security_scan.py"
-ruff format --check "$DIR_ROOT/lib/security_scan.py" "$DIR_ROOT/tests/test_security_scan.py"
-python3 -B -m unittest discover -s "$DIR_ROOT/tests" -p 'test_security_scan.py'
+ruff check "$DIR_BIN/lib/security_scan.py" "$DIR_BIN/tests/test_security_scan.py"
+ruff format --check "$DIR_BIN/lib/security_scan.py" "$DIR_BIN/tests/test_security_scan.py"
+python3 -B -m unittest discover -s "$DIR_BIN/tests" -p 'test_security_scan.py'
 
 printf 'Checking flake outputs...\n'
 nix flake check "path:${DIR_ROOT}/src"

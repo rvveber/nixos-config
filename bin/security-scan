@@ -6,4 +6,4 @@ DIR_ROOT=$(cd "$DIR_BIN/.." && pwd -P)
 
 exec nix shell --inputs-from "path:${DIR_ROOT}/src" \
   nixpkgs#python3 nixpkgs#vulnix \
-  --command python3 "${DIR_ROOT}/lib/security_scan.py" "$@"
+  --command python3 "${DIR_BIN}/lib/security_scan.py" "$@"
