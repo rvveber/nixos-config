@@ -87,8 +87,8 @@ in {
       ../../module/user/add/application/devops.nix
       ../../module/user/add/application/docker-credential-store.nix
       ../../module/user/add/application/docker-mcp-gateway
-      ../../module/user/add/application/docker-mcp-gateway/profiles/paper-search.nix
-      ../../module/user/add/application/docker-mcp-gateway/profiles/paper-retrieve.nix
+      ../../module/user/add/application/docker-mcp-gateway/servers/paper-search.nix
+      ../../module/user/add/application/docker-mcp-gateway/servers/paper-retrieve.nix
       ../../module/user/add/application/windows-environment.nix
     ];
 
