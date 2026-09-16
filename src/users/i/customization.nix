@@ -86,13 +86,13 @@ in {
       ../../module/user/add/application/development.nix
       ../../module/user/add/application/devops.nix
       ../../module/user/add/application/docker-credential-store.nix
-      ../../module/user/add/application/docker-mcp-gateway.nix
+      ../../module/user/add/application/docker-mcp-gateway
+      ../../module/user/add/application/docker-mcp-gateway/profiles/paper-search.nix
+      ../../module/user/add/application/docker-mcp-gateway/profiles/paper-retrieve.nix
       ../../module/user/add/application/windows-environment.nix
     ];
 
     xdg.enable = true;
-
-    services.dockerMcpGateway.enable = osConfig.virtualisation.docker.enable;
 
     # Temporary warning-silencer for HM default change; removable after home.stateVersion >= 25.05
     # if you also want to adopt the new default (null).
