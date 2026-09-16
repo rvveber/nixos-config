@@ -163,45 +163,26 @@ in {
     home.file.".docker/cli-plugins/docker-mcp".source = lib.getExe dockerMcp;
     home.packages = [headersHelper];
 
-    systemd.user.services = {
-      docker-mcp-profile = {
-        Unit.Description = "Reconcile the declarative Docker MCP profile";
+    systemd.user.services.docker-mcp-gateway = {
+      Unit.Description = "Docker MCP Gateway";
 
-        Service = {
-          Type = "oneshot";
-          Environment = [
+      Service = {
+        Environment =
+          [
             "HOME=${config.home.homeDirectory}"
             "DOCKER_CONFIG=${config.home.homeDirectory}/.docker"
+          ]
+          ++ lib.optionals (gateway.allowedReadOnlyPaths != []) [
+            "MCP_GATEWAY_DOCKER_BIND_ALLOWED_PATHS=${lib.concatStringsSep ":" gateway.allowedReadOnlyPaths}"
           ];
-          ExecStart = lib.getExe profileReconciler;
-          UMask = "0077";
-        };
+        ExecStartPre = lib.getExe profileReconciler;
+        ExecStart = lib.getExe gatewayLauncher;
+        Restart = "on-failure";
+        RestartSec = "5s";
+        UMask = "0077";
       };
 
-      docker-mcp-gateway = {
-        Unit = {
-          Description = "Docker MCP Gateway";
-          Requires = ["docker-mcp-profile.service"];
-          After = ["docker-mcp-profile.service"];
-        };
-
-        Service = {
-          Environment =
-            [
-              "HOME=${config.home.homeDirectory}"
-              "DOCKER_CONFIG=${config.home.homeDirectory}/.docker"
-            ]
-            ++ lib.optionals (gateway.allowedReadOnlyPaths != []) [
-              "MCP_GATEWAY_DOCKER_BIND_ALLOWED_PATHS=${lib.concatStringsSep ":" gateway.allowedReadOnlyPaths}"
-            ];
-          ExecStart = lib.getExe gatewayLauncher;
-          Restart = "on-failure";
-          RestartSec = "5s";
-          UMask = "0077";
-        };
-
-        Install.WantedBy = ["default.target"];
-      };
+      Install.WantedBy = ["default.target"];
     };
   };
 }
