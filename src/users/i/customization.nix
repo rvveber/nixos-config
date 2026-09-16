@@ -85,7 +85,7 @@ in {
       ../../module/user/select/customization/application/neovim/rvveber-nvim
       ../../module/user/add/application/development.nix
       ../../module/user/add/application/devops.nix
-      ../../module/user/add/application/credential-store.nix
+      ../../module/user/add/application/docker-credential-store.nix
       ../../module/user/add/application/mcp-gateway.nix
       ../../module/user/add/application/windows-environment.nix
     ];

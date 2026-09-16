@@ -1,3 +1,5 @@
+# Stores Docker registry credentials through pass instead of writing them into
+# ~/.docker/config.json. Docker MCP server secrets use a separate resolver.
 {
   config,
   lib,
