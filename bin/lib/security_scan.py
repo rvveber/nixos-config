@@ -1,5 +1,6 @@
 """Scan a Nix closure and retain candidate findings with their triage evidence."""
 
+import argparse
 import csv
 import datetime as dt
 import hashlib
@@ -7,11 +8,13 @@ import json
 import math
 import os
 import re
+import shutil
 import signal
 import socket
 import subprocess
 import sys
 import tempfile
+import textwrap
 import time
 from pathlib import Path
 
@@ -19,8 +22,48 @@ ROOT = Path(__file__).resolve().parents[2]
 CVE = re.compile(r"CVE-\d{4}-\d+")
 
 
+class Console:
+    """Render scan progress and findings for a terminal."""
+
+    RESET = "\033[0m"
+    CYAN = "\033[0;36m"
+    GREEN = "\033[0;32m"
+    YELLOW = "\033[0;33m"
+    RED = "\033[0;31m"
+    MAGENTA = "\033[0;35m"
+
+    def __init__(self):
+        self.color = "NO_COLOR" not in os.environ and (
+            sys.stdout.isatty() or os.environ.get("CLICOLOR_FORCE") == "1"
+        )
+        self.width = max(60, min(shutil.get_terminal_size((100, 24)).columns, 120))
+
+    def paint(self, text, color):
+        return f"{color}{text}{self.RESET}" if self.color else text
+
+    def line(self, text="", color=None, file=None):
+        print(self.paint(text, color) if color else text, file=file, flush=True)
+
+    def info(self, text):
+        self.line(f"➜ INFO: {text}", self.CYAN)
+
+    def warning(self, text):
+        self.line(f"➜ WARNING: {text}", self.YELLOW)
+
+    def success(self, text):
+        self.line(f"➜ SUCCESS: {text}", self.GREEN)
+
+    def error(self, text):
+        self.line(f"➜ ERROR: {text}", self.RED, sys.stderr)
+
+
+CONSOLE = Console()
+
+
 def write_json(path, value):
-    path.write_text(json.dumps(value, indent=2) + "\n")
+    temporary = path.with_suffix(f"{path.suffix}.tmp")
+    temporary.write_text(json.dumps(value, indent=2) + "\n")
+    temporary.replace(path)
 
 
 def run(command, timeout=900, stdout=None, stderr=None):
@@ -42,7 +85,12 @@ def run(command, timeout=900, stdout=None, stderr=None):
                     break
                 except subprocess.TimeoutExpired:
                     if time.monotonic() < deadline:
-                        print(f"Still running {command[0]}...", flush=True)
+                        elapsed = (
+                            round(timeout - remaining) if timeout is not None else 0
+                        )
+                        CONSOLE.info(
+                            f"{command[0]} is still running ({elapsed}s elapsed)"
+                        )
         except BaseException:
             try:
                 os.killpg(process.pid, signal.SIGTERM)
@@ -158,7 +206,7 @@ def load_policy(path, today, enforce_expiry):
             "expired": enforce_expiry and until < today,
         }
         if rule["expired"]:
-            print(f"Expired suppression: {cve} / {pname} ({expiry})")
+            CONSOLE.warning(f"Suppression expired: {cve} / {pname} ({expiry})")
         rules.append(rule)
     return rules
 
@@ -270,6 +318,14 @@ def findings(data, rules, minimum, closure):
     )
 
 
+def finding_keys(report, status=None):
+    return {
+        (row["pname"], row["version"], row["cve"])
+        for row in report["findings"]
+        if status is None or row["status"] == status
+    }
+
+
 def compare_previous(report, directory):
     identity = ("host", "target", "scope")
     for previous_path in sorted(directory.parent.glob("*/report.json"), reverse=True):
@@ -281,86 +337,246 @@ def compare_previous(report, directory):
                 previous.get(key) != report[key] for key in identity
             ):
                 continue
-            keys = lambda value: {
-                (row["pname"], row["version"], row["cve"]) for row in value["findings"]
-            }
-            old, new = keys(previous), keys(report)
+            old, new = finding_keys(previous), finding_keys(report)
+            old_review = finding_keys(previous, "review")
+            new_review = finding_keys(report, "review")
         except (OSError, ValueError, KeyError, TypeError):
             continue
         report["comparison"] = {
             "report": str(previous_path),
             "added": sorted(new - old),
             "removed": sorted(old - new),
+            "review_added": sorted(new_review - old_review),
+            "review_removed": sorted(old_review - new_review),
         }
-        print(
-            f"Candidate changes since {previous_path.parent.name}: {len(new - old)} added, {len(old - new)} removed"
-        )
         return
 
 
-def display(report, config):
+def severity(score):
+    if score is None:
+        return "Unknown"
+    if score >= 9:
+        return "Critical"
+    if score >= 7:
+        return "High"
+    if score >= 4:
+        return "Medium"
+    if score > 0:
+        return "Low"
+    return "Unknown"
+
+
+def score_text(score):
+    return "unknown" if score is None else f"{score:g}"
+
+
+def severity_color(score):
+    if score is None or score >= 9:
+        return CONSOLE.RED
+    if score >= 7:
+        return CONSOLE.YELLOW
+    if score >= 4:
+        return CONSOLE.MAGENTA
+    return CONSOLE.CYAN
+
+
+def comparison_counts(comparison):
+    if not comparison:
+        return None
+    added = comparison.get("review_added", comparison.get("added", []))
+    removed = comparison.get("review_removed", comparison.get("removed", []))
+    return len(added), len(removed)
+
+
+def comparison_changes(comparison):
+    if not comparison:
+        return set(), set()
+    added = comparison.get("review_added", comparison.get("added", []))
+    removed = comparison.get("review_removed", comparison.get("removed", []))
+    return {tuple(item) for item in added}, {tuple(item) for item in removed}
+
+
+def print_changes(label, changes):
+    if not changes:
+        return
+    preview = sorted(changes)[:5]
+    rendered = ", ".join(f"{pname} {version} {cve}" for pname, version, cve in preview)
+    remainder = (
+        f" (+{len(changes) - len(preview)} more)" if len(changes) > len(preview) else ""
+    )
+    CONSOLE.line(f"   {label}: {rendered}{remainder}")
+
+
+def print_trace(trace):
+    for line in trace.splitlines():
+        CONSOLE.line(f"   │ {line}")
+
+
+def trace_target(derivation, runtime_outputs):
+    if runtime_outputs:
+        return preferred_output(runtime_outputs)
+    try:
+        outputs = checked(["nix-store", "--query", "--outputs", derivation], 30)
+    except (RuntimeError, TimeoutError):
+        return None
+    return preferred_output(outputs.splitlines())
+
+
+def preferred_output(outputs):
+    if not outputs:
+        return None
+    secondary = ("-bin", "-lib", "-data")
+    ignored = ("-dev", "-doc", "-man", "-info", "-static", "-debug", "-devdoc")
+    for candidate in outputs:
+        if not candidate.endswith((*secondary, *ignored)):
+            return candidate
+    for suffix in secondary:
+        for candidate in outputs:
+            if candidate.endswith(suffix):
+                return candidate
+    return outputs[0]
+
+
+def print_finding(row, final):
+    branch = "└─" if final else "├─"
+    continuation = "  " if final else "│ "
+    score = row["cvss"]
+    changed = " · NEW" if row.get("new") else ""
+    label = f"{row['cve']}  CVSS {score_text(score)} · {severity(score)}{changed}"
+    CONSOLE.line(f"   {branch} {CONSOLE.paint(label, severity_color(score))}")
+    description = (
+        " ".join(row["description"].split()) or "No short description available."
+    )
+    for line in textwrap.wrap(
+        description,
+        width=max(30, CONSOLE.width - 9),
+        break_long_words=False,
+        break_on_hyphens=False,
+    ):
+        CONSOLE.line(f"   {continuation}  {line}")
+    CONSOLE.line(f"   {continuation}  https://nvd.nist.gov/vuln/detail/{row['cve']}")
+
+
+def display(report, config, summary_only=False):
     rows = report["findings"]
     review = [row for row in rows if row["status"] == "review"]
-    print(
-        f"{len(rows)} candidate package/CVE entries; {len({row['cve'] for row in rows})} distinct CVEs"
-    )
-    print(
-        f"Review: {len(review)}; suppressed: {sum(row['status'] == 'suppressed' for row in rows)}; below threshold: {sum(row['status'] == 'below-threshold' for row in rows)}"
-    )
-    print(
-        "These are name/version matches requiring review. Closure membership does not establish exploitability."
-    )
-    if report["unavailable_derivers"]:
-        print(
-            f"Coverage: {len(report['unavailable_derivers'])} closure paths lack locally available recorded derivations; see report.json"
-        )
     grouped = {}
     for row in review:
         grouped.setdefault(
             (row["pname"], row["version"], row["derivation"]), []
         ).append(row)
-    for (pname, version, derivation), group in grouped.items():
-        print(f"\n{pname} {version}: {len(group)} candidates")
-        print(f"  Derivation: {derivation}")
+    groups = sorted(
+        grouped.items(),
+        key=lambda item: (
+            -max(row["cvss"] if row["cvss"] is not None else 10 for row in item[1]),
+            item[0][0],
+            item[0][1],
+        ),
+    )
+    suppressed = sum(row["status"] == "suppressed" for row in rows)
+    below = sum(row["status"] == "below-threshold" for row in rows)
+    distinct = len({row["cve"] for row in rows})
+    review_distinct = len({row["cve"] for row in review})
+    comparison = comparison_counts(report.get("comparison"))
+    added, removed = comparison_changes(report.get("comparison"))
+    identity_gaps = sum(not row["runtime_outputs"] for row in review)
+
+    if review:
+        CONSOLE.warning(
+            f"{len(review)} entries across {len(groups)} package nodes require review "
+            f"({review_distinct} distinct CVEs)"
+        )
+    else:
+        CONSOLE.success("No unsuppressed findings meet the review policy")
+    CONSOLE.line(
+        f"   Scan totals: {len(rows)} entries · {distinct} distinct CVEs · "
+        f"{below} below CVSS {config['minimum_cvss']:g} · {suppressed} suppressed"
+    )
+    if comparison:
+        added_count, removed_count = comparison
+        baseline = Path(report["comparison"]["report"]).parent.name
+        if added_count or removed_count:
+            CONSOLE.line(
+                f"   Since {baseline}: {added_count} review entries added · "
+                f"{removed_count} removed"
+            )
+        else:
+            CONSOLE.line(f"   Since {baseline}: review findings unchanged")
+        print_changes("Added", added)
+        print_changes("Removed", removed)
+    if identity_gaps:
+        CONSOLE.warning(
+            f"{identity_gaps} finding entries lack a directly matched runtime output; "
+            "their dependency traces require review"
+        )
+    CONSOLE.line(
+        "   Name/version matches require triage; closure membership alone does not prove exploitability."
+    )
+    if summary_only:
+        return bool(review)
+
+    for index, ((pname, version, derivation), group) in enumerate(groups, 1):
+        maximum = max(row["cvss"] if row["cvss"] is not None else 10 for row in group)
+        CONSOLE.line()
+        heading = (
+            f"➜ [{index}/{len(groups)}] {pname} {version} · {len(group)} "
+            f"{'finding' if len(group) == 1 else 'findings'} · "
+            f"max CVSS {score_text(maximum)} {severity(maximum)}"
+        )
+        CONSOLE.line(heading, severity_color(maximum))
         outputs = group[0]["runtime_outputs"]
         if outputs:
-            print(f"  Runtime output: {outputs[0]}")
+            suffix = f" (+{len(outputs) - 1} more)" if len(outputs) > 1 else ""
+            CONSOLE.line(f"   Runtime: {preferred_output(outputs)}{suffix}")
         else:
-            print(
-                "  Runtime output identity unavailable; candidate retained for review"
+            CONSOLE.line(
+                "   Runtime: identity unavailable; finding retained for review"
             )
-        if config["evidence"] == "always" and outputs:
+        CONSOLE.line(f"   Derivation: {derivation}")
+        trace_requested = config["evidence"] == "always" or (
+            config["evidence"] == "auto" and not outputs
+        )
+        target_output = trace_target(derivation, outputs) if trace_requested else None
+        if trace_requested and target_output:
             try:
                 trace = checked(
-                    ["nix", "why-depends", report["store_path"], outputs[0]],
+                    ["nix", "why-depends", report["store_path"], target_output],
                     config["trace_timeout"],
                 )
-                print(trace)
+                CONSOLE.line("   Trace:")
+                print_trace(trace)
             except (RuntimeError, TimeoutError) as error:
-                print(f"  Dependency trace unavailable: {error}")
-        for row in group:
-            score = (
-                row["cvss"] if row["cvss"] is not None else "unknown; review required"
+                CONSOLE.line(f"   Trace unavailable: {error}")
+        elif trace_requested:
+            CONSOLE.line(
+                "   Trace unavailable: derivation outputs are no longer present"
             )
-            description = " ".join(row["description"].split())[
-                : config["description_length"]
-            ]
-            print(f"  {row['cve']} (CVSS {score}): {description}")
-            print(f"    https://nvd.nist.gov/vuln/detail/{row['cve']}")
+        CONSOLE.line("   Vulnerabilities:")
+        for finding_index, row in enumerate(group):
+            shortened = dict(row)
+            shortened["new"] = (row["pname"], row["version"], row["cve"]) in added
+            description = " ".join(row["description"].split())
+            if len(description) > config["description_length"]:
+                description = description[: config["description_length"]].rstrip() + "…"
+            shortened["description"] = description
+            print_finding(shortened, finding_index == len(group) - 1)
     return bool(review)
 
 
 def scan(config, directory):
+    started_at = dt.datetime.now(dt.timezone.utc)
+    started = time.monotonic()
     rules = load_policy(
         config["policy_path"],
         dt.datetime.now(dt.timezone.utc).date(),
         config["enforce_expiry"],
     )
     if config["target"] == "system":
+        CONSOLE.info("Resolving the running system closure")
         target = Path("/run/current-system").resolve(strict=True)
     else:
         flake = f"path:{ROOT}/src#nixosConfigurations.{config['host']}.config.system.build.toplevel"
-        print(f"Building {flake}...", flush=True)
+        CONSOLE.info(f"Building the configured system for {config['host']}")
         target = Path(
             checked(
                 [
@@ -386,7 +602,11 @@ def scan(config, directory):
     if config["scope"] == "runtime":
         command.append("--closure")
     command.append(str(target))
-    print(f"Scanning {target} ({config['scope']})...", flush=True)
+    CONSOLE.info(f"Scanning {len(closure)} closure paths with vulnix")
+    CONSOLE.line(f"   Target: {target}")
+    CONSOLE.line(f"   Scope: {config['scope']}")
+    CONSOLE.line(f"   Review threshold: CVSS {config['minimum_cvss']:g}")
+    CONSOLE.line(f"   Suppressions: {config['policy_path']}")
     with (
         (directory / "raw.json").open("w") as out,
         (directory / "scanner.log").open("w") as err,
@@ -400,7 +620,8 @@ def scan(config, directory):
     report = {
         "schema_version": 1,
         "status": "complete",
-        "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "created_at": started_at.isoformat(),
+        "duration_seconds": round(time.monotonic() - started, 3),
         "host": config["host"],
         "target": config["target"],
         "scope": config["scope"],
@@ -425,31 +646,95 @@ def scan(config, directory):
         ),
         "findings": findings(raw, rules, config["minimum_cvss"], closure),
     }
+    report["coverage"] = {
+        "closure_paths": len(closure),
+        "paths_without_available_deriver": len(report["unavailable_derivers"]),
+        "findings_without_runtime_identity": sum(
+            not row["runtime_outputs"] for row in report["findings"]
+        ),
+    }
     compare_previous(report, directory)
     write_json(directory / "report.json", report)
-    needs_review = display(report, config)
-    print(f"\nReport: {directory / 'report.json'}")
+    needs_review = display(report, config, config["summary_only"])
+    CONSOLE.line()
+    CONSOLE.info(f"Report: {directory / 'report.json'}")
     if needs_review:
         if config["allow_failure"]:
-            print(
-                "SECURITY_SCAN_ALLOW_FAILURE=1: continuing with candidates awaiting review."
+            CONSOLE.info(
+                "SECURITY_SCAN_ALLOW_FAILURE=1; continuing with findings awaiting review"
             )
             return 0
-        print("Security check requires review of the candidates above.")
+        CONSOLE.error("Security check requires review of the findings above")
         return 1
-    print("No unsuppressed candidates meet the review policy.")
     return 0
+
+
+def arguments():
+    parser = argparse.ArgumentParser(
+        description="Scan a NixOS closure with vulnix and retain triage evidence."
+    )
+    parser.add_argument(
+        "--report",
+        type=Path,
+        metavar="REPORT",
+        help="render an existing report.json or report directory without running a scan",
+    )
+    parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="show scan totals and changes without per-package details",
+    )
+    return parser.parse_args()
+
+
+def report_path(path):
+    resolved = path.resolve(strict=True)
+    return resolved / "report.json" if resolved.is_dir() else resolved
+
+
+def render_report(path, config, summary_only=False):
+    path = report_path(path)
+    report = json.loads(path.read_text())
+    if report.get("status") != "complete" or not isinstance(
+        report.get("findings"), list
+    ):
+        raise ValueError(f"{path} is not a completed security scan report")
+    config = {
+        **config,
+        "minimum_cvss": report.get("minimum_cvss", config["minimum_cvss"]),
+        "evidence": "never",
+    }
+    CONSOLE.info(
+        f"Rendering saved report from {report.get('created_at', 'unknown time')}"
+    )
+    CONSOLE.line(f"   Host: {report.get('host', 'unknown')}")
+    CONSOLE.line(f"   Target: {report.get('store_path', 'unknown')}")
+    scanner = report.get("scanner", "unknown scanner")
+    revision = report.get("toolchain_nixpkgs", {}).get("rev", "unknown")[:12]
+    duration = report.get("duration_seconds")
+    metadata = f"   Scanner: {scanner} · nixpkgs {revision}"
+    if duration is not None:
+        metadata += f" · {duration:g}s"
+    CONSOLE.line(metadata)
+    display(report, config, summary_only)
+    CONSOLE.line()
+    CONSOLE.info(f"Report: {path.resolve()}")
+    return 1 if any(row["status"] == "review" for row in report["findings"]) else 0
 
 
 def main():
     directory = None
     try:
+        options = arguments()
         config = settings()
+        if options.report:
+            return render_report(options.report, config, options.summary)
+        config["summary_only"] = options.summary
         config["report_dir"].mkdir(parents=True, exist_ok=True)
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d-%H%M%S")
         prefix = f"security-scan-{config['host']}-{config['target']}-{stamp}-"
         directory = Path(tempfile.mkdtemp(prefix=prefix, dir=config["report_dir"]))
-        print(f"Scan artifacts: {directory}", flush=True)
+        CONSOLE.info(f"Scan artifacts: {directory}")
         return scan(config, directory)
     except (OSError, ValueError, TypeError, RuntimeError, TimeoutError) as error:
         if directory:
@@ -457,7 +742,7 @@ def main():
                 directory / "report.json",
                 {"schema_version": 1, "status": "failed", "error": str(error)},
             )
-        print(f"Security scan failed: {error}", file=sys.stderr)
+        CONSOLE.error(f"Security scan failed: {error}")
         return 2
     except KeyboardInterrupt:
         if directory:
@@ -465,7 +750,7 @@ def main():
                 directory / "report.json",
                 {"schema_version": 1, "status": "interrupted"},
             )
-        print("Security scan interrupted.", file=sys.stderr)
+        CONSOLE.error("Security scan interrupted")
         return 130
 
 
