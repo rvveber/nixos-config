@@ -1,6 +1,10 @@
 backup/
 result
 
+# Python
+__pycache__/
+*.py[cod]
+
 # direnv
 .direnv
 
