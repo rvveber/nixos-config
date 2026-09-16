@@ -82,6 +82,8 @@ in {
     wantedBy = ["graphical-session.target"];
     after = ["graphical-session.target"];
     partOf = ["graphical-session.target"];
+    # Allow the target to become active before this wanted notification runs.
+    unitConfig.DefaultDependencies = false;
     serviceConfig = {
       Type = "oneshot";
       ExecCondition = "${pkgs.systemd}/bin/systemctl --user is-active --quiet graphical-session.target";

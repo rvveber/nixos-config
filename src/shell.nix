@@ -1,4 +1,4 @@
-# Provides the repository's formatting, analysis and regression-test tools.
+# Provides the repository's formatting, analysis and scripting tools.
 {pkgs}:
 pkgs.mkShellNoCC {
   packages = with pkgs; [
