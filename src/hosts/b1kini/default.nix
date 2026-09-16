@@ -11,6 +11,7 @@
     ../../module/host/add/hardware/ssd.nix
     ../../module/host/add/hardware/battery.nix
     ../../module/host/add/hardware/xbox_controller.nix
+    ../../module/host/select/hardware/tuxedo-pulse-14-gen4.nix
     ../../module/host/add/application/home-manager.nix
     ../../module/host/add/application/lix.nix
     ../../module/host/add/application/gnupg-agent.nix
