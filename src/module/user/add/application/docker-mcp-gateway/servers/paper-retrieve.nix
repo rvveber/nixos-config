@@ -20,5 +20,10 @@
 in {
   config = lib.mkIf osConfig.virtualisation.docker.enable {
     services.dockerMcpGateway.serverFiles = [server];
+    services.dockerMcpGateway.toolAllowlist.paper-retrieve = [
+      "get_details"
+      "download"
+      "read"
+    ];
   };
 }

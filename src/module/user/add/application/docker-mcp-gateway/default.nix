@@ -70,6 +70,18 @@
         --id ${lib.escapeShellArg profileId} \
         --name NixOS \
         ${lib.concatMapStringsSep " " (reference: "--server ${lib.escapeShellArg reference}") serverReferences}
+
+      ${
+        lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (server: tools: ''
+            ${lib.getExe dockerMcp} profile tools ${lib.escapeShellArg profileId} \
+              --disable-all ${lib.escapeShellArg server}
+            ${lib.getExe dockerMcp} profile tools ${lib.escapeShellArg profileId} \
+              ${lib.concatMapStringsSep " " (tool: "--enable ${lib.escapeShellArg "${server}.${tool}"}") tools}
+          '')
+          gateway.toolAllowlist
+        )
+      }
     '';
   };
 
@@ -131,6 +143,12 @@ in {
         Server-entry YAML or JSON files copied into Docker MCP's trusted
         catalog directory before the shared profile is reconciled.
       '';
+    };
+
+    toolAllowlist = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.nonEmptyListOf lib.types.nonEmptyStr);
+      default = {};
+      description = "Tools exposed by each server in the shared profile.";
     };
   };
 
