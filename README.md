@@ -141,37 +141,16 @@ key of your current machine. You can add other machines later.
 
 ## Security scans
 
-Scan the running system with:
+The `periodic-security-scan` module scans the running system's closure daily with
+Syft → Grype and sends desktop notifications for findings or scan failures.
+Findings are candidates for review; reports live in
+`/var/lib/periodic-security-scan/latest/`.
+
+For a manual Nix-aware scan with vulnix:
 
 ```shell
 SECURITY_SCAN_TARGET=system bin/security-scan
 ```
-
-The default target, `flake`, builds the configured host before scanning. Both
-targets scan the runtime closure using tools pinned by `src/flake.lock`.
-`SECURITY_SCAN_EXCLUDE_BUILD_TIME_ONLY=0` explicitly includes build dependencies.
-Runtime closure membership identifies installed references; statically embedded
-dependencies and exploitability need additional analysis.
-
-Each run creates a directory in `.security-scan/reports/` containing the raw
-vulnix output, scanner log, runtime closure and a structured `report.json`.
-Findings are candidate name/version matches, with separate review, suppressed
-and below-threshold statuses. The report preserves exclusions and their evidence.
-Only completed reports for the same host, target and scope are compared; the older
-flat JSON reports remain available for inspection.
-
-The default review threshold is CVSS 7; missing scores also require review.
-Set `SECURITY_SCAN_MIN_CVSS` to adjust it. Exit codes are 0 for a passed policy,
-1 for candidates requiring review, and 2 for a failed scan.
-`SECURITY_SCAN_ALLOW_FAILURE=1` permits findings while preserving scan failures.
-`SECURITY_SCAN_TIMEOUT_SECONDS` defaults to 900. Dependency traces are available
-with `SECURITY_SCAN_EVIDENCE_MODE=always`, bounded by
-`SECURITY_SCAN_TRACE_TIMEOUT_SECONDS` (30 by default).
-
-Reviewed false positives live in `.security-scan/suppressions.tsv`. Entries name
-an exact CVE, package, expiry date, evidence and version. Package updates and
-expiry reopen the finding. `SECURITY_SCAN_SUPPRESSIONS_FILE` selects another
-policy file; `SECURITY_SCAN_REPORT_DIR` selects the artifact directory.
 
 ## Development
 The project exposes its tools through the standard flake development shell.
