@@ -1,3 +1,4 @@
+# Builds and validates the per-window FutureHUD shader.
 {pkgs}: let
   appearance = import ../appearance.nix;
   theme = import ../theme.nix;

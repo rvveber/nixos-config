@@ -118,11 +118,18 @@ changing data, then stop.
 Application windows share fine focus borders, slight transparency, blur and
 directional shadows. Their shader tints neutral dark panels and makes those
 backgrounds translucent while retaining text and saturated colors. Long
-horizontal and vertical dividers receive an accent contour and a displaced
-echo, including low-contrast separators. The echo contracts toward its resting
-offset during entry. This is optical depth over application pixels; application
-state remains owned by the application. The effect settles without pointer
-input or continuous animation.
+horizontal and vertical dividers receive an accent contour and a fixed diagonal
+echo after a continuous 33-pixel run passes contrast and coherence checks.
+Entry changes the highlight intensity while the depth offset stays fixed.
+This is optical depth over application pixels; application state remains owned
+by the application. The effect settles without pointer input or continuous animation.
+
+The hardcoded rectangle debug overlay colors enclosed flat surfaces with stable,
+translucent colors derived from their bounds. It validates all four sides and
+covers rectangles 34–256 logical pixels wide and high. Text, nested content,
+rounded corners and larger panels can interrupt detection. This bounded single-pass
+prototype adds texture sampling work; a shared detection pass is the next step
+for larger surfaces and content-aware borders.
 Fullscreen windows bypass the shader immediately and use full compositor
 opacity. Reduced motion starts at the settled appearance.
 

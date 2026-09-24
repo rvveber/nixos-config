@@ -154,12 +154,12 @@ int main(int argc, char **argv) {
             for (int i = 0; i < (int)sizeof(output); i += 4)
                 require(output[i] <= output[i+3] && output[i+1] <= output[i+3] && output[i+2] <= output[i+3], "Output must remain premultiplied");
             if (entry)
-                require(output[PIXEL(32,80)] < 245 && output[PIXEL(32,80)] > 150, "Entry blink must be bounded and visible");
+                require(output[PIXEL(32,88)] < 245 && output[PIXEL(32,88)] > 150, "Entry blink must be bounded and visible");
             if (!entry) {
                 require(memcmp(input, output, sizeof(input)) != 0, "Depth layer must affect detected edges");
                 require(output[PIXEL(35,80) + 1] > output[PIXEL(5,5) + 1] + 15, "Depth layer must be spatially offset from its source edge");
                 require(output[PIXEL(59,80) + 1] > output[PIXEL(5,5) + 1] + 15, "Low contrast dividers must produce a displaced depth layer");
-                require(memcmp(input + PIXEL(32,80), output + PIXEL(32,80), 4) == 0, "Settled source lines must remain crisp");
+                require(memcmp(input + PIXEL(32,88), output + PIXEL(32,88), 4) == 0, "Settled source lines must remain crisp");
             }
         }
         glDeleteProgram(program);
