@@ -126,10 +126,14 @@ by the application. The effect settles without pointer input or continuous anima
 
 Super+F10 toggles the effect on the focused window. Super+Shift+F10 toggles
 rectangle debugging on that window. Debug mode shows the original content with
-translucent boxes and matching outlines. The plugin joins coherent horizontal and
-vertical segments into shared bounds, allowing rounded corners and textured image
-interiors. Text inside a detected box leaves its overlay intact; smaller nested
-controls receive their own color.
+translucent boxes and matching outlines. Similar parallel segments anchor narrow
+search regions at their ends. Within those regions, short coherent perpendicular
+segments can establish a connecting side. The nearest outward connector takes
+priority over an inward correction; its intersection with the parallel sides gives
+the implicit corner, including across rounded or missing corner pixels. The same
+search runs from horizontal and vertical anchor pairs. Observed side coverage ranks
+overlapping candidates, keeping adjacent cards separate. Text inside a detected box
+leaves its overlay intact; smaller nested controls receive their own color.
 
 Detection runs once per committed main-surface update and reuses its result while
 moving the window. A reduced texture with a maximum dimension of 1024 pixels bounds

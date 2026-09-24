@@ -57,7 +57,7 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                     } else solid = 0;
                     ++column;
                 }
-                if (end - start >= 12 && support >= (end - start + 1) * 0.7 && longest >= 8)
+                if (end - start >= 24 && support >= (end - start + 1) * 0.7 && longest >= std::max(12.f, (end - start + 1) * 0.2f))
                     result.push_back({row, start, end, support});
             }
         }
@@ -76,52 +76,80 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
         return merged;
     };
     const auto hs = lines(horizontal, false), vs = lines(vertical, true);
-    const auto support = [&](const std::vector<uint8_t>& edges, int position, int start, int end, bool transpose) {
-        const int corner = std::min(12, (end - start) / 5);
-        start += corner;
-        end -= corner;
-        int hits = 0;
-        for (int i = start; i <= end; ++i) {
-            bool hit = false;
-            for (int delta = -1; delta <= 1; ++delta)
-                hit |= edges[transpose ? i * width + position + delta : (position + delta) * width + i] != 0;
-            hits += hit;
-        }
-        return float(hits) / std::max(1, end - start + 1);
-    };
     struct Candidate { Rectangle bounds; float score, area; };
     std::vector<Candidate> candidates;
-    for (size_t t = 0; t < hs.size(); ++t) {
-        for (size_t b = t + 1; b < hs.size(); ++b) {
-            const auto& top = hs[t];
-            const auto& bottom = hs[b];
-            const int h = bottom.position - top.position;
-            if (h < 12) continue;
-            const int start = std::min(top.start, bottom.start), end = std::max(top.end, bottom.end);
-            const int corner = std::min(16, std::min(h, end - start) / 4);
-            if (std::abs(top.start - bottom.start) > corner + 6 || std::abs(top.end - bottom.end) > corner + 6)
-                continue;
-            for (const auto& left : vs) {
-                if (std::abs(left.position - start) > corner + 3 || left.start > top.position + corner + 3 || left.end < bottom.position - corner - 3)
-                    continue;
-                for (const auto& right : vs) {
-                    if (std::abs(right.position - end) > corner + 3 || right.start > top.position + corner + 3 || right.end < bottom.position - corner - 3 || right.position - left.position < 12)
-                        continue;
-                    const float score = std::min({
-                        support(horizontal, top.position, left.position, right.position, false),
-                        support(horizontal, bottom.position, left.position, right.position, false),
-                        support(vertical, left.position, top.position, bottom.position, true),
-                        support(vertical, right.position, top.position, bottom.position, true)});
-                    if (score < 0.7f) continue;
-                    candidates.push_back({{float(left.position) / width, float(top.position) / height,
-                                           float(right.position) / width, float(bottom.position) / height},
-                                          score, float(right.position - left.position) * h});
-                }
+    const auto infer = [&](const std::vector<Line>& anchors, const std::vector<uint8_t>& edges, bool transpose) {
+        const int limit = transpose ? height : width;
+        struct Connector { int position; float confidence; };
+        for (size_t first = 0; first < anchors.size(); ++first) {
+            for (size_t second = first + 1; second < anchors.size(); ++second) {
+                const auto& a = anchors[first];
+                const auto& b = anchors[second];
+                const int separation = b.position - a.position;
+                const int shorter = std::min(a.end - a.start, b.end - b.start);
+                const int longer = std::max(a.end - a.start, b.end - b.start);
+                if (separation < 12 || shorter < longer * 0.75f) continue;
+                const int reach = std::min(64, separation / 2 + 2);
+                const int alignment = std::min(reach, shorter / 4 + 2);
+                if (std::abs(a.start - b.start) > alignment || std::abs(a.end - b.end) > alignment) continue;
+
+                // Short perpendicular evidence is meaningful inside these predicted end regions.
+                // Require straight evidence away from corner shoulders; infer the intersections.
+                const int inset = std::max(2, separation / 5);
+                const auto connector = [&](int endpoint, int outward) {
+                    const auto confidence = [&](int position) {
+                        if (position < 2 || position >= limit - 2) return 0.f;
+                        int start = -1, end = -1, hits = 0, run = 0, longest = 0, gap = 0, largestGap = 0;
+                        for (int i = a.position + 2; i <= b.position - 2; ++i) {
+                            if (edges[transpose ? position * width + i : i * width + position]) {
+                                if (start < 0) start = i;
+                                end = i;
+                                largestGap = std::max(largestGap, gap);
+                                gap = 0;
+                                ++hits;
+                                if (i >= a.position + inset && i <= b.position - inset)
+                                    longest = std::max(longest, ++run);
+                                else run = 0;
+                            } else {
+                                run = 0;
+                                if (start >= 0) ++gap;
+                            }
+                        }
+                        if (largestGap > 6 || longest < 4 || hits < 4 || hits < (end - start + 1) * 0.7f) return 0.f;
+                        return float(hits) / (separation - 3);
+                    };
+                    // Prefer the first outward connector, then consider an inward correction.
+                    for (int distance = 0; distance <= reach; ++distance) {
+                        const int position = endpoint + distance * outward;
+                        const float score = confidence(position);
+                        if (score > 0.f) return Connector{position, score};
+                    }
+                    for (int distance = 1; distance <= reach; ++distance) {
+                        const int position = endpoint - distance * outward;
+                        const float score = confidence(position);
+                        if (score > 0.f) return Connector{position, score};
+                    }
+                    return Connector{-1, 0.f};
+                };
+                const auto start = connector(std::min(a.start, b.start), -1);
+                if (start.position < 0) continue;
+                const auto end = connector(std::max(a.end, b.end), 1);
+                if (end.position - start.position < std::max(12.f, shorter * 0.7f)) continue;
+                const float score = std::min({start.confidence, end.confidence,
+                    float(a.support) / (a.end - a.start + 1), float(b.support) / (b.end - b.start + 1)});
+                const Rectangle bounds = transpose
+                    ? Rectangle{float(a.position) / width, float(start.position) / height,
+                                float(b.position) / width, float(end.position) / height}
+                    : Rectangle{float(start.position) / width, float(a.position) / height,
+                                float(end.position) / width, float(b.position) / height};
+                candidates.push_back({bounds, score, float(end.position - start.position) * separation});
             }
         }
-    }
+    };
+    infer(hs, vertical, false);
+    infer(vs, horizontal, true);
     std::stable_sort(candidates.begin(), candidates.end(), [](const Candidate& a, const Candidate& b) {
-        return a.area != b.area ? a.area > b.area : a.score > b.score;
+        return a.score != b.score ? a.score > b.score : a.area > b.area;
     });
     std::vector<Rectangle> result;
     const auto area = [](const Rectangle& r) { return (r[2] - r[0]) * (r[3] - r[1]); };
