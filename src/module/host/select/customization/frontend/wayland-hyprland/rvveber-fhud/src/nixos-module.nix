@@ -35,6 +35,14 @@ in {
     ./lockscreen.nix
   ];
 
+  nixpkgs.overlays = [
+    (_final: prev: {
+      hyprland = prev.hyprland.overrideAttrs (old: {
+        patches = (old.patches or []) ++ [./patches/hyprland-screen-shader-output.patch];
+      });
+    })
+  ];
+
   # Install packages from this flake
   environment.systemPackages = [
     # Additional FHUD-specific packages

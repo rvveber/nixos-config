@@ -51,9 +51,9 @@ in {
   # physically achievable, but we can heavily suppress blue and most
   # green to approximate an amber-only output.
   xdg.configFile."hypr/shaders/blue-light-filter-550.glsl".text = ''
+    #version 300 es
                 // Aggressive "blue light" suppression shader (approximate).
                 // Based on hyprshade's built-in blue-light-filter.glsl.
-                #version 300 es
                 precision highp float;
 
                 in vec2 v_texcoord;
@@ -93,7 +93,7 @@ in {
                     return mix(
                         clamp(m[0] / (vec3(clamp(temperature, 1000.0, 40000.0)) + m[1]) + m[2], 0.0, 1.0),
                         vec3(1.0),
-                        smoothstep(1000.0, 0.0, temperature)
+                        (1.0 - smoothstep(0.0, 1000.0, temperature))
                     );
                 }
 
