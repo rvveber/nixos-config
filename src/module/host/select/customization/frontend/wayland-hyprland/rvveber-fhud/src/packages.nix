@@ -14,10 +14,12 @@
     };
 in rec {
   holographic-plugin = pkgs.hyprlandPlugins.hypr-darkwindow.overrideAttrs (old: {
-    patches = (old.patches or []) ++ [./patches/darkwindow-damage.patch];
+    patches = (old.patches or []) ++ [./patches/darkwindow-damage.patch ./patches/darkwindow-rectangles.patch];
     postPatch =
       (old.postPatch or "")
       + ''
+        cp ${./rectangles}/* src/
+        substituteInPlace Makefile --replace-fail 'CXXFLAGS = -fPIC' 'CXXFLAGS = -O2 -fPIC'
         substituteInPlace src/ShadeManager.cpp \
           --replace-fail '@fhudDamageRadius@' '${toString (17 + (import ./appearance.nix).window.edgeDepth)}'
         substituteInPlace src/CustomShader.cpp \

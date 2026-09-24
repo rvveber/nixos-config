@@ -125,15 +125,18 @@ This is optical depth over application pixels; application state remains owned
 by the application. The effect settles without pointer input or continuous animation.
 
 Super+F10 toggles the effect on the focused window. Super+Shift+F10 toggles
-rectangle debugging on that window. The normal shader compiles out the rectangle
-search. Debugging uses stronger translucent colors, skips short text strokes,
-and infers boxes 22–512 source texture pixels wide and high from coherent sides.
-Side validation skips the corners and accepts varying contrast and occasional gaps,
-so rounded controls and surfaces with varying contents can contribute bounds.
-The local search can fragment overlays around interior edges; larger panels remain
-outside this prototype.
-The debug search adds substantial sampling work and is intended for inspection.
-A shared detection pass is needed for efficient continuous rectangle overlays.
+rectangle debugging on that window. Debug mode shows the original content with
+translucent boxes and matching outlines. The plugin joins coherent horizontal and
+vertical segments into shared bounds, allowing rounded corners and textured image
+interiors. Text inside a detected box leaves its overlay intact; smaller nested
+controls receive their own color.
+
+Detection runs once per committed main-surface update and reuses its result while
+moving the window. A reduced texture with a maximum dimension of 1024 pixels bounds
+the debug readback and CPU work; up to 64 boxes are passed to the shader. Large image
+panels are supported across the window. This remains a visual heuristic: low-contrast
+or interrupted borders can be missed, and subsurfaces are outside this debug pass.
+The normal shader uses its existing local line tracing without detection or readback.
 
 The plugin expands local window damage by the shader's sampling radius, so
 changed controls also redraw their displaced highlights. Screen shader changes

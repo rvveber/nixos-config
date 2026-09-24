@@ -5,7 +5,8 @@ const float fhudPanelOpacity = @panelOpacity@;
 const float fhudPanelTint = @panelTint@;
 const int fhudLineRadius = 16;
 const bool fhudDebugRectangles = false;
-const int fhudRectangleReach = 512;
+uniform int fhudRectangleCount;
+uniform vec4 fhudRectangleBounds[64];
 
 bool fhudInside(vec2 offset) {
     vec2 position = x_PixelPos - offset;
@@ -65,96 +66,27 @@ float fhudLines(vec2 offset) {
     return max(horizontal, vertical) * center.a * fhudNeutral(center.rgb / max(center.a, 0.001));
 }
 
-vec2 fhudDebugTexel() {
-    return x_WindowSize / max(vec2(textureSize(x_Tex, 0)), vec2(1.0));
-}
-
-// Debug-only search: sample source texels, including thin borders on scaled monitors.
-bool fhudRectangleEdge(vec2 offset, vec2 across, vec2 along, float contrast) {
-    int positiveGaps = 0;
-    int negativeGaps = 0;
-    for (int i = 1; i < 12; ++i) {
-        vec2 step = along * float(i);
-        if (!fhudInside(offset + step) || !fhudInside(offset - across + step) ||
-            (fhudSampleLuminance(offset + step) - fhudSampleLuminance(offset - across + step)) * sign(contrast) < 0.035)
-            ++positiveGaps;
-        if (!fhudInside(offset - step) || !fhudInside(offset - across - step) ||
-            (fhudSampleLuminance(offset - step) - fhudSampleLuminance(offset - across - step)) * sign(contrast) < 0.035)
-            ++negativeGaps;
-        if (positiveGaps > 1 && negativeGaps > 1)
-            return false;
-    }
-    return true;
-}
-float fhudFindSide(vec2 direction) {
-    vec2 texel = fhudDebugTexel();
-    vec2 across = direction * texel;
-    vec2 along = direction.yx * texel;
-    float previous = fhudSampleLuminance(vec2(0.0));
-    for (int i = 1; i <= fhudRectangleReach; ++i) {
-        vec2 offset = across * float(i);
-        if (!fhudInside(offset))
-            return -1.0;
-        float value = fhudSampleLuminance(offset);
-        if (abs(value - previous) >= 0.035 && fhudRectangleEdge(offset, across, along, value - previous))
-            return (float(i) - 0.5) * dot(abs(direction), texel);
-        previous = value;
-    }
-    return -1.0;
-}
-
-bool fhudRectangleSide(vec2 start, vec2 end, vec2 inward) {
-    vec2 texel = fhudDebugTexel();
-    float sideLength = length((end - start) / texel);
-    vec2 along = (end - start) / sideLength;
-    inward *= texel;
-    // Infer the box from its straight sides; rounded corners can fall inside it.
-    float corner = min(24.0, sideLength * 0.22);
-    int positive = 0;
-    int negative = 0;
-    for (int i = 0; i < 32; ++i) {
-        float distance = mix(corner, sideLength - corner, (float(i) + 0.5) / 32.0);
-        vec2 offset = start + along * distance;
-        float contrast = fhudSampleLuminance(offset + inward * 0.5) -
-                         fhudSampleLuminance(offset - inward * 0.5);
-        if (contrast >= 0.035) ++positive;
-        if (contrast <= -0.035) ++negative;
-    }
-    return max(positive, negative) >= 26;
-}
-
 vec4 fhudRectangle() {
-    float left = fhudFindSide(vec2(1.0, 0.0));
-    if (left < 0.0) return vec4(0.0);
-    float right = fhudFindSide(vec2(-1.0, 0.0));
-    if (right < 0.0) return vec4(0.0);
-    float top = fhudFindSide(vec2(0.0, 1.0));
-    if (top < 0.0) return vec4(0.0);
-    float bottom = fhudFindSide(vec2(0.0, -1.0));
-    if (bottom < 0.0) return vec4(0.0);
-    vec2 size = vec2(left + right, top + bottom) / fhudDebugTexel();
-    // Capping the entire rectangle keeps the search result consistent across its interior.
-    if (min(size.x, size.y) < 22.0 ||
-        max(size.x, size.y) > float(fhudRectangleReach))
-        return vec4(0.0);
-
-    vec2 a = vec2(left, top);
-    vec2 b = vec2(-right, top);
-    vec2 c = vec2(-right, -bottom);
-    vec2 d = vec2(left, -bottom);
-    if (!fhudRectangleSide(a, b, vec2(0.0, -1.0)) ||
-        !fhudRectangleSide(b, c, vec2(1.0, 0.0)) ||
-        !fhudRectangleSide(c, d, vec2(0.0, 1.0)) ||
-        !fhudRectangleSide(d, a, vec2(-1.0, 0.0)))
-        return vec4(0.0);
-
-    vec4 bounds = floor(vec4(x_PixelPos - a, x_PixelPos - c) / fhudDebugTexel().xyxy + 0.5);
-    float hue = fract(dot(bounds, vec4(0.1031, 0.11369, 0.13787, 0.17389)));
-    vec3 debugColor = 0.5 + 0.5 * cos(6.2831853 * (hue + vec3(0.0, 0.3333, 0.6667)));
-    return vec4(debugColor, 0.35);
+    vec4 result = vec4(0.0);
+    for (int i = 0; i < min(fhudRectangleCount, 64); ++i) {
+        vec4 bounds = fhudRectangleBounds[i];
+        if (any(lessThan(x_TexCoord, bounds.xy)) || any(greaterThanEqual(x_TexCoord, bounds.zw)))
+            continue;
+        float hue = fract(dot(floor(bounds * 1024.0 + 0.5), vec4(0.1031, 0.11369, 0.13787, 0.17389)));
+        vec3 tint = 0.5 + 0.5 * cos(6.2831853 * (hue + vec3(0.0, 0.3333, 0.6667)));
+        vec2 edge = min(x_TexCoord - bounds.xy, bounds.zw - x_TexCoord) * x_WindowSize;
+        float alpha = min(edge.x, edge.y) < 2.0 ? 0.8 : 0.3;
+        result = vec4(tint, alpha);
+    }
+    return result;
 }
 
 void windowShader(inout vec4 color) {
+    if (fhudDebugRectangles) {
+        vec4 rectangle = fhudRectangle();
+        color.rgb = mix(color.rgb, rectangle.rgb * color.a, rectangle.a);
+        return;
+    }
     vec3 original = color.rgb / max(color.a, 0.001);
     float luminance = fhudLuminance(color);
     float neutral = fhudNeutral(original);
@@ -173,10 +105,6 @@ void windowShader(inout vec4 color) {
     ink *= 1.0 - line * entrance * fhudStrength;
     ink = mix(ink, max(ink, fhudAccent * 0.7), line * geometry * fhudStrength);
     ink += fhudAccent * echo * geometry * fhudStrength * settle;
-    if (fhudDebugRectangles && color.a > 0.99) {
-        vec4 rectangle = fhudRectangle();
-        ink = mix(ink, rectangle.rgb, rectangle.a);
-    }
     color.a *= mix(1.0, fhudPanelOpacity, panel);
     color.rgb = clamp(ink, vec3(0.0), vec3(1.0)) * color.a;
 }

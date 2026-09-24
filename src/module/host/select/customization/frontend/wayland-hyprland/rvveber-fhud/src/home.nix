@@ -230,7 +230,7 @@ in {
         })
         hl.plugin.darkwindow.load_shader("fhud-debug", {
           path = "${packages.holographic-shader}/holographic-debug.glsl",
-          introduces_transparency = true,
+          introduces_transparency = false,
           fade_in_speed = 0,
           fade_out_speed = 0,
         })

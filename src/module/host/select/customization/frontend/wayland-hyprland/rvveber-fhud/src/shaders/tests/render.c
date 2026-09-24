@@ -138,17 +138,25 @@ int main(int argc, char **argv) {
             glDeleteShader(fragment);
             continue;
         }
+        if (debug) {
+            const GLfloat bounds[] = {81.f/SIZE, 17.f/SIZE, 110.f/SIZE, 40.f/SIZE};
+            glUniform1i(glGetUniformLocation(program, "fhudRectangleCount"), 1);
+            glUniform4fv(glGetUniformLocation(program, "fhudRectangleBounds[0]"), 1, bounds);
+        }
         for (int entry = 0; entry < 2; entry++) {
             glUniform1f(glGetUniformLocation(program, "x_FadeIn"), entry ? 0.4f : 1);
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             glReadPixels(0, 0, SIZE, SIZE, GL_RGBA, GL_UNSIGNED_BYTE, output);
             require(glGetError() == GL_NO_ERROR, "Rendering failed");
+            if (debug) {
+                require(memcmp(input + PIXEL(95,25), output + PIXEL(95,25), 4) != 0, "Debug overlay must fill its supplied rectangle");
+                require(memcmp(input + PIXEL(5,5), output + PIXEL(5,5), 4) == 0, "Debug mode must preserve pixels outside detected boxes");
+                require(memcmp(input + PIXEL(35,80), output + PIXEL(35,80), 4) == 0, "Debug mode must replace decorative line echoes");
+                continue;
+            }
             require(output[PIXEL(5,5) + 3] < 230 && output[PIXEL(5,5) + 3] > 190, "Neutral dark panels must become visibly translucent");
             require(output[PIXEL(5,5) + 1] > output[PIXEL(5,5)] + 12, "Neutral dark panels must acquire a visible selective tint");
-            if (debug)
-                require(memcmp(input + PIXEL(95,25), output + PIXEL(95,25), 4) != 0, "Debug overlay must color the small rectangular surface");
-            else
-                require(memcmp(input + PIXEL(95,25), output + PIXEL(95,25), 4) == 0, "Saturated surfaces must retain their color");
+            require(memcmp(input + PIXEL(95,25), output + PIXEL(95,25), 4) == 0, "Saturated surfaces must retain their color");
             require(memcmp(input + PIXEL(72,77), output + PIXEL(72,77), 4) == 0, "Short text strokes must remain sharp and opaque");
             require(memcmp(output + PIXEL(76,77), output + PIXEL(5,5), 4) == 0, "Short text strokes must not create displaced halos");
             if (variant == 1) {
