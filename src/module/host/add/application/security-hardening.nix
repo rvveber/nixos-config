@@ -32,22 +32,36 @@
 
   networking = {
     nftables.enable = true;
+    resolvconf.enable = false;
+    networkmanager.dns = "none";
+
     firewall = {
       enable = true;
       logRefusedPackets = lib.mkDefault false;
     };
   };
 
-  services.resolved = {
+  environment.etc."resolv.conf".text = ''
+    nameserver 127.0.0.1
+    nameserver ::1
+    options edns0 trust-ad
+  '';
+
+  services.dnsproxy = {
     enable = true;
-    settings.Resolve = {
-      DNSSEC = "allow-downgrade";
-      DNSOverTLS = "opportunistic";
-      FallbackDNS = [
-        "9.9.9.9#dns.quad9.net"
-        "149.112.112.112#dns.quad9.net"
-        "1.1.1.1#cloudflare-dns.com"
-        "1.0.0.1#cloudflare-dns.com"
+    settings = {
+      bootstrap = [];
+      cache = true;
+      dnssec = true;
+      fallback = [];
+      listen-addrs = [
+        "127.0.0.1"
+        "::1"
+      ];
+      listen-ports = [53];
+      upstream = [
+        "quic://9.9.9.10:853"
+        "quic://149.112.112.10:853"
       ];
     };
   };
