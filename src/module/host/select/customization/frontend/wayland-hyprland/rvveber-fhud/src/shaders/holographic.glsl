@@ -5,7 +5,7 @@ const float fhudPanelOpacity = @panelOpacity@;
 const float fhudPanelTint = @panelTint@;
 const int fhudLineRadius = 16;
 const bool fhudDebugRectangles = false;
-const int fhudRectangleReach = 256;
+const int fhudRectangleReach = 512;
 
 bool fhudInside(vec2 offset) {
     vec2 position = x_PixelPos - offset;
@@ -70,22 +70,18 @@ vec2 fhudDebugTexel() {
 }
 
 // Debug-only search: sample source texels, including thin borders on scaled monitors.
-bool fhudRectangleEdge(vec2 offset, vec2 across, vec2 along, float outside, float inside) {
-    bool positive = true;
-    bool negative = true;
+bool fhudRectangleEdge(vec2 offset, vec2 across, vec2 along, float contrast) {
+    int positiveGaps = 0;
+    int negativeGaps = 0;
     for (int i = 1; i < 12; ++i) {
         vec2 step = along * float(i);
-        if (positive) {
-            positive = fhudInside(offset + step) && fhudInside(offset - across + step) &&
-                abs(fhudSampleLuminance(offset + step) - outside) < 0.018 &&
-                abs(fhudSampleLuminance(offset - across + step) - inside) < 0.018;
-        }
-        if (negative) {
-            negative = fhudInside(offset - step) && fhudInside(offset - across - step) &&
-                abs(fhudSampleLuminance(offset - step) - outside) < 0.018 &&
-                abs(fhudSampleLuminance(offset - across - step) - inside) < 0.018;
-        }
-        if (!positive && !negative)
+        if (!fhudInside(offset + step) || !fhudInside(offset - across + step) ||
+            (fhudSampleLuminance(offset + step) - fhudSampleLuminance(offset - across + step)) * sign(contrast) < 0.035)
+            ++positiveGaps;
+        if (!fhudInside(offset - step) || !fhudInside(offset - across - step) ||
+            (fhudSampleLuminance(offset - step) - fhudSampleLuminance(offset - across - step)) * sign(contrast) < 0.035)
+            ++negativeGaps;
+        if (positiveGaps > 1 && negativeGaps > 1)
             return false;
     }
     return true;
@@ -100,7 +96,7 @@ float fhudFindSide(vec2 direction) {
         if (!fhudInside(offset))
             return -1.0;
         float value = fhudSampleLuminance(offset);
-        if (abs(value - previous) >= 0.035 && fhudRectangleEdge(offset, across, along, value, previous))
+        if (abs(value - previous) >= 0.035 && fhudRectangleEdge(offset, across, along, value - previous))
             return (float(i) - 0.5) * dot(abs(direction), texel);
         previous = value;
     }
@@ -109,23 +105,22 @@ float fhudFindSide(vec2 direction) {
 
 bool fhudRectangleSide(vec2 start, vec2 end, vec2 inward) {
     vec2 texel = fhudDebugTexel();
-    float length = length((end - start) / texel);
-    vec2 along = (end - start) / length;
+    float sideLength = length((end - start) / texel);
+    vec2 along = (end - start) / sideLength;
     inward *= texel;
-    float reference = fhudSampleLuminance(start + along * 0.5 + inward * 0.5) -
-                      fhudSampleLuminance(start + along * 0.5 - inward * 0.5);
-    if (abs(reference) < 0.035)
-        return false;
-    for (int i = 0; i < 2 * fhudRectangleReach; ++i) {
-        if (float(i) >= length)
-            break;
-        vec2 offset = start + along * (float(i) + 0.5);
+    // Infer the box from its straight sides; rounded corners can fall inside it.
+    float corner = min(24.0, sideLength * 0.22);
+    int positive = 0;
+    int negative = 0;
+    for (int i = 0; i < 32; ++i) {
+        float distance = mix(corner, sideLength - corner, (float(i) + 0.5) / 32.0);
+        vec2 offset = start + along * distance;
         float contrast = fhudSampleLuminance(offset + inward * 0.5) -
                          fhudSampleLuminance(offset - inward * 0.5);
-        if (contrast * sign(reference) < 0.035 || abs(contrast - reference) > 0.018)
-            return false;
+        if (contrast >= 0.035) ++positive;
+        if (contrast <= -0.035) ++negative;
     }
-    return true;
+    return max(positive, negative) >= 26;
 }
 
 vec4 fhudRectangle() {

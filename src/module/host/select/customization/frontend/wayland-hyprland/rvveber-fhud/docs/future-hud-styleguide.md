@@ -127,8 +127,11 @@ by the application. The effect settles without pointer input or continuous anima
 Super+F10 toggles the effect on the focused window. Super+Shift+F10 toggles
 rectangle debugging on that window. The normal shader compiles out the rectangle
 search. Debugging uses stronger translucent colors, skips short text strokes,
-and accepts enclosed rectangles 22–256 source texture pixels wide and high. Rounded
-corners, textured boundaries and larger panels remain outside this prototype.
+and infers boxes 22–512 source texture pixels wide and high from coherent sides.
+Side validation skips the corners and accepts varying contrast and occasional gaps,
+so rounded controls and surfaces with varying contents can contribute bounds.
+The local search can fragment overlays around interior edges; larger panels remain
+outside this prototype.
 The debug search adds substantial sampling work and is intended for inspection.
 A shared detection pass is needed for efficient continuous rectangle overlays.
 
