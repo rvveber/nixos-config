@@ -124,12 +124,20 @@ Entry changes the highlight intensity while the depth offset stays fixed.
 This is optical depth over application pixels; application state remains owned
 by the application. The effect settles without pointer input or continuous animation.
 
-The hardcoded rectangle debug overlay colors enclosed flat surfaces with stable,
-translucent colors derived from their bounds. It validates all four sides and
-covers rectangles 34–256 logical pixels wide and high. Text, nested content,
-rounded corners and larger panels can interrupt detection. This bounded single-pass
-prototype adds texture sampling work; a shared detection pass is the next step
-for larger surfaces and content-aware borders.
+Super+F10 toggles the effect on the focused window. Super+Shift+F10 toggles
+rectangle debugging on that window. The normal shader compiles out the rectangle
+search. Debugging uses stronger translucent colors, skips short text strokes,
+and accepts enclosed rectangles 22–256 source texture pixels wide and high. Rounded
+corners, textured boundaries and larger panels remain outside this prototype.
+The debug search adds substantial sampling work and is intended for inspection.
+A shared detection pass is needed for efficient continuous rectangle overlays.
+
+The plugin expands local window damage by the shader's sampling radius, so
+changed controls also redraw their displaced highlights. Screen shader changes
+invalidate all monitor damage histories, including buffers awaiting reuse.
+The nightshift tuner applies mouse-driven changes on slider release; keyboard
+changes are debounced. Off and Quit cancel pending updates.
+
 Fullscreen windows bypass the shader immediately and use full compositor
 opacity. Reduced motion starts at the settled appearance.
 

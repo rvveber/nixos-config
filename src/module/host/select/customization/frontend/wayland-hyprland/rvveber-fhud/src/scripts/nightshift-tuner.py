@@ -192,6 +192,8 @@ class Tuner:
         self.settings = load_settings()
         self.vars = {}
         self.debounce_id = None
+        self.dragging = False
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
 
         frame = ttk.Frame(self.root, padding=14)
         frame.grid(row=0, column=0, sticky="nsew")
@@ -206,6 +208,8 @@ class Tuner:
             ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", padx=(0, 10), pady=3)
             scale = ttk.Scale(frame, from_=low, to=high, orient="horizontal", variable=var, command=self.changed)
             scale.grid(row=row, column=1, sticky="ew", pady=3)
+            scale.bind("<ButtonPress-1>", self.begin_drag)
+            scale.bind("<ButtonRelease-1>", self.end_drag)
             value = ttk.Label(frame, width=9)
             value.grid(row=row, column=2, sticky="e", padx=(10, 0))
 
@@ -223,8 +227,8 @@ class Tuner:
         buttons.grid(row=len(SLIDERS) + 2, column=0, columnspan=3, sticky="ew")
         ttk.Button(buttons, text="Apply now", command=self.apply_now).pack(side="left")
         ttk.Button(buttons, text="Save", command=self.save).pack(side="left", padx=8)
-        ttk.Button(buttons, text="Off", command=turn_off).pack(side="left")
-        ttk.Button(buttons, text="Quit", command=self.root.destroy).pack(side="right")
+        ttk.Button(buttons, text="Off", command=self.turn_off).pack(side="left")
+        ttk.Button(buttons, text="Quit", command=self.close).pack(side="right")
 
         self.update_metric()
         self.apply_now()
@@ -235,23 +239,45 @@ class Tuner:
     def changed(self, _value=None):
         self.settings = self.current_settings()
         self.update_metric()
+        self.cancel_pending()
+        if not self.dragging:
+            self.debounce_id = self.root.after(250, self.apply_now)
+
+    def cancel_pending(self):
         if self.debounce_id is not None:
             self.root.after_cancel(self.debounce_id)
-        self.debounce_id = self.root.after(250, self.apply_now)
+            self.debounce_id = None
+
+    def begin_drag(self, _event):
+        self.cancel_pending()
+        self.dragging = True
+
+    def end_drag(self, _event):
+        self.dragging = False
+        self.apply_now()
+
+    def turn_off(self):
+        self.cancel_pending()
+        turn_off()
+
+    def close(self):
+        self.cancel_pending()
+        self.root.destroy()
 
     def update_metric(self):
         leak, color = score(self.current_settings())
         self.metric.configure(text=f"Blue/cyan leak score: {leak}/100 lower is warmer | Color detail score: {color}/100 higher is easier to play")
 
     def apply_now(self):
-        self.debounce_id = None
+        self.cancel_pending()
         self.settings = self.current_settings()
+        self.root.update_idletasks()
         apply_shader(self.settings)
 
     def save(self):
         self.settings = self.current_settings()
         save_settings(self.settings)
-        apply_shader(self.settings)
+        self.apply_now()
 
     def run(self):
         self.root.mainloop()

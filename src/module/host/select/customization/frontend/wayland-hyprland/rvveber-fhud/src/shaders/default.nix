@@ -18,6 +18,9 @@ in
         --replace-fail '@depth@' '${toString appearance.window.edgeDepth}' \
         --replace-fail '@panelOpacity@' '${toString appearance.window.panelOpacity}' \
         --replace-fail '@panelTint@' '${toString appearance.window.panelTint}'
+      cp holographic.glsl holographic-debug.glsl
+      substituteInPlace holographic-debug.glsl \
+        --replace-fail 'const bool fhudDebugRectangles = false;' 'const bool fhudDebugRectangles = true;'
     '';
     buildPhase = ''
       runHook preBuild
@@ -32,10 +35,11 @@ in
       export MESA_SHADER_CACHE_DISABLE=true
       export __EGL_VENDOR_LIBRARY_FILENAMES=${pkgs.mesa}/share/glvnd/egl_vendor.d/50_mesa.json
       ./shader-check holographic.glsl
+      ./shader-check holographic-debug.glsl --debug
       runHook postCheck
     '';
     installPhase = ''
       mkdir -p $out
-      cp holographic.glsl $out/
+      cp holographic.glsl holographic-debug.glsl $out/
     '';
   }

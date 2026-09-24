@@ -30,7 +30,8 @@ static GLuint shader(GLenum type, const char **parts, int count) {
 }
 
 int main(int argc, char **argv) {
-    require(argc == 2, "Expected shader path");
+    int debug = argc == 3 && strcmp(argv[2], "--debug") == 0;
+    require(argc == 2 || debug, "Expected shader path and optional --debug");
     FILE *file = fopen(argv[1], "rb");
     require(file != NULL, "Shader source unavailable");
     require(fseek(file, 0, SEEK_END) == 0, "Cannot seek shader");
@@ -144,7 +145,10 @@ int main(int argc, char **argv) {
             require(glGetError() == GL_NO_ERROR, "Rendering failed");
             require(output[PIXEL(5,5) + 3] < 230 && output[PIXEL(5,5) + 3] > 190, "Neutral dark panels must become visibly translucent");
             require(output[PIXEL(5,5) + 1] > output[PIXEL(5,5)] + 12, "Neutral dark panels must acquire a visible selective tint");
-            require(memcmp(input + PIXEL(95,25), output + PIXEL(95,25), 4) == 0, "Saturated surfaces must retain their color");
+            if (debug)
+                require(memcmp(input + PIXEL(95,25), output + PIXEL(95,25), 4) != 0, "Debug overlay must color the small rectangular surface");
+            else
+                require(memcmp(input + PIXEL(95,25), output + PIXEL(95,25), 4) == 0, "Saturated surfaces must retain their color");
             require(memcmp(input + PIXEL(72,77), output + PIXEL(72,77), 4) == 0, "Short text strokes must remain sharp and opaque");
             require(memcmp(output + PIXEL(76,77), output + PIXEL(5,5), 4) == 0, "Short text strokes must not create displaced halos");
             if (variant == 1) {

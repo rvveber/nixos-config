@@ -1,3 +1,4 @@
+# Packages the FutureHUD shell, shader plugin and desktop tools.
 {
   pkgs,
   source,
@@ -13,9 +14,12 @@
     };
 in rec {
   holographic-plugin = pkgs.hyprlandPlugins.hypr-darkwindow.overrideAttrs (old: {
+    patches = (old.patches or []) ++ [./patches/darkwindow-damage.patch];
     postPatch =
       (old.postPatch or "")
       + ''
+        substituteInPlace src/ShadeManager.cpp \
+          --replace-fail '@fhudDamageRadius@' '${toString (17 + (import ./appearance.nix).window.edgeDepth)}'
         substituteInPlace src/CustomShader.cpp \
           --replace-fail 'replaceIdentifier(pixelGetter, "v_TexCoord", "texCoord");' \
             'replaceIdentifier(pixelGetter, "v_texcoord", "texCoord");'

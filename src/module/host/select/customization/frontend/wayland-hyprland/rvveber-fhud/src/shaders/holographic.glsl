@@ -4,7 +4,7 @@ const float fhudDepth = @depth@;
 const float fhudPanelOpacity = @panelOpacity@;
 const float fhudPanelTint = @panelTint@;
 const int fhudLineRadius = 16;
-const bool fhudDebugRectangles = true;
+const bool fhudDebugRectangles = false;
 const int fhudRectangleReach = 256;
 
 bool fhudInside(vec2 offset) {
@@ -36,13 +36,15 @@ float fhudAxis(vec2 offset, vec2 across, vec2 along, float value) {
     if (contrast < 0.035 || !fhudInside(edge))
         return 0.0;
 
+    vec2 end = along * float(fhudLineRadius);
+    if (!fhudInside(offset + end) || !fhudInside(offset - end) ||
+        !fhudInside(edge + end) || !fhudInside(edge - end))
+        return 0.0;
+
+    // Reject short strokes first, then verify every intervening pixel.
     float continuity = 0.0;
-    // Every pixel of a 33-pixel run must preserve both sides of the edge.
-    for (int i = 1; i <= fhudLineRadius; ++i) {
+    for (int i = fhudLineRadius; i > 0; --i) {
         vec2 step = along * float(i);
-        if (!fhudInside(offset + step) || !fhudInside(offset - step) ||
-            !fhudInside(edge + step) || !fhudInside(edge - step))
-            return 0.0;
         continuity = max(continuity, max(abs(value - fhudSampleLuminance(offset + step)),
                                          abs(value - fhudSampleLuminance(offset - step))));
         continuity = max(continuity, max(abs(neighbor - fhudSampleLuminance(edge + step)),
@@ -63,24 +65,53 @@ float fhudLines(vec2 offset) {
     return max(horizontal, vertical) * center.a * fhudNeutral(center.rgb / max(center.a, 0.001));
 }
 
-// Debug prototype for flat, enclosed surfaces; search stays inside the window.
+vec2 fhudDebugTexel() {
+    return x_WindowSize / max(vec2(textureSize(x_Tex, 0)), vec2(1.0));
+}
+
+// Debug-only search: sample source texels, including thin borders on scaled monitors.
+bool fhudRectangleEdge(vec2 offset, vec2 across, vec2 along, float outside, float inside) {
+    bool positive = true;
+    bool negative = true;
+    for (int i = 1; i < 12; ++i) {
+        vec2 step = along * float(i);
+        if (positive) {
+            positive = fhudInside(offset + step) && fhudInside(offset - across + step) &&
+                abs(fhudSampleLuminance(offset + step) - outside) < 0.018 &&
+                abs(fhudSampleLuminance(offset - across + step) - inside) < 0.018;
+        }
+        if (negative) {
+            negative = fhudInside(offset - step) && fhudInside(offset - across - step) &&
+                abs(fhudSampleLuminance(offset - step) - outside) < 0.018 &&
+                abs(fhudSampleLuminance(offset - across - step) - inside) < 0.018;
+        }
+        if (!positive && !negative)
+            return false;
+    }
+    return true;
+}
 float fhudFindSide(vec2 direction) {
+    vec2 texel = fhudDebugTexel();
+    vec2 across = direction * texel;
+    vec2 along = direction.yx * texel;
     float previous = fhudSampleLuminance(vec2(0.0));
     for (int i = 1; i <= fhudRectangleReach; ++i) {
-        vec2 offset = direction * float(i);
+        vec2 offset = across * float(i);
         if (!fhudInside(offset))
             return -1.0;
         float value = fhudSampleLuminance(offset);
-        if (abs(value - previous) >= 0.035)
-            return float(i) - 0.5;
+        if (abs(value - previous) >= 0.035 && fhudRectangleEdge(offset, across, along, value, previous))
+            return (float(i) - 0.5) * dot(abs(direction), texel);
         previous = value;
     }
     return -1.0;
 }
 
 bool fhudRectangleSide(vec2 start, vec2 end, vec2 inward) {
-    float length = distance(start, end);
+    vec2 texel = fhudDebugTexel();
+    float length = length((end - start) / texel);
     vec2 along = (end - start) / length;
+    inward *= texel;
     float reference = fhudSampleLuminance(start + along * 0.5 + inward * 0.5) -
                       fhudSampleLuminance(start + along * 0.5 - inward * 0.5);
     if (abs(reference) < 0.035)
@@ -106,9 +137,9 @@ vec4 fhudRectangle() {
     if (top < 0.0) return vec4(0.0);
     float bottom = fhudFindSide(vec2(0.0, -1.0));
     if (bottom < 0.0) return vec4(0.0);
-    vec2 size = vec2(left + right, top + bottom);
+    vec2 size = vec2(left + right, top + bottom) / fhudDebugTexel();
     // Capping the entire rectangle keeps the search result consistent across its interior.
-    if (min(size.x, size.y) < 2.0 * float(fhudLineRadius) + 2.0 ||
+    if (min(size.x, size.y) < 22.0 ||
         max(size.x, size.y) > float(fhudRectangleReach))
         return vec4(0.0);
 
@@ -122,10 +153,10 @@ vec4 fhudRectangle() {
         !fhudRectangleSide(d, a, vec2(-1.0, 0.0)))
         return vec4(0.0);
 
-    vec4 bounds = floor(vec4(x_PixelPos - a, x_PixelPos - c) + 0.5);
+    vec4 bounds = floor(vec4(x_PixelPos - a, x_PixelPos - c) / fhudDebugTexel().xyxy + 0.5);
     float hue = fract(dot(bounds, vec4(0.1031, 0.11369, 0.13787, 0.17389)));
     vec3 debugColor = 0.5 + 0.5 * cos(6.2831853 * (hue + vec3(0.0, 0.3333, 0.6667)));
-    return vec4(debugColor, 0.22);
+    return vec4(debugColor, 0.35);
 }
 
 void windowShader(inout vec4 color) {

@@ -1,0 +1,98 @@
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -2,6 +2,7 @@
+ 
+ #include "CustomShader.h"
+ #include "State.h"
++#include <hyprland/src/state/MonitorState.hpp>
+ 
+ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
+ {
+@@ -14,6 +15,14 @@
+         Log::logger->log(Log::INFO, "[Hypr-DarkWindow] Forcing shader initialization");
+         Render::GL::g_pHyprOpenGL->initShaders();
+     }
++
++    // Screen shader changes must enter damage history for every swapchain buffer.
++    g.Listeners.push_back(Event::bus()->m_events.config.props_refreshed.listen([](bool) {
++        if (!g_pHyprRenderer->m_reloadScreenShader)
++            return;
++        for (const auto& monitor : State::monitorState()->monitors())
++            g_pHyprRenderer->damageMonitor(monitor);
++    }));
+ 
+     g.AddConfigValues();
+     g.HookFunctions();
+--- a/src/ShadeManager.cpp
++++ b/src/ShadeManager.cpp
+@@ -356,12 +356,31 @@
+ void ShadeManager::PreRenderMonitor(PHLMONITOR monitor)
+ {
+     g.RenderState.Time = Time::steadyNow();
++    const auto contentDamage = monitor->m_damage.getBufferDamage(1);
+ 
+     auto updateElements = [&](auto& eles)
+     {
+         for (auto it = eles.begin(); it != eles.end();)
+         {
+             auto& [ele, config] = *it;
++
++            // FHUD samples neighboring texels; include their affected output pixels.
++            const auto& id = config.ActiveShader->ID;
++            if ((id == "fhud" || id == "fhud-debug") && shouldRender(ele, monitor))
++            {
++                if (auto box = ele->logicalBox())
++                {
++                    CBox windowBox = box->copy().translate(-monitor->m_position).scale(monitor->m_scale).round();
++                    auto affected = contentDamage.copy().intersect(windowBox);
++                    if (!affected.empty())
++                    {
++                        if (id == "fhud-debug")
++                            monitor->addDamage(windowBox);
++                        else
++                            monitor->addDamage(affected.expand(std::ceil(@fhudDamageRadius@ * monitor->m_scale)).intersect(windowBox));
++                    }
++                }
++            }
+ 
+             bool needsDamage = false, remove = false;
+             if (config.ActiveShader->Compiled->UsesTimeUniform)
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -177,7 +177,7 @@
+ APICALL EXPORT void PLUGIN_EXIT()
+ {
+     g.RemoveConfigValues();
+-    g = State();
++    g = DarkWindowState();
+ }
+ 
+ APICALL EXPORT std::string PLUGIN_API_VERSION()
+--- a/src/State.h
++++ b/src/State.h
+@@ -50,7 +50,7 @@
+     }                                                                                             \
+     retType _ns_##className_##methodName::hook args
+ 
+-struct State
++struct DarkWindowState
+ {
+     using WindowRuleEffect = Desktop::Rule::CWindowRuleEffectContainer::storageType;
+     using LayerRuleEffect = Desktop::Rule::CLayerRuleEffectContainer::storageType;
+@@ -280,4 +280,4 @@
+     };
+ };
+ 
+-inline State g;
++inline DarkWindowState g;
+--- a/src/LuaCallbacks.cpp
++++ b/src/LuaCallbacks.cpp
+@@ -182,7 +182,7 @@
+         return HyprLua::configError(L, "darkwindow.load_shader: " + argsResult.error());
+ 
+     g.UserShaders.push_back(
+-        State::UserShader{
++        DarkWindowState::UserShader{
+             .Id = id,
+             .From = from,
+             .Path = path,
