@@ -22,6 +22,7 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
             delta = std::max(delta, std::abs(int(rgba[a * 4 + c]) - int(rgba[b * 4 + c])));
         return delta;
     };
+    enum : uint8_t { NoEdge, FaintEdge, WeakEdge, StrongEdge };
     std::vector<uint8_t> horizontal(width * height), vertical(width * height);
     for (int y = 2; y < height - 2; ++y) {
         for (int x = 2; x < width - 2; ++x) {
@@ -31,6 +32,7 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                 const int along = axis ? width : 1;
                 const int a = p - across, b = p;
                 const int contrast = difference(a, b);
+                if (contrast == 0) continue;
                 const int variationA = std::max(difference(a, a - along), difference(a, a + along));
                 const int variationB = std::max(difference(b, b - along), difference(b, b + along));
                 const int calm = std::min(variationA, variationB);
@@ -38,9 +40,10 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                 const bool coherent = std::max(variationA, variationB) <= contrast / 8 + 2 ||
                     difference(a - across, b + across) >= weakContrast;
                 const bool strong = coherent && contrast >= 12 && calm <= contrast / 2 + 3;
-                const bool weak = coherent && contrast >= weakContrast && calm <= 1 &&
-                    contrast > difference(a, a - across) && contrast >= difference(b, b + across);
-                (axis ? vertical : horizontal)[p] = strong ? 2 : weak ? 1 : 0;
+                const bool peak = contrast > difference(a, a - across) && contrast >= difference(b, b + across);
+                const bool weak = coherent && contrast >= weakContrast && calm <= 1 && peak;
+                const bool faint = std::max(variationA, variationB) <= 1 && peak;
+                (axis ? vertical : horizontal)[p] = strong ? StrongEdge : weak ? WeakEdge : faint ? FaintEdge : NoEdge;
             }
         }
     }
@@ -49,7 +52,10 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
     const auto lines = [&](const std::vector<uint8_t>& edges, bool transpose) {
         std::vector<Line> result;
         const int rows = transpose ? width : height, columns = transpose ? height : width;
-        const auto edge = [&](int row, int column) { return edges[transpose ? column * width + row : row * width + column]; };
+        const auto edge = [&](int row, int column) {
+            const auto value = edges[transpose ? column * width + row : row * width + column];
+            return value >= WeakEdge ? value : uint8_t(NoEdge);
+        };
         for (int row = 2; row < rows - 2; ++row) {
             for (int column = 2; column < columns - 2;) {
                 if (!edge(row, column)) { ++column; continue; }
@@ -59,7 +65,7 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                     if (edge(row, column)) {
                         end = column;
                         ++support;
-                        strong += edge(row, column) == 2;
+                        strong += edge(row, column) == StrongEdge;
                         longest = std::max(longest, ++solid);
                     } else solid = 0;
                     ++column;
@@ -109,7 +115,7 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                     const auto confidence = [&](int position) {
                         if (position < 2 || position >= limit - 2) return 0.f;
                         const auto edge = [&](int i) { return edges[transpose ? position * width + i : i * width + position]; };
-                        int start = -1, end = -1, hits = 0, run = 0, longest = 0, gap = 0, largestGap = 0;
+                        int start = -1, end = -1, hits = 0, faint = 0, run = 0, longest = 0, gap = 0, largestGap = 0;
                         for (int i = a.position + 2; i <= b.position - 2; ++i) {
                             if (edge(i)) {
                                 if (start < 0) start = i;
@@ -117,6 +123,7 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                                 largestGap = std::max(largestGap, gap);
                                 gap = 0;
                                 ++hits;
+                                faint += edge(i) == FaintEdge;
                                 if (i >= a.position + inset && i <= b.position - inset)
                                     longest = std::max(longest, ++run);
                                 else run = 0;
@@ -129,6 +136,8 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                         const float coverage = span >= 24 ? 0.9f : 0.7f;
                         const float sustained = span >= 24 ? std::max(4.f, (span - 6) * 0.5f) : 4.f;
                         if (largestGap > 6 || longest < sustained || hits < 4 || hits < span * coverage) return 0.f;
+                        // Subthreshold evidence only completes a long side predicted by established anchors.
+                        if (faint && (span < 24 || hits < span * 0.95f)) return 0.f;
                         // Each connector end must fit the corner region predicted by its anchor.
                         // Outward extension allows a rounded corner; an inward cut needs a junction.
                         const auto cornerSupport = [&](const Line& anchor, int tip, int direction) {
@@ -143,14 +152,40 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                                 const int junction = transpose ? position * width + i : i * width + position;
                                 if (gap > 2 || difference(junction, junction - (transpose ? width : 1)) < weakContrast) return false;
                             }
-                            // Rounding joins two ending segments; a passing side needs a real junction.
+                            const auto cornerPath = [&] {
+                                const int origin = anchorEnd + (outward > 0 ? 1 : 0);
+                                const int distance = std::abs(position - origin);
+                                const int depthLimit = std::min(extension + tolerance, separation / 2);
+                                const auto pixel = [&](int u, int v) { return transpose ? u * width + v : v * width + u; };
+                                std::vector<uint8_t> connected(distance + 1);
+                                // Follow actual pixel interfaces monotonically through the predicted corner region.
+                                for (int depth = 0; depth <= depthLimit; ++depth) {
+                                    const int v = anchor.position - depth * direction;
+                                    for (int step = 0; step <= distance; ++step) {
+                                        const int u = origin + step * outward;
+                                        bool reachable = depth == 0 && step == 0;
+                                        if (depth > 0 && connected[step]) {
+                                            const int p = pixel(u, v - (direction < 0 ? 1 : 0));
+                                            reachable |= difference(p, p - (transpose ? width : 1)) > 0;
+                                        }
+                                        if (step > 0 && connected[step - 1]) {
+                                            const int p = pixel(u - (outward > 0 ? 1 : 0), v);
+                                            reachable |= difference(p, p - (transpose ? 1 : width)) > 0;
+                                        }
+                                        connected[step] = reachable;
+                                    }
+                                    if (connected.back()) return true;
+                                }
+                                return false;
+                            };
+                            // A passing side needs a junction or a visible turn into the anchor.
                             if (extension > 1 && gap <= 2) {
                                 int run = 0;
                                 for (int distance = 3; distance <= 8; ++distance) {
                                     const int i = anchor.position + distance * direction;
                                     if (i < 2 || i >= (transpose ? width : height) - 2) break;
                                     if (edge(i)) {
-                                        if (++run >= 4) return false;
+                                        if (++run >= 4) return cornerPath();
                                     } else run = 0;
                                 }
                             }

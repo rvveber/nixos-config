@@ -131,14 +131,18 @@ search regions at their ends. Within those regions, short coherent perpendicular
 segments can establish a connecting side when both ends fit the predicted corner
 regions. Outward extension determines the allowance for rounding; inward cuts
 require evidence near both junctions. A side continuing past an inferred corner
-must meet its anchor, keeping detached row highlights from borrowing panel borders.
-All candidates are considered: the greatest
-supported coverage between the two connections wins, with outward proximity used
+must meet its anchor or connect through a visible corner contour. This keeps
+detached row highlights from borrowing panel borders while allowing rounded
+controls beside scrollbars. All candidates are considered: the greatest supported
+coverage between the two connections wins, with outward proximity used
 to break ties. This lets complete enclosing sides outrank isolated strokes.
 The intersections give implicit corners across rounded or missing corner pixels.
 The same search runs from horizontal and vertical anchor pairs. Long anchors and
 connectors require sustained continuity; thin strokes also need a stable profile.
-Faint edges qualify through longer coherent runs. Supported perimeter length ranks
+Faint edges qualify through longer coherent runs. Within predicted side regions,
+a one-level color difference can complete a long, nearly uninterrupted connector;
+this weaker evidence never seeds anchor lines. A side whose contrast disappears
+remains unconfirmed. Supported perimeter length ranks
 overlapping rectangles before coverage and area, allowing a fine enclosing border
 to outrank an internal separator. Text inside a detected box leaves its overlay
 intact; smaller nested controls receive their own color.
