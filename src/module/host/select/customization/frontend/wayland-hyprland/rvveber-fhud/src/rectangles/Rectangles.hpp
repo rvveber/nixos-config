@@ -12,7 +12,7 @@ using Rectangle = std::array<float, 4>;
 inline constexpr int MaxRectangles = 64;
 
 // Coordinates are normalized to the source texture, independent of monitor scale.
-inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, int width, int height) {
+inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, int width, int height, int weakContrast = 3) {
     if (width < 16 || height < 16 || rgba.size() != size_t(width) * height * 4)
         return {};
 
@@ -31,10 +31,16 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                 const int along = axis ? width : 1;
                 const int a = p - across, b = p;
                 const int contrast = difference(a, b);
-                const int calm = std::min(std::max(difference(a, a - along), difference(a, a + along)),
-                                          std::max(difference(b, b - along), difference(b, b + along)));
-                // An image boundary can have a quiet background on only one side.
-                (axis ? vertical : horizontal)[p] = contrast >= 12 && calm <= contrast / 2 + 3;
+                const int variationA = std::max(difference(a, a - along), difference(a, a + along));
+                const int variationB = std::max(difference(b, b - along), difference(b, b + along));
+                const int calm = std::min(variationA, variationB);
+                // A surface step may vary on one side; a thin ridge needs a stable stroke.
+                const bool coherent = std::max(variationA, variationB) <= contrast / 8 + 2 ||
+                    difference(a - across, b + across) >= weakContrast;
+                const bool strong = coherent && contrast >= 12 && calm <= contrast / 2 + 3;
+                const bool weak = coherent && contrast >= weakContrast && calm <= 1 &&
+                    contrast > difference(a, a - across) && contrast >= difference(b, b + across);
+                (axis ? vertical : horizontal)[p] = strong ? 2 : weak ? 1 : 0;
             }
         }
     }
@@ -48,16 +54,19 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
             for (int column = 2; column < columns - 2;) {
                 if (!edge(row, column)) { ++column; continue; }
                 const int start = column;
-                int end = column, support = 0, solid = 0, longest = 0;
+                int end = column, support = 0, strong = 0, solid = 0, longest = 0;
                 while (column < columns - 2 && column - end <= 6) {
                     if (edge(row, column)) {
                         end = column;
                         ++support;
+                        strong += edge(row, column) == 2;
                         longest = std::max(longest, ++solid);
                     } else solid = 0;
                     ++column;
                 }
-                if (end - start >= 24 && support >= (end - start + 1) * 0.7 && longest >= std::max(12.f, (end - start + 1) * 0.2f))
+                const int minimum = strong ? 24 : 48;
+                if (end - start >= minimum && support >= (end - start + 1) * 0.9 &&
+                    longest >= std::max(minimum / 2.f, (end - start - 5) * 0.5f))
                     result.push_back({row, start, end, support});
             }
         }
@@ -76,7 +85,7 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
         return merged;
     };
     const auto hs = lines(horizontal, false), vs = lines(vertical, true);
-    struct Candidate { Rectangle bounds; float score, area; };
+    struct Candidate { Rectangle bounds; float evidence, score, area; };
     std::vector<Candidate> candidates;
     const auto infer = [&](const std::vector<Line>& anchors, const std::vector<uint8_t>& edges, bool transpose) {
         const int limit = transpose ? height : width;
@@ -115,7 +124,10 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                                 if (start >= 0) ++gap;
                             }
                         }
-                        if (largestGap > 6 || longest < 4 || hits < 4 || hits < (end - start + 1) * 0.7f) return 0.f;
+                        const int span = end - start + 1;
+                        const float coverage = span >= 24 ? 0.9f : 0.7f;
+                        const float sustained = span >= 24 ? std::max(4.f, (span - 6) * 0.5f) : 4.f;
+                        if (largestGap > 6 || longest < sustained || hits < 4 || hits < span * coverage) return 0.f;
                         // Each connector end must fit the corner region predicted by its anchor.
                         // Outward extension allows a rounded corner; an inward cut needs a junction.
                         const auto cornerSupport = [&](const Line& anchor, int tip) {
@@ -153,13 +165,19 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                                 float(b.position) / width, float(end.position) / height}
                     : Rectangle{float(start.position) / width, float(a.position) / height,
                                 float(end.position) / width, float(b.position) / height};
-                candidates.push_back({bounds, score, float(end.position - start.position) * separation});
+                const int anchorStart = std::max(a.start, start.position), anchorEnd = std::min(a.end, end.position);
+                const int otherStart = std::max(b.start, start.position), otherEnd = std::min(b.end, end.position);
+                const float evidence = float(a.support) * std::max(0, anchorEnd - anchorStart + 1) / (a.end - a.start + 1) +
+                    float(b.support) * std::max(0, otherEnd - otherStart + 1) / (b.end - b.start + 1) +
+                    (separation - 3) * (start.confidence + end.confidence);
+                candidates.push_back({bounds, evidence, score, float(end.position - start.position) * separation});
             }
         }
     };
     infer(hs, vertical, false);
     infer(vs, horizontal, true);
     std::stable_sort(candidates.begin(), candidates.end(), [](const Candidate& a, const Candidate& b) {
+        if (a.evidence != b.evidence) return a.evidence > b.evidence;
         return a.score != b.score ? a.score > b.score : a.area > b.area;
     });
     std::vector<Rectangle> result;

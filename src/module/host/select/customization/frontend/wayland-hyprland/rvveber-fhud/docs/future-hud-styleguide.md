@@ -134,13 +134,17 @@ require evidence near both junctions. All candidates are considered: the greates
 supported coverage between the two connections wins, with outward proximity used
 to break ties. This lets complete enclosing sides outrank isolated strokes.
 The intersections give implicit corners across rounded or missing corner pixels.
-The same search runs from horizontal and vertical anchor pairs. Observed side coverage ranks
-overlapping candidates, keeping adjacent cards separate. Text inside a detected box
-leaves its overlay intact; smaller nested controls receive their own color.
+The same search runs from horizontal and vertical anchor pairs. Long anchors and
+connectors require sustained continuity; thin strokes also need a stable profile.
+Faint edges qualify through longer coherent runs. Supported perimeter length ranks
+overlapping rectangles before coverage and area, allowing a fine enclosing border
+to outrank an internal separator. Text inside a detected box leaves its overlay
+intact; smaller nested controls receive their own color.
 
 Detection runs once per committed main-surface update and reuses its result while
-moving the window. A reduced texture with a maximum dimension of 1024 pixels bounds
-the debug readback and CPU work; up to 64 boxes are passed to the shader. Large image
+moving the window. Repeated 2x2 reduction preserves thin-line coverage; contrast
+thresholds account for its scale. A maximum dimension of 1024 pixels bounds the
+debug readback and CPU work; up to 64 boxes are passed to the shader. Large image
 panels are supported across the window. This remains a visual heuristic: low-contrast
 or interrupted borders can be missed, and subsurfaces are outside this debug pass.
 The normal shader uses its existing local line tracing without detection or readback.
