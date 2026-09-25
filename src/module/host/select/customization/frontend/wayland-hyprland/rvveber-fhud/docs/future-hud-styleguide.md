@@ -128,10 +128,13 @@ Super+F10 toggles the effect on the focused window. Super+Shift+F10 toggles
 rectangle debugging on that window. Debug mode shows the original content with
 translucent boxes and matching outlines. Similar parallel segments anchor narrow
 search regions at their ends. Within those regions, short coherent perpendicular
-segments can establish a connecting side. The nearest outward connector takes
-priority over an inward correction; its intersection with the parallel sides gives
-the implicit corner, including across rounded or missing corner pixels. The same
-search runs from horizontal and vertical anchor pairs. Observed side coverage ranks
+segments can establish a connecting side when both ends fit the predicted corner
+regions. Outward extension determines the allowance for rounding; inward cuts
+require evidence near both junctions. All candidates are considered: the greatest
+supported coverage between the two connections wins, with outward proximity used
+to break ties. This lets complete enclosing sides outrank isolated strokes.
+The intersections give implicit corners across rounded or missing corner pixels.
+The same search runs from horizontal and vertical anchor pairs. Observed side coverage ranks
 overlapping candidates, keeping adjacent cards separate. Text inside a detected box
 leaves its overlay intact; smaller nested controls receive their own color.
 

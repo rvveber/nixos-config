@@ -116,20 +116,31 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                             }
                         }
                         if (largestGap > 6 || longest < 4 || hits < 4 || hits < (end - start + 1) * 0.7f) return 0.f;
+                        // Each connector end must fit the corner region predicted by its anchor.
+                        // Outward extension allows a rounded corner; an inward cut needs a junction.
+                        const auto cornerSupport = [&](const Line& anchor, int tip) {
+                            const int anchorEnd = outward < 0 ? anchor.start : anchor.end;
+                            const int extension = std::max(0, (position - anchorEnd) * outward);
+                            const int gap = std::abs(tip - anchor.position);
+                            const int tolerance = std::max(8, extension / 2);
+                            return gap <= extension + tolerance;
+                        };
+                        if (!cornerSupport(a, start) || !cornerSupport(b, end)) return 0.f;
                         return float(hits) / (separation - 3);
                     };
-                    // Prefer the first outward connector, then consider an inward correction.
+                    // Maximize supported coverage between the connections; proximity only breaks ties.
+                    Connector best{-1, 0.f};
                     for (int distance = 0; distance <= reach; ++distance) {
                         const int position = endpoint + distance * outward;
                         const float score = confidence(position);
-                        if (score > 0.f) return Connector{position, score};
+                        if (score > best.confidence) best = Connector{position, score};
                     }
                     for (int distance = 1; distance <= reach; ++distance) {
                         const int position = endpoint - distance * outward;
                         const float score = confidence(position);
-                        if (score > 0.f) return Connector{position, score};
+                        if (score > best.confidence) best = Connector{position, score};
                     }
-                    return Connector{-1, 0.f};
+                    return best;
                 };
                 const auto start = connector(std::min(a.start, b.start), -1);
                 if (start.position < 0) continue;
