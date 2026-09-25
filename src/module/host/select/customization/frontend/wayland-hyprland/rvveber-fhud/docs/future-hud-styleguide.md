@@ -133,18 +133,24 @@ regions. Outward extension determines the allowance for rounding; inward cuts
 require evidence near both junctions. A side continuing past an inferred corner
 must meet its anchor or connect through a visible corner contour. This keeps
 detached row highlights from borrowing panel borders while allowing rounded
-controls beside scrollbars. All candidates are considered: the greatest supported
-coverage between the two connections wins, with outward proximity used
-to break ties. This lets complete enclosing sides outrank isolated strokes.
+controls beside scrollbars. Corner confidence measures the complete turn and its
+straight continuation. Once a side has sufficient contrast, its supported length
+determines coverage. The more confident side is reflected through the shared
+midpoint of the parallel anchors; observed sides near that prediction receive a
+bounded ranking bonus. Midpoint disagreement widens the tolerance. This favors
+symmetric bounds while allowing uneven visible segments; reflection alone never
+creates an edge. Outward proximity breaks otherwise equal rankings.
 The intersections give implicit corners across rounded or missing corner pixels.
 The same search runs from horizontal and vertical anchor pairs. Long anchors and
 connectors require sustained continuity; thin strokes also need a stable profile.
-Faint edges qualify through longer coherent runs. Within predicted side regions,
+A one-pixel band follows antialiased edges, with direct support retaining their
+position. Sustained endpoint runs keep isolated fragments from extending anchors;
+opposite transitions of a thin rim remain separate. Faint edges qualify through
+longer coherent runs. Within predicted side regions,
 a one-level color difference can complete a long, nearly uninterrupted connector;
 this weaker evidence never seeds anchor lines. A side whose contrast disappears
-remains unconfirmed. Supported perimeter length ranks
-overlapping rectangles before coverage and area, allowing a fine enclosing border
-to outrank an internal separator. Text inside a detected box leaves its overlay
+remains unconfirmed. Corner confidence and mirrored-side agreement rank overlapping
+rectangles before supported perimeter, coverage, and area. Text inside a detected box leaves its overlay
 intact; smaller nested controls receive their own color.
 
 Detection runs once per committed main-surface update and reuses its result while
