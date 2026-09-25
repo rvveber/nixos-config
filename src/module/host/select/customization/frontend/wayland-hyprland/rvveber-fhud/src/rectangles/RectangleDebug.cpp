@@ -114,19 +114,9 @@ bool FhudRectangleDebug::update(const SP<Render::ITexture>& texture) {
         atlas.pixels.resize(size_t(atlas.Size) * rows * 4);
         glReadPixels(0, 0, atlas.Size, rows, GL_RGBA, GL_UNSIGNED_BYTE, atlas.pixels.data());
     }
-    const auto sample = [&](float x, float y) { return atlas.sample(x, y); };
-    for (size_t i = 0; i < m_rectangles.size(); ++i) {
-        auto& box = m_rectangles[i];
-        const auto confirmed = Fhud::refineBounds(sample, atlas.width, atlas.height, box, reduction, plans[i].edges,
-                                                   std::span<const Fhud::Rectangle>(m_rectangles).first(i));
-        for (int corner = 0; corner < 4; ++corner)
-            if (!confirmed[corner == 0 || corner == 3 ? 0 : 2] || !confirmed[corner < 2 ? 1 : 3])
-                plans[i].radii[corner] = 0.f;
-        const auto corners = Fhud::fitSampledCorners(sample, atlas.width, atlas.height, box, 1.f, plans[i].radii);
-        std::array<float, 4> radii{};
-        for (size_t c = 0; c < radii.size(); ++c) radii[c] = corners[c].radius / texture->m_size.x;
-        m_cornerRadii.push_back(radii);
-    }
+    m_cornerRadii = Fhud::refineGeometry(atlas, m_rectangles, plans, reduction);
+    for (auto& radii : m_cornerRadii)
+        for (auto& radius : radii) radius /= texture->m_size.x;
     return true;
 }
 

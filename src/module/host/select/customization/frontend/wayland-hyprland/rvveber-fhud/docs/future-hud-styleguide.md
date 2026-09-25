@@ -146,6 +146,9 @@ endpoint agreement: less extension into the proposed corners gives stronger
 support. This also strengthens the three-sided reference used to rank the fourth
 side. Outward proximity breaks otherwise equal rankings.
 The intersections give implicit corners across rounded or missing corner pixels.
+Coherent sections remain separate candidates when a line spans a gap. Matching
+gaps in both opposite anchors reject a combined surface, keeping adjacent controls
+separate after reduction while retaining a boundary interrupted on one side.
 The same search runs from horizontal and vertical anchor pairs. Long anchors and
 connectors require sustained continuity; thin strokes also need a stable profile.
 A one-pixel band follows antialiased edges, with direct support retaining their
@@ -180,7 +183,11 @@ coarse readback and detection work; up to 64 boxes are passed to the shader.
 Candidate edges and corners then use native texture tiles packed into a second
 readback of at most 1024 by 1024 pixels. Supported transitions refine each boundary
 within its coarse sampling uncertainty; inset controls retain distinct parent
-boundaries. Circle fits use these refined bounds and native pixels, so reduced
+boundaries. A distributed weak transition can extend the native search up to twelve
+pixels inward toward a substantially sharper opposite transition. This recovers a
+surface inside its hover shadow. Recovered sides must face opposite ways, and
+converging outlines share one result. Complete native bounds also supersede nearby
+incomplete duplicates. Circle fits use these refined bounds and native pixels, so reduced
 resolution does not multiply their fitting error. A corner needs both adjacent
 edges confirmed at native resolution. Exhausted tile budgets retain coarse bounds
 and omit unverified circles. Coarse radii guide the native corner search; unresolved

@@ -51,7 +51,7 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
         }
     }
 
-    struct Line { int position, start, end, support, centered, polarity; };
+    struct Line { int position, start, end, support, centered, polarity; bool section = false; };
     const auto lines = [&](const std::vector<uint8_t>& edges, bool transpose) {
         std::vector<Line> result;
         const int rows = transpose ? width : height, columns = transpose ? height : width;
@@ -97,6 +97,29 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                     const int length = last - first + 1;
                     result.push_back({row, first, last, support * length / (end - start + 1),
                         centered * length / (end - start + 1), (polarity > 0) - (polarity < 0)});
+                    // Preserve independently coherent sections of an accepted line.
+                    // The full span remains available when only one side is interrupted.
+                    std::vector<Line> sections;
+                    for (int begin = first; begin <= last;) {
+                        while (begin <= last && !edge(row, begin)) ++begin;
+                        int finish = begin, cursor = begin, hits = 0, direct = 0, intense = 0, direction = 0;
+                        while (cursor <= last && cursor - finish <= 2) {
+                            if (edge(row, cursor)) {
+                                finish = cursor;
+                                ++hits;
+                                const int p = transpose ? cursor * width + row : row * width + cursor;
+                                const int across = transpose ? 1 : width;
+                                direct += edges[p] >= WeakEdge;
+                                intense += edge(row, cursor) == StrongEdge;
+                                for (int c = 0; c < 3; ++c) direction += int(rgba[p * 4 + c]) - int(rgba[(p - across) * 4 + c]);
+                            }
+                            ++cursor;
+                        }
+                        if (finish - begin >= (intense ? 24 : 48) && hits >= (finish - begin + 1) * 0.9f)
+                            sections.push_back({row, begin, finish, hits, direct, (direction > 0) - (direction < 0), true});
+                        begin = cursor;
+                    }
+                    if (sections.size() > 1) result.insert(result.end(), sections.begin(), sections.end());
                 }
             }
         }
@@ -107,6 +130,8 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
         for (const auto& line : result) {
             const bool duplicate = std::any_of(merged.begin(), merged.end(), [&](const Line& other) {
                 return line.polarity * other.polarity >= 0 && std::abs(line.position - other.position) <= 2 &&
+                    (!(line.section || other.section) || std::min(line.end - line.start, other.end - other.start) >=
+                        std::max(line.end - line.start, other.end - other.start) * 0.75f) &&
                     std::min(line.end, other.end) - std::max(line.start, other.start) >=
                         std::min(line.end - line.start, other.end - other.start) * 0.8;
             });
@@ -147,6 +172,19 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                     line.polarity = (polarity > 0) - (polarity < 0);
                 }
                 if (a.polarity * b.polarity > 0) continue;
+                int sharedGap = 0;
+                bool disconnected = false;
+                for (int i = std::max(a.start, b.start); i <= std::min(a.end, b.end); ++i) {
+                    const auto& mask = transpose ? vertical : horizontal;
+                    const int across = transpose ? 1 : width;
+                    const auto supported = [&](int position) {
+                        const int p = transpose ? i * width + position : position * width + i;
+                        return std::max({mask[p - across], mask[p], mask[p + across]}) >= WeakEdge;
+                    };
+                    sharedGap = supported(a.position) || supported(b.position) ? 0 : sharedGap + 1;
+                    if (sharedGap >= 2) { disconnected = true; break; }
+                }
+                if (disconnected) continue;
                 const int reach = std::min(64, separation / 2 + 2);
                 const int alignment = std::min(reach, shorter / 4 + 2);
                 if (std::abs(a.start - b.start) > alignment || std::abs(a.end - b.end) > alignment) continue;
@@ -326,6 +364,7 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                 else
                     start = select(starts, twiceCenter - end.position, symmetryWeight * std::min(std::max(end.corners, end.reciprocal), end.confidence));
                 if (end.position - start.position < std::max(6.f, shorter * 0.7f)) continue;
+
                 if ((shorter < longer * 0.75f || separation < 12) && std::min(start.corners, end.corners) < 0.75f) continue;
                 const float score = std::min({start.confidence, end.confidence,
                     float(a.support) / (a.end - a.start + 1), float(b.support) / (b.end - b.start + 1)});
