@@ -108,9 +108,10 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                 const auto connector = [&](int endpoint, int outward) {
                     const auto confidence = [&](int position) {
                         if (position < 2 || position >= limit - 2) return 0.f;
+                        const auto edge = [&](int i) { return edges[transpose ? position * width + i : i * width + position]; };
                         int start = -1, end = -1, hits = 0, run = 0, longest = 0, gap = 0, largestGap = 0;
                         for (int i = a.position + 2; i <= b.position - 2; ++i) {
-                            if (edges[transpose ? position * width + i : i * width + position]) {
+                            if (edge(i)) {
                                 if (start < 0) start = i;
                                 end = i;
                                 largestGap = std::max(largestGap, gap);
@@ -130,14 +131,32 @@ inline std::vector<Rectangle> detectRectangles(std::span<const uint8_t> rgba, in
                         if (largestGap > 6 || longest < sustained || hits < 4 || hits < span * coverage) return 0.f;
                         // Each connector end must fit the corner region predicted by its anchor.
                         // Outward extension allows a rounded corner; an inward cut needs a junction.
-                        const auto cornerSupport = [&](const Line& anchor, int tip) {
+                        const auto cornerSupport = [&](const Line& anchor, int tip, int direction) {
                             const int anchorEnd = outward < 0 ? anchor.start : anchor.end;
                             const int extension = std::max(0, (position - anchorEnd) * outward);
                             const int gap = std::abs(tip - anchor.position);
                             const int tolerance = std::max(8, extension / 2);
-                            return gap <= extension + tolerance;
+                            if (gap > extension + tolerance) return false;
+                            const int overshoot = (anchorEnd - position) * outward;
+                            if (overshoot > 1) {
+                                const int i = anchor.position - direction;
+                                const int junction = transpose ? position * width + i : i * width + position;
+                                if (gap > 2 || difference(junction, junction - (transpose ? width : 1)) < weakContrast) return false;
+                            }
+                            // Rounding joins two ending segments; a passing side needs a real junction.
+                            if (extension > 1 && gap <= 2) {
+                                int run = 0;
+                                for (int distance = 3; distance <= 8; ++distance) {
+                                    const int i = anchor.position + distance * direction;
+                                    if (i < 2 || i >= (transpose ? width : height) - 2) break;
+                                    if (edge(i)) {
+                                        if (++run >= 4) return false;
+                                    } else run = 0;
+                                }
+                            }
+                            return true;
                         };
-                        if (!cornerSupport(a, start) || !cornerSupport(b, end)) return 0.f;
+                        if (!cornerSupport(a, start, -1) || !cornerSupport(b, end, 1)) return 0.f;
                         return float(hits) / (separation - 3);
                     };
                     // Maximize supported coverage between the connections; proximity only breaks ties.

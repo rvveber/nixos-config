@@ -130,7 +130,9 @@ translucent boxes and matching outlines. Similar parallel segments anchor narrow
 search regions at their ends. Within those regions, short coherent perpendicular
 segments can establish a connecting side when both ends fit the predicted corner
 regions. Outward extension determines the allowance for rounding; inward cuts
-require evidence near both junctions. All candidates are considered: the greatest
+require evidence near both junctions. A side continuing past an inferred corner
+must meet its anchor, keeping detached row highlights from borrowing panel borders.
+All candidates are considered: the greatest
 supported coverage between the two connections wins, with outward proximity used
 to break ties. This lets complete enclosing sides outrank isolated strokes.
 The intersections give implicit corners across rounded or missing corner pixels.
