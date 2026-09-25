@@ -7,6 +7,7 @@ const int fhudLineRadius = 16;
 const bool fhudDebugRectangles = false;
 uniform int fhudRectangleCount;
 uniform vec4 fhudRectangleBounds[64];
+uniform vec4 fhudCornerRadii[64];
 
 bool fhudInside(vec2 offset) {
     vec2 position = x_PixelPos - offset;
@@ -70,13 +71,36 @@ vec4 fhudRectangle() {
     vec4 result = vec4(0.0);
     for (int i = 0; i < min(fhudRectangleCount, 64); ++i) {
         vec4 bounds = fhudRectangleBounds[i];
-        if (any(lessThan(x_TexCoord, bounds.xy)) || any(greaterThanEqual(x_TexCoord, bounds.zw)))
+        vec2 position = x_TexCoord * x_WindowSize;
+        vec4 pixels = bounds * x_WindowSize.xyxy;
+        vec4 radii = fhudCornerRadii[i] * x_WindowSize.x;
+        float reach = max(max(radii.x, radii.y), max(radii.z, radii.w));
+        if (any(lessThan(position, pixels.xy - reach - 2.0)) || any(greaterThan(position, pixels.zw + reach + 2.0)))
             continue;
         float hue = fract(dot(floor(bounds * 1024.0 + 0.5), vec4(0.1031, 0.11369, 0.13787, 0.17389)));
         vec3 tint = 0.5 + 0.5 * cos(6.2831853 * (hue + vec3(0.0, 0.3333, 0.6667)));
         vec2 edge = min(x_TexCoord - bounds.xy, bounds.zw - x_TexCoord) * x_WindowSize;
-        float alpha = min(edge.x, edge.y) < 2.0 ? 0.8 : 0.3;
-        result = vec4(tint, alpha);
+        if (all(greaterThanEqual(edge, vec2(0.0)))) {
+            float alpha = min(edge.x, edge.y) < 2.0 ? 0.8 : 0.3;
+            result = vec4(tint, alpha);
+        }
+        for (int corner = 0; corner < 4; ++corner) {
+            float radius = radii[corner];
+            if (radius <= 0.0) continue;
+            bool left = corner == 0 || corner == 3;
+            bool top = corner < 2;
+            vec2 origin = vec2(left ? pixels.x : pixels.z, top ? pixels.y : pixels.w);
+            vec2 center = origin + vec2(left ? radius : -radius, top ? radius : -radius);
+            float ring = 1.0 - smoothstep(0.75, 1.5, abs(length(position - center) - radius));
+            vec2 mark = abs(position - center);
+            float crosshair = max(float(mark.x < 0.75 && mark.y < 3.0), float(mark.y < 0.75 && mark.x < 3.0));
+            float alpha = 0.9 * max(ring, crosshair);
+            if (alpha > 0.0) {
+                float combined = alpha + result.a * (1.0 - alpha);
+                vec3 ink = mix(tint, vec3(1.0, 0.94, 0.65), 0.8);
+                result = vec4((ink * alpha + result.rgb * result.a * (1.0 - alpha)) / combined, combined);
+            }
+        }
     }
     return result;
 }

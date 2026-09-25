@@ -126,7 +126,9 @@ by the application. The effect settles without pointer input or continuous anima
 
 Super+F10 toggles the effect on the focused window. Super+Shift+F10 toggles
 rectangle debugging on that window. Debug mode shows the original content with
-translucent boxes and matching outlines. Similar parallel segments anchor narrow
+translucent boxes and matching outlines. Confirmed circular corners also show
+warm-colored circles and center marks; each corner has its own fitted radius.
+Similar parallel segments anchor narrow
 search regions at their ends. Within those regions, short coherent perpendicular
 segments can establish a connecting side when both ends fit the predicted corner
 regions. Outward extension determines the allowance for rounding; inward cuts
@@ -139,25 +141,51 @@ determines coverage. The more confident side is reflected through the shared
 midpoint of the parallel anchors; observed sides near that prediction receive a
 bounded ranking bonus. Midpoint disagreement widens the tolerance. This favors
 symmetric bounds while allowing uneven visible segments; reflection alone never
-creates an edge. Outward proximity breaks otherwise equal rankings.
+creates an edge. Independently detected orthogonal segments contribute reciprocal
+endpoint agreement: less extension into the proposed corners gives stronger
+support. This also strengthens the three-sided reference used to rank the fourth
+side. Outward proximity breaks otherwise equal rankings.
 The intersections give implicit corners across rounded or missing corner pixels.
 The same search runs from horizontal and vertical anchor pairs. Long anchors and
 connectors require sustained continuity; thin strokes also need a stable profile.
 A one-pixel band follows antialiased edges, with direct support retaining their
-position. Sustained endpoint runs keep isolated fragments from extending anchors;
+position. Sustained direct support fixes the endpoints, keeping isolated fragments
+and neighboring shadow pixels from extending anchors;
 opposite transitions of a thin rim remain separate. Faint edges qualify through
 longer coherent runs. Within predicted side regions,
 a one-level color difference can complete a long, nearly uninterrupted connector;
 this weaker evidence never seeds anchor lines. A side whose contrast disappears
 remains unconfirmed. Corner confidence and mirrored-side agreement rank overlapping
-rectangles before supported perimeter, coverage, and area. Text inside a detected box leaves its overlay
-intact; smaller nested controls receive their own color.
+rectangles before supported perimeter, coverage, and area. Nearby confidence values
+share a ranking band so small measurement differences yield to complete support.
+Text inside a detected box leaves its overlay intact; smaller nested controls
+receive their own color. The minimum thickness is six analysis pixels. Short sides
+use shorter continuity runs and require confirmed corners. A short parallel edge
+can use its section of a shared longer edge when both connecting corners agree.
+Duplicate removal preserves independently inset small controls. Established parent
+and child bounds reject weaker proposals assembled from their separate edges.
+
+The 45-degree probe seeds a circular radius; four additional directions must
+support the same arc and color transition. The exterior portion of the probe must
+remain consistent, which keeps interior texture from supplying a false corner.
+Each corner is fitted independently, and adjacent radii must fit along their shared
+side. Three source pixels is the smallest reported radius. Square, unresolved,
+and incompatible noncircular corners retain their rectangle bounds without a
+circle. Existing contour continuity remains useful when a circular fit is absent.
 
 Detection runs once per committed main-surface update and reuses its result while
 moving the window. Repeated 2x2 reduction preserves thin-line coverage; contrast
 thresholds account for its scale. A maximum dimension of 1024 pixels bounds the
-debug readback and CPU work; up to 64 boxes are passed to the shader. Large image
-panels are supported across the window. This remains a visual heuristic: low-contrast
+coarse readback and detection work; up to 64 boxes are passed to the shader.
+Candidate edges and corners then use native texture tiles packed into a second
+readback of at most 1024 by 1024 pixels. Supported transitions refine each boundary
+within its coarse sampling uncertainty; inset controls retain distinct parent
+boundaries. Circle fits use these refined bounds and native pixels, so reduced
+resolution does not multiply their fitting error. A corner needs both adjacent
+edges confirmed at native resolution. Exhausted tile budgets retain coarse bounds
+and omit unverified circles. Coarse radii guide the native corner search; unresolved
+corners initially search up to 32 source pixels. Large image panels are supported
+across the window. This remains a visual heuristic: low-contrast
 or interrupted borders can be missed, and subsurfaces are outside this debug pass.
 The normal shader uses its existing local line tracing without detection or readback.
 

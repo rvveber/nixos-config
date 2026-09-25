@@ -10,6 +10,7 @@ void FhudRectangleDebug::observe(const SP<CWLSurfaceResource>& surface) {
 
 bool FhudRectangleDebug::update(const SP<Render::ITexture>& texture) {
     m_rectangles.clear();
+    m_cornerRadii.clear();
     if (!texture || texture->m_type == Render::TEXTURE_EXTERNAL || texture->m_size.x < 16 || texture->m_size.y < 16)
         return false;
     int width = int(texture->m_size.x), height = int(texture->m_size.y);
@@ -75,11 +76,56 @@ bool FhudRectangleDebug::update(const SP<Render::ITexture>& texture) {
     std::vector<uint8_t> pixels(size_t(width) * height * 4);
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
     m_rectangles = Fhud::detectRectangles(pixels, width, height, std::max(1, 3 / reduction));
+    std::vector<std::array<float, 4>> coarseRadii;
     for (auto& box : m_rectangles) {
+        const auto corners = Fhud::fitCorners(pixels, width, height, box, std::max(1, 3 / reduction));
+        std::array<float, 4> radii{};
+        for (size_t i = 0; i < radii.size(); ++i) radii[i] = corners[i].radius * reduction;
+        coarseRadii.push_back(radii);
         box[0] *= double(width * reduction) / texture->m_size.x;
         box[2] *= double(width * reduction) / texture->m_size.x;
         box[1] *= double(height * reduction) / texture->m_size.y;
         box[3] *= double(height * reduction) / texture->m_size.y;
+    }
+    Fhud::GeometryAtlas atlas{int(texture->m_size.x), int(texture->m_size.y), {}, {}};
+    std::vector<Fhud::GeometryRefinement> plans;
+    for (size_t i = 0; i < m_rectangles.size(); ++i)
+        plans.push_back(Fhud::requestGeometry(atlas, m_rectangles[i], reduction, coarseRadii[i]));
+    if (!atlas.tiles.empty()) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffers[0]);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->m_texID, 0);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffers[1]);
+        glBindRenderbuffer(GL_RENDERBUFFER, buffers[1]);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, atlas.Size, atlas.Size);
+        glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, buffers[1]);
+        if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE ||
+            glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            m_rectangles.clear();
+            return false;
+        }
+        for (const auto& [tile, slot] : atlas.tiles) {
+            const int x = tile.first * atlas.Tile, y = tile.second * atlas.Tile;
+            const int w = std::min(atlas.Tile, atlas.width - x), h = std::min(atlas.Tile, atlas.height - y);
+            const int ax = slot % atlas.Columns * atlas.Tile, ay = slot / atlas.Columns * atlas.Tile;
+            glBlitFramebuffer(x, y, x + w, y + h, ax, ay, ax + w, ay + h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        }
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffers[1]);
+        const int rows = (int(atlas.tiles.size()) + atlas.Columns - 1) / atlas.Columns * atlas.Tile;
+        atlas.pixels.resize(size_t(atlas.Size) * rows * 4);
+        glReadPixels(0, 0, atlas.Size, rows, GL_RGBA, GL_UNSIGNED_BYTE, atlas.pixels.data());
+    }
+    const auto sample = [&](float x, float y) { return atlas.sample(x, y); };
+    for (size_t i = 0; i < m_rectangles.size(); ++i) {
+        auto& box = m_rectangles[i];
+        const auto confirmed = Fhud::refineBounds(sample, atlas.width, atlas.height, box, reduction, plans[i].edges,
+                                                   std::span<const Fhud::Rectangle>(m_rectangles).first(i));
+        for (int corner = 0; corner < 4; ++corner)
+            if (!confirmed[corner == 0 || corner == 3 ? 0 : 2] || !confirmed[corner < 2 ? 1 : 3])
+                plans[i].radii[corner] = 0.f;
+        const auto corners = Fhud::fitSampledCorners(sample, atlas.width, atlas.height, box, 1.f, plans[i].radii);
+        std::array<float, 4> radii{};
+        for (size_t c = 0; c < radii.size(); ++c) radii[c] = corners[c].radius / texture->m_size.x;
+        m_cornerRadii.push_back(radii);
     }
     return true;
 }
@@ -94,7 +140,9 @@ void FhudRectangleDebug::apply(GLuint program, const std::shared_ptr<FhudRectang
     glUseProgram(program);
     const int count = cache ? cache->m_rectangles.size() : 0;
     glUniform1i(glGetUniformLocation(program, "fhudRectangleCount"), count);
-    if (count)
+    if (count) {
         glUniform4fv(glGetUniformLocation(program, "fhudRectangleBounds[0]"), count, cache->m_rectangles.front().data());
+        glUniform4fv(glGetUniformLocation(program, "fhudCornerRadii[0]"), count, cache->m_cornerRadii.front().data());
+    }
     glUseProgram(previous);
 }
