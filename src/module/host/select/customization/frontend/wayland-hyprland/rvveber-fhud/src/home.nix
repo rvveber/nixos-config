@@ -234,9 +234,47 @@ in {
           fade_in_speed = 0,
           fade_out_speed = 0,
         })
-        hl.window_rule({ match = { fullscreen = false }, ["darkwindow:shade"] = "fhud" })
-        hl.bind("SUPER + F10", hl.plugin.darkwindow.dsp_shade({ shader = "fhud" }))
-        hl.bind("SUPER + SHIFT + F10", hl.plugin.darkwindow.dsp_shade({ shader = "fhud-debug" }))
+        local stateHome = os.getenv("XDG_STATE_HOME")
+        if stateHome == nil or stateHome == "" then
+          stateHome = os.getenv("HOME") .. "/.local/state"
+        end
+        local statePath = stateHome .. "/rvveber-fhud/holographic-windows"
+        local enabled = true
+        local saved, readError, readCode = io.open(statePath, "r")
+        if saved then
+          local value = saved:read("*l")
+          assert(saved:close())
+          assert(value == "on" or value == "off", "Invalid FutureHUD shader state: " .. statePath)
+          enabled = value == "on"
+        else
+          assert(readCode == 2, readError)
+        end
+
+        local shaderRule = hl.window_rule({
+          name = "fhud-holographic-windows",
+          enabled = enabled,
+          match = { fullscreen = false },
+          ["darkwindow:shade"] = "fhud",
+        })
+        hl.bind("SUPER + F10", function()
+          local nextEnabled = not shaderRule:is_enabled()
+          assert(os.execute([[${pkgs.coreutils}/bin/mkdir -p -- "''${XDG_STATE_HOME:-$HOME/.local/state}/rvveber-fhud"]]))
+          local pending = assert(io.open(statePath .. ".tmp", "w"))
+          assert(pending:write(nextEnabled and "on\n" or "off\n"))
+          assert(pending:close())
+          assert(os.rename(statePath .. ".tmp", statePath))
+
+          for _, window in ipairs(hl.get_windows()) do
+            hl.plugin.darkwindow.dsp_shade({ window = window, shader = "" })()
+          end
+          shaderRule:set_enabled(nextEnabled)
+        end)
+        local debugShader = hl.plugin.darkwindow.dsp_shade({ shader = "fhud-debug" })
+        hl.bind("SUPER + SHIFT + F10", function()
+          if shaderRule:is_enabled() then
+            debugShader()
+          end
+        end)
       end
     '';
     settings = {

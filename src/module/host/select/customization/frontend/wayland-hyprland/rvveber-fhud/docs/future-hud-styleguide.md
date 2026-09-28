@@ -124,8 +124,14 @@ Entry changes the highlight intensity while the depth offset stays fixed.
 This is optical depth over application pixels; application state remains owned
 by the application. The effect settles without pointer input or continuous animation.
 
-Super+F10 toggles the effect on the focused window. Super+Shift+F10 toggles
-rectangle debugging on that window. Debug mode shows the original content with
+Super+F10 toggles the effect for all application windows together and clears
+per-window debug overrides. The choice is saved in
+`$XDG_STATE_HOME/rvveber-fhud/holographic-windows`, with
+`~/.local/state` as the state directory fallback. It applies to existing and new
+windows and survives rule updates, configuration reloads, logout and reboot.
+The effect starts enabled until a choice is saved; fullscreen windows retain
+their shader bypass. While the global effect is enabled, Super+Shift+F10 toggles
+rectangle debugging on the focused window. Debug mode shows the original content with
 translucent boxes and matching outlines. Confirmed circular corners also show
 warm-colored circles and center marks; each corner has its own fitted radius.
 Similar parallel segments anchor narrow
