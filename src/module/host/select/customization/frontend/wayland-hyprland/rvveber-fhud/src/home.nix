@@ -32,6 +32,20 @@
       ++ lib.optional (flags != null) flags
     );
 in {
+  imports = [
+    ({
+      config,
+      lib,
+      ...
+    }: {
+      home.activation.createFhudShaderStateDirectory = lib.mkIf holographicWindows (
+        lib.hm.dag.entryBetween ["linkGeneration"] ["writeBoundary"] ''
+          run ${pkgs.coreutils}/bin/mkdir -p -- ${lib.escapeShellArg "${config.xdg.stateHome}/rvveber-fhud"}
+        ''
+      );
+    })
+  ];
+
   # Enable stylix for home-manager
   stylix.enable = true;
 
@@ -258,7 +272,6 @@ in {
         })
         hl.bind("SUPER + F10", function()
           local nextEnabled = not shaderRule:is_enabled()
-          assert(os.execute([[${pkgs.coreutils}/bin/mkdir -p -- "''${XDG_STATE_HOME:-$HOME/.local/state}/rvveber-fhud"]]))
           local pending = assert(io.open(statePath .. ".tmp", "w"))
           assert(pending:write(nextEnabled and "on\n" or "off\n"))
           assert(pending:close())
