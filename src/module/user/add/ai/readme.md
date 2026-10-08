@@ -8,8 +8,8 @@ Import the desired server modules; Nix deduplicates their shared gateway import.
 Application modules, including OpenCode and the gateway, live under
 `../application/`.
 
-`codex-to-api.nix` is deprecated and emits a warning when imported. It remains
-available for existing configurations.
+`../hack/codex-to-api.nix` is deprecated and emits a warning when imported.
+It remains available for existing configurations.
 
 Personal instructions shared across AI clients belong in
 `module/user/select/customization/ai/<profile>.nix`. The maintained prompt can be
