@@ -27,6 +27,8 @@
         value: "false"
   '';
 in {
+  imports = [../application/docker-mcp-gateway.nix];
+
   config = lib.mkIf osConfig.virtualisation.docker.enable {
     home.activation.createPaperDirectory = lib.hm.dag.entryAfter ["writeBoundary"] ''
       ${pkgs.coreutils}/bin/install -d -m 0700 ${lib.escapeShellArg stateRoot}

@@ -13,6 +13,8 @@
     image: mcp/paper-search@sha256:19d0af269a5531403fbb042aad8277d1a9ec2315c972769c7ca8efb3a76eca34
   '';
 in {
+  imports = [../application/docker-mcp-gateway.nix];
+
   config = lib.mkIf osConfig.virtualisation.docker.enable {
     services.dockerMcpGateway.serverFiles = [server];
     services.dockerMcpGateway.toolAllowlist.paper-search = ["search_papers"];

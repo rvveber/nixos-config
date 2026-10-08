@@ -84,13 +84,12 @@ in {
     imports = [
       ../../module/user/select/customization/application/neovim/rvveber-nvim
       ../../module/user/add/application/development.nix
-      ../../module/user/add/ai/opencode.nix
+      ../../module/user/add/application/opencode.nix
       ../../module/user/add/application/devops.nix
       ../../module/user/add/application/docker-credential-store.nix
-      ../../module/user/add/ai/docker-mcp-gateway.nix
-      ../../module/user/add/ai/mcp/pdf.nix
-      ../../module/user/add/ai/mcp/paper-search.nix
-      ../../module/user/add/ai/mcp/paper-retrieve.nix
+      ../../module/user/add/ai/mcp-pdf.nix
+      ../../module/user/add/ai/mcp-paper-search.nix
+      ../../module/user/add/ai/mcp-paper-retrieve.nix
       ../../module/user/add/application/windows-environment.nix
     ];
 

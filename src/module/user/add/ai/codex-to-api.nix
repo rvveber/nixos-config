@@ -1,5 +1,5 @@
-# Runs ChatMock as a per-user HTTP compatibility layer backed by Codex
-# authentication state.
+# Deprecated: runs ChatMock as a per-user HTTP compatibility layer backed by
+# Codex authentication state, retained for existing configurations.
 {
   pkgs,
   lib,
@@ -60,7 +60,10 @@ in {
   };
 
   config = lib.mkMerge [
-    {services.codexToApi.enable = lib.mkDefault true;}
+    {
+      warnings = ["codex-to-api.nix is deprecated and retained for existing configurations."];
+      services.codexToApi.enable = lib.mkDefault true;
+    }
     (lib.mkIf cfg.enable {
       home.packages = [
         cfg.package

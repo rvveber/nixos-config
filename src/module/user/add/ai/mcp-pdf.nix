@@ -20,6 +20,8 @@
     disableNetwork: true
   '';
 in {
+  imports = [../application/docker-mcp-gateway.nix];
+
   config = lib.mkIf osConfig.virtualisation.docker.enable {
     services.dockerMcpGateway.allowedReadOnlyPaths = [paperDirectory];
     services.dockerMcpGateway.serverFiles = [server];

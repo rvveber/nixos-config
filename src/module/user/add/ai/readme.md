@@ -1,10 +1,15 @@
-This category owns per-user AI runtimes, compatibility services, and shared MCP
-infrastructure. Import its modules through `home-manager.users.<user>.imports`
+This category owns shared AI configuration and individually selectable MCP
+servers. Import its modules through `home-manager.users.<user>.imports`
 in `users/<user>/customization.nix`.
 
-`docker-mcp-gateway.nix` runs the shared MCP endpoint. Each module under `mcp/`
+Each `mcp-*.nix` module imports `../application/docker-mcp-gateway.nix` and
 registers its server, filesystem access, and tool selection with that gateway.
-Import the gateway alongside the desired server modules.
+Import the desired server modules; Nix deduplicates their shared gateway import.
+Application modules, including OpenCode and the gateway, live under
+`../application/`.
+
+`codex-to-api.nix` is deprecated and emits a warning when imported. It remains
+available for existing configurations.
 
 Personal instructions shared across AI clients belong in
 `module/user/select/customization/ai/<profile>.nix`. The maintained prompt can be
