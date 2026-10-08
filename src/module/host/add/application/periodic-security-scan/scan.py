@@ -30,6 +30,8 @@ def run(command, log, output=None, **kwargs):
 def inventory(paths, target, output, log):
     # The execution store is outside /scan. Syft rebases absolute symlinks into
     # /scan, where only closure members exist; mutable host directories are absent.
+    # Syft needs no /proc. Leave it absent: the service's ProtectKernelTunables
+    # masks prevent mounting a fresh procfs inside an unprivileged user namespace.
     arguments = [
         "--unshare-all",
         "--die-with-parent",
@@ -37,8 +39,6 @@ def inventory(paths, target, output, log):
         "--ro-bind",
         "/nix/store",
         "/nix/store",
-        "--proc",
-        "/proc",
         "--dev",
         "/dev",
         "--tmpfs",
