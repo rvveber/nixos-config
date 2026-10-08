@@ -84,7 +84,11 @@ fi
 #fi
 
 printf "${CYAN}${ARROW} INFO: Validating configuration${RESET}\n"
-${DIR_BIN}/validate
+# nixos-rebuild evaluates the target host; bin/validate keeps the all-host check.
+if ! "${DIR_BIN}/validate" --no-flake-check; then
+  printf "${RED}${ARROW} ERROR: Configuration validation failed.${RESET}\n" >&2
+  exit 1
+fi
 
 RUN_PRE_SCAN=0
 RUN_POST_SCAN=0

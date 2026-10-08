@@ -2,6 +2,14 @@
 
 set -eu
 
+CHECK_FLAKE=1
+if [ "$#" -eq 1 ] && [ "$1" = "--no-flake-check" ]; then
+  CHECK_FLAKE=0
+elif [ "$#" -ne 0 ]; then
+  printf 'Usage: %s [--no-flake-check]\n' "$0" >&2
+  exit 2
+fi
+
 DIR_BIN=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 DIR_ROOT=$(cd "$DIR_BIN"/.. && pwd -P)
 cd "$DIR_ROOT"
@@ -12,29 +20,41 @@ if ! command -v nix >/dev/null 2>&1; then
 fi
 
 if [ -z "${IN_NIX_SHELL:-}" ]; then
-  exec nix develop "path:${DIR_ROOT}/src" --command "${DIR_BIN}/validate"
+  exec nix develop "path:${DIR_ROOT}/src" --no-write-lock-file --command "${DIR_BIN}/validate" "$@"
 fi
 
-printf 'Checking Nix structure...\n'
+# Some formatter quiet modes also hide failures; retain their complete diagnostics.
+check_quietly() (
+  CHECK_LOG=$(mktemp)
+  trap 'rm -f "$CHECK_LOG"' EXIT
+  if "$@" >"$CHECK_LOG" 2>&1; then
+    exit 0
+  else
+    CHECK_STATUS=$?
+    cat "$CHECK_LOG" >&2
+    exit "$CHECK_STATUS"
+  fi
+)
+
 statix check "$DIR_ROOT"
 deadnix --fail \
   --exclude src/module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/vendor \
   "$DIR_ROOT"
 
-printf 'Checking formatting...\n'
-find "$DIR_ROOT/src" \
+check_quietly find "$DIR_ROOT/src" \
   -path "$DIR_ROOT/src/module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/vendor" -prune \
   -o -name '*.nix' -exec alejandra --check {} +
 stylua --check \
   "$DIR_ROOT/src/module/user/select/customization/application/neovim/rvveber-nvim/src/config/init.lua" \
   "$DIR_ROOT/src/module/user/select/customization/application/neovim/rvveber-nvim/src/config/lua"
 
-printf 'Checking the security scanners...\n'
 shellcheck "$DIR_ROOT/bin/security-scan"
-ruff check "$DIR_BIN/lib/security_scan.py" "$DIR_ROOT/src/module/host/add/application/periodic-security-scan"
-ruff format --check "$DIR_BIN/lib/security_scan.py" "$DIR_ROOT/src/module/host/add/application/periodic-security-scan"
+ruff check --quiet "$DIR_BIN/lib/security_scan.py" "$DIR_ROOT/src/module/host/add/application/periodic-security-scan"
+check_quietly ruff format --check "$DIR_BIN/lib/security_scan.py" "$DIR_ROOT/src/module/host/add/application/periodic-security-scan"
 
-printf 'Checking flake outputs...\n'
-nix flake check "path:${DIR_ROOT}/src"
+if [ "$CHECK_FLAKE" -eq 1 ]; then
+  printf 'Checking flake outputs...\n'
+  nix flake check "path:${DIR_ROOT}/src" --no-write-lock-file
+fi
 
 printf 'Validation passed.\n'

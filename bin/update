@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+set -eu
+
 # Get the absolute path of the directory containing the script
 DIR_BIN=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 # Navigate up one directory from the script directory to get to the project root
@@ -17,6 +19,3 @@ printf "${CYAN}${ARROW} INFO: Updating flake inputs${RESET}\n"
 nix flake update --flake "path:${DIR_ROOT}/src" \
 	--extra-experimental-features nix-command \
 	--extra-experimental-features flakes
-
-printf "${CYAN}${ARROW} INFO: Validating updated configuration${RESET}\n"
-${DIR_BIN}/validate
