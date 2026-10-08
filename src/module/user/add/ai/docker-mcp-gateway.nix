@@ -8,7 +8,7 @@
   ...
 }: let
   gateway = config.services.dockerMcpGateway;
-  dockerMcp = pkgs.callPackage ../../../../../packages/docker-mcp.nix {};
+  dockerMcp = pkgs.callPackage ../../../../packages/docker-mcp.nix {};
 
   profileId = "nixos";
   port = 8811;
