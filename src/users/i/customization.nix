@@ -84,6 +84,7 @@ in {
     imports = [
       ../../module/user/select/customization/application/neovim/rvveber-nvim
       ../../module/user/add/application/development.nix
+      ../../module/user/add/application/opencode.nix
       ../../module/user/add/application/devops.nix
       ../../module/user/add/application/docker-credential-store.nix
       ../../module/user/add/application/docker-mcp-gateway
@@ -121,7 +122,6 @@ in {
 
       # testing
       vscode
-      opencode
       spotify
       jujutsu
     ];
