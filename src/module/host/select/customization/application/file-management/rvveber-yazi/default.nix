@@ -58,7 +58,22 @@ in {
         enableZshIntegration = true;
         # Keep the short cwd-changing shell wrapper used for terminal work.
         shellWrapperName = "y";
-        settings.mgr.linemode = "size";
+        settings.mgr = {
+          linemode = "size";
+          show_hidden = true;
+        };
+        keymap.mgr.prepend_keymap = [
+          {
+            on = "s";
+            run = "search --via=fd --args='--hidden --no-ignore'";
+            desc = "Search all files by name";
+          }
+          {
+            on = "S";
+            run = "search --via=rg --args='--hidden --no-ignore'";
+            desc = "Search all files by content";
+          }
+        ];
         plugins.ranger-status = {
           package = ./plugins/ranger-status.yazi;
           setup = true;
@@ -118,6 +133,9 @@ in {
           ];
         };
       };
+
+      # Yazi's fzf picker uses the standard fzf candidate command.
+      home.sessionVariables.FZF_DEFAULT_COMMAND = "${lib.getExe pkgs.fd} --hidden --no-ignore";
 
       xdg = {
         # Terminal applications need a desktop entry to act as an XDG

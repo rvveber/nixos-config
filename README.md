@@ -29,6 +29,10 @@
 ### Pre-made Neovim Config
 - Based on [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim)
 - Uses [bun as fast nodejs replacement](https://bun.sh/) and [zig as fast gcc replacement](https://ziglang.org/)
+- Go language support uses `gopls` from the project's development shell. Start
+  Neovim from `nix develop` or a shell with the project's direnv environment loaded.
+- Language servers are configured and enabled in the Neovim `servers` table.
+- Telescope and Yazi search hidden and ignored files.
 
 ### Pre-made ZSH Config
 - [powerlevel10k](https://github.com/romkatv/powerlevel10k)
