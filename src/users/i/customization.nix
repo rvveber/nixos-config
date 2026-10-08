@@ -90,6 +90,7 @@ in {
       ../../module/user/add/ai/mcp-pdf.nix
       ../../module/user/add/ai/mcp-paper-search.nix
       ../../module/user/add/ai/mcp-paper-retrieve.nix
+      ../../module/user/add/ai/prompt-system-universal.nix
       ../../module/user/add/application/windows-environment.nix
     ];
 
