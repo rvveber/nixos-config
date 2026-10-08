@@ -473,7 +473,15 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
+        bashls = {},
+        basedpyright = {},
+        clangd = {},
+        cssls = {},
+        docker_compose_language_service = {},
+        dockerls = {},
         gopls = {},
+        html = {},
+        jsonls = {},
         lua_ls = {
           -- cmd = { ... },
           -- filetypes = { ... },
@@ -488,9 +496,16 @@ require('lazy').setup({
             },
           },
         },
+        marksman = {},
+        nixd = {},
+        qmlls = {},
+        rust_analyzer = {},
+        taplo = {},
+        ts_ls = {},
+        yamlls = {},
       }
 
-      -- Mason supplies Neovim's Lua tools; Go projects supply go and gopls.
+      -- Mason supplies Neovim's Lua tools; project environments supply language tooling.
       require('mason-tool-installer').setup {
         ensure_installed = { 'lua-language-server', 'stylua' },
       }
