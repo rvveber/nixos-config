@@ -1,5 +1,5 @@
 # Configures Docker registry logins to use pass instead of plaintext auth in
-# ~/.docker/config.json; Docker MCP server secrets remain a separate concern.
+# ~/.docker/config.json.
 {
   config,
   lib,

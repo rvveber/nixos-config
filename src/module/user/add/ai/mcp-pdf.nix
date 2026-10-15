@@ -1,29 +1,38 @@
-# Adds local PDF reading and analysis to the shared Docker MCP gateway.
+# Provides native local and remote PDF analysis through the shared MCP gateway.
 {
   config,
   lib,
-  osConfig,
   pkgs,
   ...
 }: let
-  paperDirectory = "${config.xdg.stateHome}/docker-mcp-gateway/papers";
-  server = pkgs.writeText "pdf.yaml" ''
-    name: pdf
-    title: PDF
-    description: Analyze locally available PDFs, including text, tables, charts, scans, and rendered pages; use `paper-retrieve` to acquire papers first
-    type: server
-    image: ghcr.io/jztan/pdf-mcp:3.2.0@sha256:e6787ef328005fdf69e73162e27d7f4fbcc764192950b400b2792d433ac90e92
-    command:
-      - pdf-mcp
-    volumes:
-      - ${paperDirectory}:/data/papers:ro
-    disableNetwork: true
-  '';
+  cfg = config.services.mcpPdf;
+  server = pkgs.callPackage ../../../../packages/pdf-mcp.nix {};
+  cacheDirectory = "${config.xdg.cacheHome}/pdf-mcp";
+  pdfConfig = (pkgs.formats.toml {}).generate "pdf-mcp-config.toml" {
+    paths.allow = map (directory: "${directory}/**") cfg.documentDirectories;
+  };
 in {
-  imports = [../application/docker-mcp-gateway.nix];
+  imports = [../application/mcp-gateway.nix];
 
-  config = lib.mkIf osConfig.virtualisation.docker.enable {
-    services.dockerMcpGateway.allowedReadOnlyPaths = [paperDirectory];
-    services.dockerMcpGateway.serverFiles = [server];
+  options.services.mcpPdf.documentDirectories = lib.mkOption {
+    type = lib.types.listOf (lib.types.addCheck lib.types.nonEmptyStr (lib.hasPrefix "/"));
+    default = [];
+    description = "Existing host directories the PDF server may read.";
+  };
+
+  config = {
+    home.activation.createPdfDirectories = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      ${pkgs.coreutils}/bin/install -d -m 0700 ${lib.escapeShellArg cacheDirectory}
+    '';
+    xdg.configFile."pdf-mcp/config.toml".source = pdfConfig;
+
+    services.mcpGateway.servers.pdf = {
+      command = lib.getExe server;
+      environment = {
+        FASTEMBED_CACHE_PATH = "${cacheDirectory}/fastembed";
+        PDF_MCP_CACHE_DIR = cacheDirectory;
+        PDF_MCP_UPDATE_CHECK = "false";
+      };
+    };
   };
 }

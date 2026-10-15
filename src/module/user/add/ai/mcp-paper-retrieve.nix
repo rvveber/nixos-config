@@ -1,46 +1,40 @@
-# Adds the libgen-mcp retrieval server to the shared Docker MCP gateway.
+# Retrieves scholarly documents into a private directory shared with the PDF server.
 {
   config,
   lib,
-  osConfig,
   pkgs,
   ...
 }: let
-  stateRoot = "${config.xdg.stateHome}/docker-mcp-gateway";
-  paperDirectory = "${stateRoot}/papers";
-  server = pkgs.writeText "paper-retrieve.yaml" ''
-    name: paper-retrieve
-    title: Paper Retrieve
-    description: Retrieve paper and book contents by DOI or MD5; use `paper-search` for discovery, then pass locally downloaded files to `pdf`
-    type: server
-    image: ghcr.io/jmrplens/libgen-mcp:1.7.2@sha256:fd41aaa926f3ce996e0e65042d2b55a8843b41f99898b96157d3e9ad88815426
-    volumes:
-      - ${paperDirectory}:/data/papers:rw
-    env:
-      - name: LIBGEN_MCP_REMOTE_DOWNLOADS
-        value: "false"
-      - name: LIBGEN_MCP_SERVER_FETCH
-        value: "true"
-      - name: LIBGEN_MCP_DOWNLOAD_DIR
-        value: /data/papers
-      - name: LIBGEN_MCP_CONFIRM_DOWNLOADS
-        value: "false"
-  '';
+  cfg = config.services.mcpPaperRetrieve;
+  retrieval = pkgs.callPackage ../../../../packages/libgen-mcp.nix {};
+  absolutePath = lib.types.addCheck lib.types.nonEmptyStr (lib.hasPrefix "/");
 in {
-  imports = [../application/docker-mcp-gateway.nix];
+  imports = [../application/mcp-gateway.nix];
 
-  config = lib.mkIf osConfig.virtualisation.docker.enable {
+  options.services.mcpPaperRetrieve.downloadDirectory = lib.mkOption {
+    type = absolutePath;
+    # Keep downloaded documents available across the gateway migration.
+    default = "${config.xdg.stateHome}/docker-mcp-gateway/papers";
+    description = "Private destination for retrieved documents.";
+  };
+
+  config = {
     home.activation.createPaperDirectory = lib.hm.dag.entryAfter ["writeBoundary"] ''
-      ${pkgs.coreutils}/bin/install -d -m 0700 ${lib.escapeShellArg stateRoot}
-      ${pkgs.coreutils}/bin/install -d -m 0777 ${lib.escapeShellArg paperDirectory}
+      ${pkgs.coreutils}/bin/install -d -m 0700 ${lib.escapeShellArg cfg.downloadDirectory}
     '';
 
-    services.dockerMcpGateway.allowedWritablePaths = [paperDirectory];
-    services.dockerMcpGateway.serverFiles = [server];
-    services.dockerMcpGateway.toolAllowlist.paper-retrieve = [
-      "get_details"
-      "download"
-      "read"
-    ];
+    services.mcpGateway.servers.paper-retrieve = {
+      command = lib.getExe retrieval;
+      environment = {
+        LIBGEN_MCP_REMOTE_DOWNLOADS = "false";
+        LIBGEN_MCP_SERVER_FETCH = "true";
+        LIBGEN_MCP_DOWNLOAD_DIR = cfg.downloadDirectory;
+        LIBGEN_MCP_CONFIRM_DOWNLOADS = "false";
+      };
+      tools = [
+        "get_details"
+        "download"
+      ];
+    };
   };
 }

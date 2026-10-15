@@ -87,14 +87,23 @@ in {
       ../../module/user/add/application/opencode.nix
       ../../module/user/add/application/devops.nix
       ../../module/user/add/application/docker-credential-store.nix
+      ../../module/user/add/ai/mcp-blender.nix
       ../../module/user/add/ai/mcp-pdf.nix
       ../../module/user/add/ai/mcp-paper-search.nix
       ../../module/user/add/ai/mcp-paper-retrieve.nix
+      ../../module/user/add/ai/mcp-rea.nix
       ../../module/user/add/ai/prompt-system-universal.nix
       ../../module/user/add/application/windows-environment.nix
     ];
 
     xdg.enable = true;
+
+    services.mcpPdf.documentDirectories = [
+      config.services.mcpPaperRetrieve.downloadDirectory
+      "${homeDirectory}/p"
+      "${homeDirectory}/Downloads"
+      "${homeDirectory}/Documents"
+    ];
 
     # Temporary warning-silencer for HM default change; removable after home.stateVersion >= 25.05
     # if you also want to adopt the new default (null).
