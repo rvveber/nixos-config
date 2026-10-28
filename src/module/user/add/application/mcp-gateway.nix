@@ -101,7 +101,7 @@ in {
   config = lib.mkIf (cfg.servers != {}) {
     home.packages = [headersHelper];
 
-    programs.opencode.settings.mcp.gateway = lib.mkIf config.programs.opencode.enable {
+    programs.opencode.settings.mcp.m = lib.mkIf config.programs.opencode.enable {
       type = "remote";
       url = "http://127.0.0.1:${toString cfg.port}/mcp";
       enabled = true;

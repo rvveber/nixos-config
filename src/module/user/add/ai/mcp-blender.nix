@@ -47,7 +47,7 @@ in {
   # Poly Haven works without credentials. Other provider credentials must reach
   # Blender's own runtime environment rather than Nix-generated preferences.
   services.mcpGateway.servers = {
-    blender-control = {
+    blender = {
       command = lib.getExe controlServer;
       environment = {
         BLENDER_MCP_HOST = controlConnection.host;
