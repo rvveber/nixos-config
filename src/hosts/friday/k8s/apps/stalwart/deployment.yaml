@@ -20,7 +20,7 @@ spec:
       automountServiceAccountToken: false
       initContainers:
       - name: init-postgres
-        image: postgres:17-alpine@sha256:979c4379dd698aba0b890599a6104e082035f98ef31d9b9291ec22f2b13059ca
+        image: postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b
         command: ["sh", "-ceu"]
         args:
         - |
@@ -57,7 +57,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: stalwart
-        image: stalwartlabs/stalwart:v0.15.5@sha256:dcf575db2d53d9ef86d6ced8abe4ba491984659a0f8862cc6079ee7b41c3c568
+        image: stalwartlabs/stalwart:v0.16.27@sha256:c429b311c93db5606598abc1c68225a85a6953183848ae01bee9c6a98885836c
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000
