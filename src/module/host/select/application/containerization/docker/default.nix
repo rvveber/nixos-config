@@ -1,4 +1,5 @@
-# Selects Docker Engine with pass-backed registry credential support.
+# Selects rootless Docker with pass-backed registry credential support. The
+# daemon runs as the user, so Docker access does not grant root on the host.
 {pkgs, ...}: {
   imports = [
     ../../../../add/application/containerization.nix
@@ -7,9 +8,8 @@
 
   environment.systemPackages = [pkgs.docker-credential-helpers];
 
-  virtualisation.docker.enable = true;
   virtualisation.docker.rootless = {
-    enable = false; # in rootless mode, the uid and gid of your user need to be mapped correctly, or the files in the container will be owned as root (0)
+    enable = true;
     setSocketVariable = true;
   };
 }

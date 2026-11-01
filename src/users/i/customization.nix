@@ -18,7 +18,7 @@ in {
     useDefaultShell = true;
     home = homeDirectory;
     description = "Robin";
-    extraGroups = ["networkmanager" "wheel" "docker"];
+    extraGroups = ["networkmanager" "wheel"];
   };
 
   # Personal infrastructure shared by this user's desktop hosts. Keeping it
@@ -84,6 +84,7 @@ in {
     imports = [
       ../../module/user/select/customization/application/neovim/rvveber-nvim
       ../../module/user/add/application/development.nix
+      ../../module/user/add/application/claude-code.nix
       ../../module/user/add/application/opencode.nix
       ../../module/user/add/application/devops.nix
       ../../module/user/add/application/docker-credential-store.nix

@@ -109,6 +109,12 @@ in {
       headers.Authorization = "Bearer {file:${authTokenFile}}";
     };
 
+    programs.claude-code.mcpServers.m = lib.mkIf config.programs.claude-code.enable {
+      type = "http";
+      url = "http://127.0.0.1:${toString cfg.port}/mcp";
+      headersHelper = lib.getExe headersHelper;
+    };
+
     systemd.user.services.mcp-gateway = {
       Unit.Description = "FastMCP Gateway";
       Service = {

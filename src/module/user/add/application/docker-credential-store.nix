@@ -30,7 +30,7 @@
     trap - EXIT
   '';
 in {
-  home.activation.configureDockerCredentialStore = lib.mkIf osConfig.virtualisation.docker.enable (
+  home.activation.configureDockerCredentialStore = lib.mkIf osConfig.virtualisation.docker.rootless.enable (
     lib.hm.dag.entryAfter ["writeBoundary"] ''
       if [ -z "''${DRY_RUN_CMD:-}" ]; then
         ${configureDockerCredentialStore}
