@@ -88,6 +88,7 @@ in {
       ../../module/user/add/application/opencode.nix
       ../../module/user/add/application/devops.nix
       ../../module/user/add/application/docker-credential-store.nix
+      ../../module/user/add/ai/cliproxyapi.nix
       ../../module/user/add/ai/mcp-blender.nix
       ../../module/user/add/ai/mcp-pdf.nix
       ../../module/user/add/ai/mcp-paper-search.nix
