@@ -22,7 +22,7 @@
     ../../module/host/add/application/periodic-security-scan
     ../../module/host/add/application/avahi.nix
     ../../module/host/add/application/printing.nix
-    ../../module/host/select/application/containerization/docker
+    ../../module/host/select/application/containerization/podman
     ../../module/host/add/application/gaming.nix
     ../../module/host/add/application/appimage.nix
     ../../module/host/select/locale/de_DE

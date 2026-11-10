@@ -1,4 +1,6 @@
-# Selects Podman with Docker CLI compatibility and pass-backed credentials.
+# Selects rootless Podman with Docker CLI compatibility and pass-backed
+# credentials. Docker clients reach the user's Podman API socket through
+# DOCKER_HOST, so container access does not grant root on the host.
 {pkgs, ...}: {
   imports = [
     ../../../../add/application/containerization.nix
@@ -31,6 +33,14 @@
   environment.sessionVariables = {
     PODMAN_COMPOSE_WARNING_LOGS = "false";
   };
+
+  # The user socket is enabled by the Podman module; XDG_RUNTIME_DIR is only
+  # known at login, so the variable is set at shell initialization.
+  environment.extraInit = ''
+    if [ -z "$DOCKER_HOST" -a -n "$XDG_RUNTIME_DIR" ]; then
+      export DOCKER_HOST="unix://$XDG_RUNTIME_DIR/podman/podman.sock"
+    fi
+  '';
 
   virtualisation.containers.containersConf.settings.engine.credential_helpers = ["pass"];
 }
