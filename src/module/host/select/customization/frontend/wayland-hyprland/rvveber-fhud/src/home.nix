@@ -31,6 +31,52 @@
       ]
       ++ lib.optional (flags != null) flags
     );
+
+  # Mouse back/forward buttons navigate like Alt+Left/Alt+Right. The switches
+  # chatter: one click can arrive as two, further apart than libinput's
+  # debounce window. Press and release are bound separately so the cooldown
+  # drops a chattered click as a whole, while every forwarded key press still
+  # gets its release. The cooldown restarts on release because chatter often
+  # happens when the switch opens.
+  mouseNavigationLua = ''
+    local function bindDebouncedKey(button, mods, key)
+      local press = hl.dsp.send_key_state({ mods = mods, key = key, state = "down" })
+      local release = hl.dsp.send_key_state({ mods = mods, key = key, state = "up" })
+      local cooling = false
+      local cooldownGeneration = 0
+      local pressSwallowed = false
+
+      local function startCooldown()
+        cooldownGeneration = cooldownGeneration + 1
+        local generation = cooldownGeneration
+        cooling = true
+        hl.timer(function()
+          if generation == cooldownGeneration then
+            cooling = false
+          end
+        end, { timeout = 200, type = "oneshot" })
+      end
+
+      hl.bind(button, function()
+        pressSwallowed = cooling
+        if pressSwallowed then
+          return
+        end
+        startCooldown()
+        hl.dispatch(press)
+      end)
+      hl.bind(button, function()
+        if pressSwallowed then
+          return
+        end
+        startCooldown()
+        hl.dispatch(release)
+      end, { release = true })
+    end
+
+    bindDebouncedKey("mouse:275", "ALT", "Left")
+    bindDebouncedKey("mouse:276", "ALT", "Right")
+  '';
 in {
   imports = [
     ({
@@ -233,63 +279,65 @@ in {
     enable = true;
     configType = "lua";
     plugins = lib.optionals holographicWindows [packages.holographic-plugin];
-    extraConfig = lib.optionalString holographicWindows ''
-      if hl.plugin.darkwindow ~= nil then
-        local reduced = os.getenv("RVVEBER_FHUD_REDUCED_MOTION") == "1"
-        hl.plugin.darkwindow.load_shader("fhud", {
-          path = "${packages.holographic-shader}/holographic.glsl",
-          introduces_transparency = true,
-          fade_in_speed = reduced and 0 or ${toString (appearance.motion.scene / 100.0)},
-          fade_out_speed = 0,
-        })
-        hl.plugin.darkwindow.load_shader("fhud-debug", {
-          path = "${packages.holographic-shader}/holographic-debug.glsl",
-          introduces_transparency = false,
-          fade_in_speed = 0,
-          fade_out_speed = 0,
-        })
-        local stateHome = os.getenv("XDG_STATE_HOME")
-        if stateHome == nil or stateHome == "" then
-          stateHome = os.getenv("HOME") .. "/.local/state"
-        end
-        local statePath = stateHome .. "/rvveber-fhud/holographic-windows"
-        local enabled = true
-        local saved, readError, readCode = io.open(statePath, "r")
-        if saved then
-          local value = saved:read("*l")
-          assert(saved:close())
-          assert(value == "on" or value == "off", "Invalid FutureHUD shader state: " .. statePath)
-          enabled = value == "on"
-        else
-          assert(readCode == 2, readError)
-        end
-
-        local shaderRule = hl.window_rule({
-          name = "fhud-holographic-windows",
-          enabled = enabled,
-          match = { fullscreen = false },
-          ["darkwindow:shade"] = "fhud",
-        })
-        hl.bind("SUPER + F10", function()
-          local nextEnabled = not shaderRule:is_enabled()
-          local pending = assert(io.open(statePath .. ".tmp", "w"))
-          assert(pending:write(nextEnabled and "on\n" or "off\n"))
-          assert(pending:close())
-          assert(os.rename(statePath .. ".tmp", statePath))
-
-          for _, window in ipairs(hl.get_windows()) do
-            hl.plugin.darkwindow.dsp_shade({ window = window, shader = "" })()
+    extraConfig =
+      mouseNavigationLua
+      + lib.optionalString holographicWindows ''
+        if hl.plugin.darkwindow ~= nil then
+          local reduced = os.getenv("RVVEBER_FHUD_REDUCED_MOTION") == "1"
+          hl.plugin.darkwindow.load_shader("fhud", {
+            path = "${packages.holographic-shader}/holographic.glsl",
+            introduces_transparency = true,
+            fade_in_speed = reduced and 0 or ${toString (appearance.motion.scene / 100.0)},
+            fade_out_speed = 0,
+          })
+          hl.plugin.darkwindow.load_shader("fhud-debug", {
+            path = "${packages.holographic-shader}/holographic-debug.glsl",
+            introduces_transparency = false,
+            fade_in_speed = 0,
+            fade_out_speed = 0,
+          })
+          local stateHome = os.getenv("XDG_STATE_HOME")
+          if stateHome == nil or stateHome == "" then
+            stateHome = os.getenv("HOME") .. "/.local/state"
           end
-          shaderRule:set_enabled(nextEnabled)
-        end)
-        local debugShader = hl.plugin.darkwindow.dsp_shade({ shader = "fhud-debug" })
-        hl.bind("SUPER + SHIFT + F10", function()
-          if shaderRule:is_enabled() then
-            debugShader()
+          local statePath = stateHome .. "/rvveber-fhud/holographic-windows"
+          local enabled = true
+          local saved, readError, readCode = io.open(statePath, "r")
+          if saved then
+            local value = saved:read("*l")
+            assert(saved:close())
+            assert(value == "on" or value == "off", "Invalid FutureHUD shader state: " .. statePath)
+            enabled = value == "on"
+          else
+            assert(readCode == 2, readError)
           end
-        end)
-      end
-    '';
+
+          local shaderRule = hl.window_rule({
+            name = "fhud-holographic-windows",
+            enabled = enabled,
+            match = { fullscreen = false },
+            ["darkwindow:shade"] = "fhud",
+          })
+          hl.bind("SUPER + F10", function()
+            local nextEnabled = not shaderRule:is_enabled()
+            local pending = assert(io.open(statePath .. ".tmp", "w"))
+            assert(pending:write(nextEnabled and "on\n" or "off\n"))
+            assert(pending:close())
+            assert(os.rename(statePath .. ".tmp", statePath))
+
+            for _, window in ipairs(hl.get_windows()) do
+              hl.plugin.darkwindow.dsp_shade({ window = window, shader = "" })()
+            end
+            shaderRule:set_enabled(nextEnabled)
+          end)
+          local debugShader = hl.plugin.darkwindow.dsp_shade({ shader = "fhud-debug" })
+          hl.bind("SUPER + SHIFT + F10", function()
+            if shaderRule:is_enabled() then
+              debugShader()
+            end
+          end)
+        end
+      '';
     settings = {
       mainMod._var = "SUPER";
       terminal._var = "kitty";
