@@ -19,7 +19,7 @@ if ! command -v nix >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ -z "${IN_NIX_SHELL:-}" ]; then
+if [ -z "${NIXOS_CONFIG_DEV_SHELL:-}" ]; then
   exec nix develop "path:${DIR_ROOT}/src" --no-write-lock-file --command "${DIR_BIN}/validate" "$@"
 fi
 
