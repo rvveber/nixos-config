@@ -58,7 +58,7 @@ spec:
           /app/gitea/gitea --work-path /var/lib/gitea --config /etc/forgejo/app.ini migrate
 
           if /app/gitea/gitea --work-path /var/lib/gitea --config /etc/forgejo/app.ini \
-            admin user list | awk 'NR > 1 { print $2 }' | grep --fixed-strings --line-regexp rvveber >/dev/null; then
+            admin user list | awk 'NR > 1 { print $2 }' | grep -qFx rvveber; then
             exit 0
           fi
 
