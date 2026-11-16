@@ -36,14 +36,15 @@ check_quietly() (
   fi
 )
 
+statix fix "$DIR_ROOT"
+check_quietly find "$DIR_ROOT/src" \
+  -path "$DIR_ROOT/src/module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/vendor" -prune \
+  -o -name '*.nix' -exec alejandra --quiet {} +
+
 statix check "$DIR_ROOT"
 deadnix --fail \
   --exclude src/module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/vendor \
   "$DIR_ROOT"
-
-check_quietly find "$DIR_ROOT/src" \
-  -path "$DIR_ROOT/src/module/host/select/customization/frontend/wayland-hyprland/rvveber-fhud/src/widgets/vendor" -prune \
-  -o -name '*.nix' -exec alejandra --check {} +
 stylua --check \
   "$DIR_ROOT/src/module/user/select/customization/application/neovim/rvveber-nvim/src/config/init.lua" \
   "$DIR_ROOT/src/module/user/select/customization/application/neovim/rvveber-nvim/src/config/lua"

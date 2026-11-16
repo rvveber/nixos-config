@@ -161,7 +161,8 @@ With direnv installed, entering the repository loads it automatically through
 nix develop ./src
 ```
 
-Run all formatting, static analysis, and flake evaluation checks with:
+Format and automatically fix Nix files, then run static analysis and flake
+evaluation checks with:
 
 ```shell
 bin/validate
