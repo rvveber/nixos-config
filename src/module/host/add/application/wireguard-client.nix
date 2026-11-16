@@ -57,6 +57,16 @@ in {
       lib.nameValuePair "wg-quick-${name}" {
         after = interface.configFileDependencies;
         wants = interface.configFileDependencies;
+
+        # wg-quick refuses to start while the interface exists, and a stop
+        # whose `wg-quick down` failed leaves it behind. The unit owns the
+        # interface, so starting begins from a clean state.
+        preStart = ''
+          if ${pkgs.iproute2}/bin/ip link show dev ${lib.escapeShellArg name} >/dev/null 2>&1; then
+            echo "Removing leftover interface ${name} before starting"
+            ${pkgs.iproute2}/bin/ip link delete dev ${lib.escapeShellArg name}
+          fi
+        '';
       })
     enabledInterfaces;
   };
