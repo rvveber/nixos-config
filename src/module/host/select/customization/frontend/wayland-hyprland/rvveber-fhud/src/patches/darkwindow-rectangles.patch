@@ -1,8 +1,8 @@
 --- a/src/CustomShader.h
 +++ b/src/CustomShader.h
-@@ -3,8 +3,10 @@
- #include <hyprland/src/helpers/time/Time.hpp>
+@@ -5,8 +5,10 @@
  #include <hyprland/src/render/Shader.hpp>
+ #include <hyprland/src/render/ShaderLoader.hpp>
  #include <map>
 +#include <memory>
  #include <string>
@@ -11,7 +11,7 @@
  struct ShadedElement;
  
  enum IntroducesTransparency : bool
-@@ -85,6 +87,7 @@
+@@ -87,6 +89,7 @@
  
  struct ShadedElement
  {
@@ -19,16 +19,6 @@
      ShaderInstance* RuleShader = nullptr;
      ShaderInstance* DispatchShader = nullptr;
  
---- a/src/State.h
-+++ b/src/State.h
-@@ -108,6 +108,7 @@
-     {
-         bool Active = false;
-         WP<Render::ITexture> Texture;
-+        std::shared_ptr<FhudRectangleDebug> Rectangles;
-         ShadedElement* ShaderConfig;
-         Time::steady_tp Time;
-         UniformVariables Uniforms;
 --- a/src/Hooks.cpp
 +++ b/src/Hooks.cpp
 @@ -3,6 +3,7 @@
@@ -39,14 +29,15 @@
  
  static ShadedElement* getShaderForSurfacePass(CSurfacePassElement* element)
  {
-@@ -51,12 +52,21 @@
-     Hyprutils::Utils::CScopeGuard _state([&] {
-         g.RenderState.ShaderConfig = nullptr;
-         g.RenderState.Texture = nullptr;
-+        g.RenderState.Rectangles.reset();
-     });
+@@ -65,6 +66,7 @@
+         {
+             g.RenderState.ShaderConfig = nullptr;
+             g.RenderState.Texture = nullptr;
++            g.RenderState.Rectangles.reset();
+         }
+     );
      g.RenderState.ShaderConfig = getShaderForSurfacePass(element.get());
- 
+@@ -72,6 +74,14 @@
      if (g.RenderState.ShaderConfig)
      {
          g.RenderState.Texture = element->m_data.texture;
@@ -58,10 +49,10 @@
 +            cache->observe(element->m_data.surface);
 +            g.RenderState.Rectangles = cache;
 +        }
-         g.RenderState.Uniforms.MonitorScale = g_pHyprRenderer->renderData().pMonitor.lock()->m_scale;
+         g.RenderState.Uniforms.MonitorScale = ctx.m_data.pMonitor.lock()->m_scale;
          if (element->m_data.pWindow)
          {
-@@ -119,6 +129,8 @@
+@@ -134,6 +144,8 @@
              }
          );
  
@@ -70,3 +61,13 @@
          shader.SetUniforms(*g.RenderState.ShaderConfig, g.RenderState.Uniforms);
          return shader.Shader;
      }
+--- a/src/State.h
++++ b/src/State.h
+@@ -126,6 +126,7 @@
+     {
+         bool Active = false;
+         WP<Render::ITexture> Texture;
++        std::shared_ptr<FhudRectangleDebug> Rectangles;
+         ShadedElement* ShaderConfig;
+         Time::steady_tp Time;
+         UniformVariables Uniforms;

@@ -1,4 +1,7 @@
 # Packages the scholarly document retrieval MCP server from its upstream release.
+#
+# Why local: nixpkgs does not package it.
+# Remove when: nixpkgs packages it.
 {
   lib,
   buildGo127Module,

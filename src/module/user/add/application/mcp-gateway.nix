@@ -11,7 +11,12 @@
   authTokenFile = "${stateRoot}/auth-token";
   legacyAuthTokenFile = "${config.xdg.stateHome}/docker-mcp-gateway/auth-token";
   absolutePath = lib.types.addCheck lib.types.nonEmptyStr (lib.hasPrefix "/");
-  python = pkgs.python3.withPackages (pythonPackages:
+  # FastMCP 3 does not support the MCP 2 SDK yet; nixpkgs marks that pairing broken.
+  pythonWithMcp1 = pkgs.python3.override {
+    self = pythonWithMcp1;
+    packageOverrides = _: super: {mcp = super.mcp_1;};
+  };
+  python = pythonWithMcp1.withPackages (pythonPackages:
     [pythonPackages.fastmcp-slim]
     ++ pythonPackages.fastmcp-slim.optional-dependencies.client
     ++ pythonPackages.fastmcp-slim.optional-dependencies.server);

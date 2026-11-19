@@ -564,11 +564,11 @@ def display(report, config, summary_only=False):
 
 
 def scan(config, directory):
-    started_at = dt.datetime.now(dt.timezone.utc)
+    started_at = dt.datetime.now(dt.UTC)
     started = time.monotonic()
     rules = load_policy(
         config["policy_path"],
-        dt.datetime.now(dt.timezone.utc).date(),
+        dt.datetime.now(dt.UTC).date(),
         config["enforce_expiry"],
     )
     if config["target"] == "system":
@@ -731,7 +731,7 @@ def main():
             return render_report(options.report, config, options.summary)
         config["summary_only"] = options.summary
         config["report_dir"].mkdir(parents=True, exist_ok=True)
-        stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d-%H%M%S")
+        stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%d-%H%M%S")
         prefix = f"security-scan-{config['host']}-{config['target']}-{stamp}-"
         directory = Path(tempfile.mkdtemp(prefix=prefix, dir=config["report_dir"]))
         CONSOLE.info(f"Scan artifacts: {directory}")

@@ -189,7 +189,7 @@ def perform_scan(state):
         if summary["status"] == "complete":
             previous = summary
             break
-    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ-")
+    stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%S.%fZ-")
     directory = Path(tempfile.mkdtemp(prefix=stamp, dir=runs))
     directory.chmod(0o755)
     summary = {"status": "running"}

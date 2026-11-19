@@ -1,17 +1,45 @@
+--- a/addon.py
++++ b/addon.py
+@@ -7537,7 +7537,7 @@
+     bpy.types.Scene.blendermcp_use_polyhaven = bpy.props.BoolProperty(
+         name="Use Poly Haven",
+         description="Enable Poly Haven asset integration",
+-        default=False
++        default=True
+     )
+ 
+     bpy.types.Scene.blendermcp_use_hyper3d = bpy.props.BoolProperty(
+@@ -7741,8 +7741,6 @@
+     for cls in PREMIUM_CLASSES:
+         bpy.utils.register_class(cls)
+ 
+-    # Off the register path: no network until Blender has finished starting.
+-    bpy.app.timers.register(_addon_update_check_on_startup, first_interval=5.0)
+ 
+     # Add-on registration can run before Blender has a stable UI/scene context.
+     # Defer socket startup and retry after startup-file or .blend loads.
+--- /dev/null
++++ b/src/blender_mcp/config.py
+@@ -0,0 +1,5 @@
++"""Source builds omit upstream's private telemetry configuration; keep it disabled."""
++
++from types import SimpleNamespace
++
++telemetry_config = SimpleNamespace(enabled=False)
 --- a/src/blender_mcp/server.py
 +++ b/src/blender_mcp/server.py
-@@ -456,8 +456,8 @@
-     on or off for this user. "(Premium)" ones come with MCP for Blender Premium and don't use the
-     user's own API keys.
-
+@@ -495,8 +495,8 @@
+     user's own API keys. When pointing the user to Premium, link
+     https://mcp-for-blender.com/premium?ref=mcp-status
+ 
 -    If outdated, tells the user how to update via `uvx mcp-for-blender install-addon`
 -    (then restart or re-enable the addon in Blender).
 +    Nix owns this server and its matching extension. Activate the rebuilt
 +    configuration and restart Blender when updating them.
-
+ 
      `telemetry_consent` reports whether data collection is on, off, or null if
      Blender could not be reached. Use it to answer telemetry status questions.
-@@ -483,10 +483,9 @@
+@@ -522,10 +522,9 @@
              "source": result.source,
              "warning": result.warning,
              "telemetry_consent": get_telemetry().check_user_consent(),
@@ -24,39 +52,21 @@
              ),
          }
          return (json.dumps(payload, indent=2) + premium_generation_guidance(result.premium_generators)
-@@ -535,7 +534,7 @@
+@@ -574,7 +573,7 @@
  #   (look -> the native screenshot, get_scene_info -> the addon's own summary).
  # tests/test_compat_matrix.py runs the tools against real past addons.
-
+ 
 -ADDON_UPDATE_HINT = "Update the Blender addon: run `uvx mcp-for-blender install-addon`, then restart Blender."
 +ADDON_UPDATE_HINT = "Update the pinned Nix package, activate the rebuilt configuration, then restart Blender."
-
-
+ 
+ 
  class AddonTooOld(Exception):
---- /dev/null
-+++ b/src/blender_mcp/config.py
-@@ -0,0 +1,5 @@
-+"""Source builds omit upstream's private telemetry configuration; keep it disabled."""
-+
-+from types import SimpleNamespace
-+
-+telemetry_config = SimpleNamespace(enabled=False)
---- a/addon.py
-+++ b/addon.py
-@@ -6235,7 +6235,7 @@
-     bpy.types.Scene.blendermcp_use_polyhaven = bpy.props.BoolProperty(
-         name="Use Poly Haven",
-         description="Enable Poly Haven asset integration",
--        default=False
-+        default=True
-     )
-
-     bpy.types.Scene.blendermcp_use_hyper3d = bpy.props.BoolProperty(
-@@ -6380,7 +6380,5 @@
-         bpy.utils.register_class(cls)
-
--    # Off the register path: no network until Blender has finished starting.
--    bpy.app.timers.register(_addon_update_check_on_startup, first_interval=5.0)
-
-     # Add-on registration can run before Blender has a stable UI/scene context.
-     # Defer socket startup and retry after startup-file or .blend loads.
+@@ -2415,7 +2414,7 @@
+             "It will now wait silently for a client on stdin -- that is normal, "
+             "not a hang. Press Ctrl-C to exit. "
+             "Setup guide: https://github.com/ahujasid/blender-mcp#installation "
+-            "(if the addon is outdated this logs how to update it: uvx mcp-for-blender install-addon)"
++            "(Nix owns this server and its Blender extension)"
+         )
+     context_log.install(mcp, SERVER_INSTRUCTIONS)
+     mcp.run()

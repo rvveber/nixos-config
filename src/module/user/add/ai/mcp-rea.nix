@@ -3,15 +3,13 @@
   lib,
   pkgs,
   ...
-}: let
-  rea = pkgs.callPackage ../../../../packages/rea-agents.nix {};
-in {
+}: {
   imports = [../application/mcp-gateway.nix];
 
-  home.packages = [rea pkgs.ghidra];
+  home.packages = [pkgs.rea pkgs.ghidra];
 
   services.mcpGateway.servers.rea = {
-    command = lib.getExe rea;
+    command = lib.getExe pkgs.rea;
     args = ["mcp"];
     environment = {
       GHIDRA_INSTALL_DIR = "${pkgs.ghidra}/lib/ghidra";

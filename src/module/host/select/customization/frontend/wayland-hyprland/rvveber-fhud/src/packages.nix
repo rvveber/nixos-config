@@ -13,6 +13,14 @@
       '';
     };
 in rec {
+  # Why patched: the FHUD shaders sample neighboring texels, so upstream
+  # darkwindow's damage tracking leaves stale edges; the damage patch widens
+  # damage around shaded windows and renames the plugin's `State` struct, which
+  # collides with Hyprland's `State` namespace. The rectangles patch feeds the
+  # fhud-debug shader with surface rectangle bounds.
+  # Remove when: upstream darkwindow expands damage for shaders that sample
+  # neighbors, no longer collides with Hyprland's `State`, and exposes surface
+  # rectangles to shaders; the debug overlay depends on the last one.
   holographic-plugin = pkgs.hyprlandPlugins.hypr-darkwindow.overrideAttrs (old: {
     patches = (old.patches or []) ++ [./patches/darkwindow-damage.patch ./patches/darkwindow-rectangles.patch];
     postPatch =
