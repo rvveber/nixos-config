@@ -19,7 +19,7 @@ spec:
       enableServiceLinks: false
       initContainers:
       - name: init-postgres
-        image: postgres:17-alpine@sha256:979c4379dd698aba0b890599a6104e082035f98ef31d9b9291ec22f2b13059ca
+        image: postgres:19-alpine@sha256:cac45fb483caee3668946088a1c0532db89d5285c28dbfeac889b4068296e06f
         command: ["sh", "-ceu"]
         args:
         - |
@@ -51,7 +51,7 @@ spec:
               name: nix-secrets
               key: host_friday_k8s_postgres_forgejo_password
       - name: bootstrap-forgejo
-        image: codeberg.org/forgejo/forgejo:16.0.2-rootless@sha256:23ccc146e6dc2cd1f5c5435909baae64db873201717f1726490dae649283e6cd
+        image: codeberg.org/forgejo/forgejo:17.0.2-rootless@sha256:39362ab93a94c0c9b8b330d2a877ddbb3f02fa8c0cba1b8d686d437b39f36a04
         command: ["/bin/sh", "-ceu"]
         args:
         - |
@@ -99,7 +99,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: forgejo
-        image: codeberg.org/forgejo/forgejo:16.0.2-rootless@sha256:23ccc146e6dc2cd1f5c5435909baae64db873201717f1726490dae649283e6cd
+        image: codeberg.org/forgejo/forgejo:17.0.2-rootless@sha256:39362ab93a94c0c9b8b330d2a877ddbb3f02fa8c0cba1b8d686d437b39f36a04
         command: ["/usr/bin/dumb-init", "--"]
         args:
         - /app/gitea/gitea
